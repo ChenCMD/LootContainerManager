@@ -1,0 +1,15 @@
+*.iml
+.DS_Store
+project/metals.sbt
+.idea/*.*
+.bsp/
+.bloop/
+.idea/libraries/
+.idea/modules/
+.idea/shelf/
+.metals/
+.vscode/
+project/target/
+project/project/
+project/.bloop/
+target/
