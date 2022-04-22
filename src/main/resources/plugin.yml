@@ -1,11 +1,11 @@
 name: 'CardGame'
 version: '1.0.0'
-main: 'com.github.chencmd.protectlootchest.ProtectLootChest'
+main: 'com.github.chencmd.lootcontainerutil.LootContainerUtil'
 api-version: '1.18'
 author: 'ChenCMD'
 commands:
-  lcp:
-    descriptions: 'loot chest protect'
-    usage: '/lcp'
+  lcu:
+    descriptions: 'loot container util'
+    usage: '/lcu'
 depend:
   - NBTAPI

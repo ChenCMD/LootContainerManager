@@ -1,4 +1,4 @@
-name := "ProtectLootChest"
+name := "LootContainerUtil"
 
 version := "0.1"
 

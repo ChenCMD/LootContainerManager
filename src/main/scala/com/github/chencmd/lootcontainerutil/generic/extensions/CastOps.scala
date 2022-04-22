@@ -1,4 +1,4 @@
-package com.github.chencmd.protectlootchest.generic.extensions
+package com.github.chencmd.lootcontainerutil.generic.extensions
 
 import scala.reflect.TypeTest
 

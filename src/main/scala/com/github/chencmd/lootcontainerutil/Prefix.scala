@@ -1,4 +1,4 @@
-package com.github.chencmd.protectlootchest
+package com.github.chencmd.lootcontainerutil
 
 import org.bukkit.ChatColor
 
