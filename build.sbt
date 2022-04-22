@@ -12,7 +12,7 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "org.spigotmc" % "spigot-api" % "1.17.1-R0.1-SNAPSHOT",
+  "org.spigotmc" % "spigot-api" % "1.18.2-R0.1-SNAPSHOT",
   "org.typelevel" %% "cats-effect" % "3.3.11"
 )
 
