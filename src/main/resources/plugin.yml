@@ -7,5 +7,3 @@ commands:
   lcu:
     descriptions: 'loot container util'
     usage: '/lcu'
-depend:
-  - NBTAPI
