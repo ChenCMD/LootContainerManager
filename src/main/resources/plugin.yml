@@ -1,4 +1,4 @@
-name: 'CardGame'
+name: 'LootContainerUtil'
 version: '1.0.0'
 main: 'com.github.chencmd.lootcontainerutil.LootContainerUtil'
 api-version: '1.18'
