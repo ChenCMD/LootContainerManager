@@ -3,6 +3,7 @@ package com.github.chencmd.lootcontainerutil
 import cats.data.OptionT
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
+import com.github.chencmd.lootcontainerutil.Prefix
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import com.github.chencmd.lootcontainerutil.generic.extensions.CastOps.downcastOrNone
