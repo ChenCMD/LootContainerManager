@@ -29,3 +29,5 @@ scalacOptions ++= Seq(
 assembly / assemblyExcludedJars := {
   (assembly / fullClasspath).value.filter(_.data.absolutePath.startsWith((baseDirectory.value / "localDependencies").absolutePath))
 }
+
+assembly / assemblyOutputPath := baseDirectory.value / "target" / "LootContainerUtil.jar"
