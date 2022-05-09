@@ -6,33 +6,28 @@ import cats.effect.unsafe.implicits.global
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 
+import com.github.chencmd.lootcontainerutil.generic.extensions.CastOps.downcastOrNone
+
 class CommandExecutor(ignorePlayerSet: IgnorePlayerSet) {
-  def run(sender: CommandSender, args: Array[String]): Boolean = {
-    val p: Option[Player] = sender match {
-      case p: Player => Some(p)
-      case _ => None
-    }
+  def run(sender: CommandSender, args: Array[String]): IO[Boolean] = {
+    val p: Option[Player] = sender.downcastOrNone[Player]
 
     if (args.length == 0) {
-      if (sender.isOp) {
-        sender.sendMessage(s"${Prefix.ERROR}/lcu <ignore>")
-      } else {
-        return false
-      }
+      return IO.whenA(sender.isOp)(IO(sender.sendMessage(s"${Prefix.ERROR}/lcu <ignore>"))).as(sender.isOp)
     }
 
-    args(0) match {
+    val optIO = args(0) match {
       case "ignore" =>
-        val action = for {
+        for {
           p <- OptionT.fromOption[IO](p)
           _ <- OptionT.liftF(ignorePlayerSet.registerIgnorePlayer(p))
           _ <- OptionT.liftF(IO {
             p.sendMessage(s"${Prefix.SUCCESS}ルートコンテナーの保護を8秒間無効化しました。")
           })
-        } yield ()
-
-        action.value.unsafeRunAndForget()
-        true
+        } yield true
+      case _ => OptionT.pure[IO](false)
     }
+
+    optIO.value.map(_.getOrElse(true))
   }
 }
