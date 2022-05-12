@@ -14,7 +14,8 @@ resolvers ++= Seq(
 libraryDependencies ++= Seq(
   "org.spigotmc" % "spigot-api" % "1.18.2-R0.1-SNAPSHOT",
   "org.typelevel" %% "cats-effect" % "3.3.11",
-  "org.scala-lang.modules" %% "scala-parser-combinators" % "2.1.1"
+  "org.scala-lang.modules" %% "scala-parser-combinators" % "2.1.1",
+  "org.scalatest" %% "scalatest" % "3.2.12" % "test"
 )
 
 unmanagedBase := baseDirectory.value / "localDependencies"
@@ -31,4 +32,4 @@ assembly / assemblyExcludedJars := {
   (assembly / fullClasspath).value.filter(_.data.absolutePath.startsWith((baseDirectory.value / "localDependencies").absolutePath))
 }
 
-assembly / assemblyOutputPath := baseDirectory.value / "target" / "LootContainerUtil.jar"
+assembly / assemblyOutputPath := new File("C:\\Users\\scnme\\Chen_Data\\Minecraft\\minecraft Servers\\Plugin Server\\1.18.2\\plugins\\LootContainerUtil.jar")
