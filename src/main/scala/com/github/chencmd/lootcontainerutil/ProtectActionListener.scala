@@ -33,26 +33,21 @@ class ProtectActionListener(plugin: JavaPlugin, ignorePlayerSet: IgnorePlayerSet
       isIgnoreProtect <- ignorePlayerSet.isIgnorePlayer(p)
 
       _ <- IO.unlessA(isIgnoreProtect) {
-        val lootTableKey = e.getLootTable.getKey
-        val w = e.getLootContext.getLocation.getWorld
-        val cmd = e.getLootContext
-          .getLocation
-          .getBlock
-          .pipe(l => s"data modify block ${l.getX} ${l.getY} ${l.getZ} LootTable set value \"$lootTableKey\"")
+        val lootTable = e.getLootTable
 
         for {
           _ <- mcThread.runAndForget(SyncIO {
-            val scfDefault = w.getGameRuleValue(GameRule.SEND_COMMAND_FEEDBACK)
-            w.setGameRule(GameRule.SEND_COMMAND_FEEDBACK, false)
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender, cmd)
-            w.setGameRule(GameRule.SEND_COMMAND_FEEDBACK, scfDefault)
+            Option(e.getInventoryHolder)
+              .flatMap(_.downcastOrNone[Container])
+              .flatMap(_.downcastOrNone[Lootable])
+              .tapEach(_.setLootTable(lootTable))
+              .tapEach(_.update())
           })
           _ <- IO {
             p.sendMessage(s"${Prefix.INFO}ルートテーブルが設定されているため開くことができませんでした。")
             p.sendMessage(s"${Prefix.INFO}意図して開く場合は、${ChatColor.GOLD}/lcu ignore${ChatColor.WHITE}を実行してください。")
-            p.sendMessage(s"${Prefix.INFO}設定されているルートテーブル: $lootTableKey")
-
-            p.setMetadata("generateCancelled", FixedMetadataValue(plugin, Bukkit.getWorlds.asScala.head.getGameTime))
+            p.sendMessage(s"${Prefix.INFO}設定されているルートテーブル: ${lootTable.getKey}")
+            p.setMetadata("generateCancelled", FixedMetadataValue(plugin, e.getWorld.getGameTime))
           }
         } yield ()
       }
@@ -73,7 +68,7 @@ class ProtectActionListener(plugin: JavaPlugin, ignorePlayerSet: IgnorePlayerSet
         .asScala
         .headOption
         .flatMap(_.value.downcastOrNone[Long])
-        .exists(Bukkit.getWorlds.asScala.head.getGameTime - _ <= 10)
+        .exists(_ == e.getPlayer.getWorld.getGameTime)
       p.removeMetadata("generateCancelled", plugin)
       res
     }
