@@ -52,7 +52,7 @@ object NBTPathParser extends RegexParsers {
     ".".? ~> "[" ~> compoundTag <~ "]" ^^ NBTPathNode.MatchElement.apply
 
   private def indexedElementNode: Parser[NBTPathNode.IndexedElement] =
-    ".".? ~> "[" ~> int <~ "]" ^^ (_.value) ^^ NBTPathNode.IndexedElement.apply
+    ".".? ~> "[" ~> int <~ "]" ^^ (n => NBTPathNode.IndexedElement(n.value))
 
   private def nonRootCompoundChildNode: Parser[NBTPathNode.CompoundChild] =
     "." ~> compoundChildNode ^^ (n => NBTPathNode.CompoundChild(n.name))
@@ -73,49 +73,49 @@ object NBTPathParser extends RegexParsers {
     (quotedString | unquotedString) ^^ CompoundValue.VString.apply
 
   private def byte: Parser[CompoundValue.VByte] =
-    (("""-?\d+""".r <~ ("b" | "B")) | ("false" ^^ (_ => "0")) | ("true" ^^ (_ => "1"))) ^^ (_.toByte) ^^ CompoundValue.VByte.apply
+    (("""-?\d+""".r <~ ("b" | "B")) | ("false" ^^ (_ => "0")) | ("true" ^^ (_ => "1"))) ^^ (s => CompoundValue.VByte(s.toByte))
 
   private def short: Parser[CompoundValue.VShort] =
-    """-?\d""".r <~ ("s" | "S") ^^ (_.toShort) ^^ CompoundValue.VShort.apply
+    """-?\d""".r <~ ("s" | "S") ^^ (s => CompoundValue.VShort(s.toShort))
 
   private def int: Parser[CompoundValue.VInt] =
-    """-?\d+""".r ^^ (_.toInt) ^^ CompoundValue.VInt.apply
+    """-?\d+""".r ^^ (s => CompoundValue.VInt(s.toInt))
 
   private def long: Parser[CompoundValue.VLong] =
-    """-?\d+""".r <~ ("l" | "L") ^^ (_.toLong) ^^ CompoundValue.VLong.apply
+    """-?\d+""".r <~ ("l" | "L") ^^ (s => CompoundValue.VLong(s.toLong))
 
   private def float: Parser[CompoundValue.VFloat] =
-    """-?(\d+\.)?\d+""".r <~ ("f" | "F") ^^ (_.toFloat) ^^ CompoundValue.VFloat.apply
+    """-?(\d+\.)?\d+""".r <~ ("f" | "F") ^^ (s => CompoundValue.VFloat(s.toFloat))
 
   private def double: Parser[CompoundValue.VDouble] =
-    """-?(\d+\.)?\d+""".r <~ ("d" | "D").? ^^ (_.toDouble) ^^ CompoundValue.VDouble.apply
+    """-?(\d+\.)?\d+""".r <~ ("d" | "D").? ^^ (s => CompoundValue.VDouble(s.toDouble))
 
   private def compound: Parser[CompoundValue.VCompound] =
     compoundTag ^^ CompoundValue.VCompound.apply
 
   private def stringList: Parser[CompoundValue.VStringList] =
-    toListParser(string) ^^ (_.map(_.value)) ^^ CompoundValue.VStringList.apply
+    toListParser(string) ^^ (l => CompoundValue.VStringList(l.map(_.value)))
 
   private def byteList: Parser[CompoundValue.VByteList] =
-    toListParser(byte, "B") ^^ (_.map(_.value)) ^^ CompoundValue.VByteList.apply
+    toListParser(byte, "B") ^^ (l => CompoundValue.VByteList(l.map(_.value)))
 
   private def shortList: Parser[CompoundValue.VShortList] =
-    toListParser(short) ^^ (_.map(_.value)) ^^ CompoundValue.VShortList.apply
+    toListParser(short) ^^ (l => CompoundValue.VShortList(l.map(_.value)))
 
   private def intList: Parser[CompoundValue.VIntList] =
-    toListParser(int, "I") ^^ (_.map(_.value)) ^^ CompoundValue.VIntList.apply
+    toListParser(int, "I") ^^ (l => CompoundValue.VIntList(l.map(_.value)))
 
   private def longList: Parser[CompoundValue.VLongList] =
-    toListParser(long, "L") ^^ (_.map(_.value)) ^^ CompoundValue.VLongList.apply
+    toListParser(long, "L") ^^ (l => CompoundValue.VLongList(l.map(_.value)))
 
   private def floatList: Parser[CompoundValue.VFloatList] =
-    toListParser(float) ^^ (_.map(_.value)) ^^ CompoundValue.VFloatList.apply
+    toListParser(float) ^^ (l => CompoundValue.VFloatList(l.map(_.value)))
 
   private def doubleList: Parser[CompoundValue.VDoubleList] =
-    toListParser(double) ^^ (_.map(_.value)) ^^ CompoundValue.VDoubleList.apply
+    toListParser(double) ^^ (l => CompoundValue.VDoubleList(l.map(_.value)))
 
   private def compoundList: Parser[CompoundValue.VCompoundList] =
-    toListParser(compound) ^^ (_.map(_.value)) ^^ CompoundValue.VCompoundList.apply
+    toListParser(compound) ^^ (l => CompoundValue.VCompoundList(l.map(_.value)))
 
 
   private def toListParser[A](elemParser: Parser[A], header: String = ""): Parser[List[A]] =
@@ -124,5 +124,5 @@ object NBTPathParser extends RegexParsers {
 
   private def unquotedString: Parser[String] = """[^".\[{]""".r
 
-  private def quotedString: Parser[String] = "\"" ~> unquotedString <~ "\""
+  private def quotedString: Parser[String] = '"' ~> unquotedString <~ '"'
 }
