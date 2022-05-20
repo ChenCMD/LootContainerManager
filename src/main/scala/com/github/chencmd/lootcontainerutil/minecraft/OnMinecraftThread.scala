@@ -57,8 +57,8 @@ class OnMinecraftThread[F[_]: Async](taskOwner: JavaPlugin) {
   }
 
   private def makeRunnable[A](
-    syncAction: SyncIO[A],
-    callback: Either[Throwable, A] => Unit
+      syncAction: SyncIO[A],
+      callback: Either[Throwable, A] => Unit
   ): Runnable = { () =>
     callback {
       try Right(syncAction.unsafeRunSync())

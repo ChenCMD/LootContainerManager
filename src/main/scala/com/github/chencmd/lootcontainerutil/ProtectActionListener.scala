@@ -20,7 +20,9 @@ import scala.jdk.CollectionConverters.*
 import org.bukkit.Sound
 import org.bukkit.SoundCategory
 
-class ProtectActionListener(plugin: JavaPlugin, ignorePlayerSet: IgnorePlayerSet)(using mcThread: OnMinecraftThread[IO]) extends Listener {
+class ProtectActionListener(plugin: JavaPlugin, ignorePlayerSet: IgnorePlayerSet)(using
+    mcThread: OnMinecraftThread[IO]
+) extends Listener {
   Bukkit.getPluginManager.registerEvents(this, plugin)
 
   @EventHandler def onLootGenerate(e: LootGenerateEvent): Unit = {
@@ -47,15 +49,18 @@ class ProtectActionListener(plugin: JavaPlugin, ignorePlayerSet: IgnorePlayerSet
               .tapEach(_.update())
           })
           _ <- {
+            val loc = p.getLocation
             for {
-              _ <- IO.pure(p.playSound(p.getLocation, Sound.BLOCK_NOTE_BLOCK_PLING, SoundCategory.MASTER, 0.6f, 2))
+              _ <- IO(p.playSound(loc, Sound.BLOCK_NOTE_BLOCK_PLING, SoundCategory.MASTER, 0.6f, 2))
               _ <- IO.sleep((2 * 0.05).seconds)
-              _ <- IO.pure(p.playSound(p.getLocation, Sound.BLOCK_NOTE_BLOCK_PLING, SoundCategory.MASTER, 0.6f, 2))
+              _ <- IO(p.playSound(loc, Sound.BLOCK_NOTE_BLOCK_PLING, SoundCategory.MASTER, 0.6f, 2))
             } yield ()
           }.start
           _ <- IO {
             p.sendMessage(s"${Prefix.INFO}ルートテーブルが設定されているため開くことができませんでした。")
-            p.sendMessage(s"${Prefix.INFO}意図して開く場合は、${ChatColor.GOLD}/lcu ignore${ChatColor.WHITE}を実行してください。")
+            p.sendMessage(
+              s"${Prefix.INFO}意図して開く場合は、${ChatColor.GOLD}/lcu ignore${ChatColor.WHITE}を実行してください。"
+            )
             p.sendMessage(s"${Prefix.INFO}設定されているルートテーブル: ${lootTable.getKey}")
             p.setMetadata("generateCancelled", FixedMetadataValue(plugin, e.getWorld.getGameTime))
           }
@@ -74,7 +79,8 @@ class ProtectActionListener(plugin: JavaPlugin, ignorePlayerSet: IgnorePlayerSet
     val p = e.getPlayer.asInstanceOf[Player]
 
     val action = IO {
-      val res = p.getMetadata("generateCancelled")
+      val res = p
+        .getMetadata("generateCancelled")
         .asScala
         .headOption
         .flatMap(_.value.downcastOrNone[Long])

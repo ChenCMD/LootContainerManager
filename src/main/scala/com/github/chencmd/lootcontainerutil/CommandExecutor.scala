@@ -16,7 +16,8 @@ class CommandExecutor(ignorePlayerSet: IgnorePlayerSet)(using mcThread: OnMinecr
     val p: Option[Player] = sender.downcastOrNone[Player]
 
     if (args.length == 0) {
-      return IO.whenA(sender.isOp)(IO(sender.sendMessage(s"${Prefix.ERROR}/lcu <ignore>")))
+      return IO
+        .whenA(sender.isOp)(IO(sender.sendMessage(s"${Prefix.ERROR}/lcu <ignore>")))
         .as(sender.isOp)
         .unsafeRunSync()
     }
@@ -37,8 +38,7 @@ class CommandExecutor(ignorePlayerSet: IgnorePlayerSet)(using mcThread: OnMinecr
           _ <- OptionT.liftF(GenLootAsset.generateLootAsset(p))
         } yield ()
         action.value.unsafeRunAsync(
-          _.left
-            .toOption
+          _.left.toOption
             .foreach(_.printStackTrace())
         )
         true

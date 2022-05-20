@@ -21,10 +21,10 @@ class LootContainerUtil extends JavaPlugin {
   }
 
   override def onCommand(
-    sender: CommandSender,
-    command: Command,
-    label: String,
-    args: Array[String]
+      sender: CommandSender,
+      command: Command,
+      label: String,
+      args: Array[String]
   ): Boolean = {
     if (command.getName == "lcu") {
       cmdExecutor.get.run(sender, args)

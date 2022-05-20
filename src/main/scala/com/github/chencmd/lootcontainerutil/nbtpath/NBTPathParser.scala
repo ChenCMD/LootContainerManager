@@ -14,15 +14,13 @@ object NBTPathParser extends RegexParsers {
   def parse(input: String): Either[String, NBTPath] = parseAll(nbtPath, input) match {
     case Success(res, _) => Right(res)
     case Failure(mes, _) => Left(mes)
-    case Error(mes, _) => Left(mes)
+    case Error(mes, _)   => Left(mes)
   }
-
 
   private def nbtPath: Parser[NBTPath] = for {
     root <- rootNode
     nodes <- node.*
   } yield NBTPath(root, nodes)
-
 
   private def rootNode: Parser[NBTPathRootNode] =
     matchRootObjectNode | matchObjectNode | compoundChildNode
@@ -37,7 +35,6 @@ object NBTPathParser extends RegexParsers {
 
   private def compoundChildNode: Parser[NBTPathRootNode.CompoundChild] =
     (quotedString | unquotedString) ^^ NBTPathRootNode.CompoundChild.apply
-
 
   private def node: Parser[NBTPathNode] =
     nonRootMatchObjectNode | allElementsNode | matchElementNode | indexedElementNode | nonRootCompoundChildNode
@@ -57,9 +54,10 @@ object NBTPathParser extends RegexParsers {
   private def nonRootCompoundChildNode: Parser[NBTPathNode.CompoundChild] =
     "." ~> compoundChildNode ^^ (n => NBTPathNode.CompoundChild(n.name))
 
-
   private def compoundTag: Parser[CompoundTag] =
-    "{" ~> repsep(whiteSpace ~> compoundPair <~ whiteSpace, ",") <~ "}" ^^ (p => CompoundTag(p.toMap))
+    "{" ~> repsep(whiteSpace ~> compoundPair <~ whiteSpace, ",") <~ "}" ^^ (p =>
+      CompoundTag(p.toMap)
+    )
 
   private def compoundPair: Parser[CompoundPair] = for {
     key <- quotedString | unquotedString
@@ -68,12 +66,13 @@ object NBTPathParser extends RegexParsers {
       | compoundList | byteList | shortList | longList | floatList | intList | doubleList | stringList
   } yield (key, value)
 
-
   private def string: Parser[CompoundValue.VString] =
     (quotedString | unquotedString) ^^ CompoundValue.VString.apply
 
   private def byte: Parser[CompoundValue.VByte] =
-    (("""-?\d+""".r <~ ("b" | "B")) | ("false" ^^ (_ => "0")) | ("true" ^^ (_ => "1"))) ^^ (s => CompoundValue.VByte(s.toByte))
+    (("""-?\d+""".r <~ ("b" | "B")) | ("false" ^^ (_ => "0")) | ("true" ^^ (_ => "1"))) ^^ (s =>
+      CompoundValue.VByte(s.toByte)
+    )
 
   private def short: Parser[CompoundValue.VShort] =
     """-?\d""".r <~ ("s" | "S") ^^ (s => CompoundValue.VShort(s.toShort))
@@ -117,10 +116,11 @@ object NBTPathParser extends RegexParsers {
   private def compoundList: Parser[CompoundValue.VCompoundList] =
     toListParser(compound) ^^ (l => CompoundValue.VCompoundList(l.map(_.value)))
 
-
   private def toListParser[A](elemParser: Parser[A], header: String = ""): Parser[List[A]] =
-    "[" ~> (if header != "" then s"$header;" else "").? ~> repsep(whiteSpace ~> elemParser <~ whiteSpace, ",") <~ "]"
-
+    "[" ~> (if header != "" then s"$header;" else "").? ~> repsep(
+      whiteSpace ~> elemParser <~ whiteSpace,
+      ","
+    ) <~ "]"
 
   private def unquotedString: Parser[String] = """[^".\[{]""".r
 
