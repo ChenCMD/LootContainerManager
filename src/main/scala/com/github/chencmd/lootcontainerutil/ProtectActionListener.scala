@@ -13,9 +13,12 @@ import org.bukkit.event.{EventHandler, Listener}
 import org.bukkit.loot.{LootTable, Lootable}
 import org.bukkit.metadata.{FixedMetadataValue, MetadataValue}
 import org.bukkit.plugin.java.JavaPlugin
+import scala.concurrent.duration.*
 
 import scala.util.chaining.*
 import scala.jdk.CollectionConverters.*
+import org.bukkit.Sound
+import org.bukkit.SoundCategory
 
 class ProtectActionListener(plugin: JavaPlugin, ignorePlayerSet: IgnorePlayerSet)(using mcThread: OnMinecraftThread[IO]) extends Listener {
   Bukkit.getPluginManager.registerEvents(this, plugin)
@@ -43,6 +46,13 @@ class ProtectActionListener(plugin: JavaPlugin, ignorePlayerSet: IgnorePlayerSet
               .tapEach(_.setLootTable(lootTable))
               .tapEach(_.update())
           })
+          _ <- {
+            for {
+              _ <- IO.pure(p.playSound(p.getLocation, Sound.BLOCK_NOTE_BLOCK_PLING, SoundCategory.MASTER, 0.6f, 2))
+              _ <- IO.sleep((2 * 0.05).seconds)
+              _ <- IO.pure(p.playSound(p.getLocation, Sound.BLOCK_NOTE_BLOCK_PLING, SoundCategory.MASTER, 0.6f, 2))
+            } yield ()
+          }.start
           _ <- IO {
             p.sendMessage(s"${Prefix.INFO}ルートテーブルが設定されているため開くことができませんでした。")
             p.sendMessage(s"${Prefix.INFO}意図して開く場合は、${ChatColor.GOLD}/lcu ignore${ChatColor.WHITE}を実行してください。")
