@@ -7,16 +7,13 @@ import cats.effect.{IO, SyncIO}
 import com.github.chencmd.lootcontainerutil.generic.givens.PlayerCompare.given
 import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
 import org.bukkit.entity.Player
+import concurrent.duration.*
 
-class IgnorePlayerSet(using mcThread: OnMinecraftThread[IO]) {
+class IgnorePlayerSet {
   private val ignorePlayers: Ref[IO, Set[Player]] = Ref.unsafe(Set.empty)
 
-  def registerIgnorePlayer(p: Player): IO[Unit] = {
-    for {
-      _ <- ignorePlayers.update(_ + p)
-      _ <- mcThread.runLaterAndForget(8 * 20)(ignorePlayers.update(_ - p).syncStep)
-    } yield ()
-  }
+  def registerIgnorePlayer(p: Player): IO[Unit] =
+    ignorePlayers.update(_ + p)
 
   def removeIgnorePlayer(p: Player): IO[Unit] =
     ignorePlayers.update(_ - p)
