@@ -20,32 +20,35 @@ object GenLootAsset {
       val loc = p.getEyeLocation
       val vec = loc.getDirection.normalize().multiply(1d / acc)
 
-      (0 until (5 * acc))
-        .view
+      (0 until (5 * acc)).view
         .map(i => loc.clone() add (vec.clone() multiply i))
         .map(p.getWorld.getBlockAt)
         .flatMap(_.getState.downcastOrNone[Container])
         .headOption
-        .foreach { (block: Container) =>
-          for (item <- NBTTileEntity(block).getCompoundList("Items").asScala.toList) yield {
-            val id = item.getString("id")
-            val slot = item.getByte("Slot")
-            val count = item.getByte("Count")
-            val tag = Option(item.getCompound("tag"))
-            p.sendMessage(id)
+        .foreach { block =>
+          NBTTileEntity(block)
+            .getCompoundList("Items")
+            .asScala
+            .toList
+            .map(item => {
+              val id = item.getString("id")
+              val slot = item.getByte("Slot")
+              val count = item.getByte("Count")
+              val tag = Option(item.getCompound("tag"))
+              p.sendMessage(id)
 
-            /*
-             * "tag.TSB.ID"           -> "{id:%%tag.TSB.ID%%}"
-             * "tag.TSB{Currency:1b}" -> "{Count:%%Count%%,PresetItem:\"currency/\"}"
-             * "tag.TSB{Currency:2b}" -> "{Count:%%Count%%,PresetItem:\"currency/high\"}"
-             * "tag.TSB.ShardRarity"  -> "{Count:%%Count%%,PresetItem:\"sacred_shard/lv-%%tag.TSB.ShardRarity%%\"}"
-             * "{}"                   -> "{Count:%%Count%%,id:%%id%%}"
-             */
-            // TODO Configデータを読み込み、NBTPathをパースしてそれを元にデータを構築する
-          }
+              /*
+               * "tag.TSB.ID"           -> "{id:%%tag.TSB.ID%%}"
+               * "tag.TSB{Currency:1b}" -> "{Count:%%Count%%,PresetItem:\"currency/\"}"
+               * "tag.TSB{Currency:2b}" -> "{Count:%%Count%%,PresetItem:\"currency/high\"}"
+               * "tag.TSB.ShardRarity"  -> "{Count:%%Count%%,PresetItem:\"sacred_shard/lv-%%tag.TSB.ShardRarity%%\"}"
+               * "{}"                   -> "{Count:%%Count%%,id:%%id%%}"
+               */
+              // TODO Configデータを読み込み、NBTPathをパースしてそれを元にデータを構築する
+
+            })
         }
     })
-
 
     action.void
   }

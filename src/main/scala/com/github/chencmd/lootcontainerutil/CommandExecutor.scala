@@ -37,8 +37,7 @@ class CommandExecutor(ignorePlayerSet: IgnorePlayerSet)(using mcThread: OnMinecr
           _ <- OptionT.liftF(GenLootAsset.generateLootAsset(p))
         } yield ()
         action.value.unsafeRunAsync(
-          _.left
-            .toOption
+          _.left.toOption
             .foreach(_.printStackTrace())
         )
         true
