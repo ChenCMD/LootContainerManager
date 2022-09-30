@@ -13,9 +13,9 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "org.spigotmc" % "spigot-api" % "1.18.2-R0.1-SNAPSHOT",
-  "org.typelevel" %% "cats-effect" % "3.3.11",
+  "org.typelevel" %% "cats-effect" % "3.3.14",
   "org.scala-lang.modules" %% "scala-parser-combinators" % "2.1.1",
-  "org.scalatest" %% "scalatest" % "3.2.12" % "test"
+  "org.scalatest" %% "scalatest" % "3.2.12" % Test
 )
 
 unmanagedBase := baseDirectory.value / "localDependencies"
