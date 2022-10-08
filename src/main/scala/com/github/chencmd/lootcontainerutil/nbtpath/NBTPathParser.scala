@@ -31,13 +31,12 @@ object NBTPathParser extends RegexParsers {
     compoundTag ^^ NBTPathRootNode.MatchRootObject.apply
 
   private def matchObjectNode: Parser[NBTPathRootNode.MatchObject] = for {
-    name <- quotedString | unquotedString
+    name <- quotedString() | unquotedString
     pattern <- compoundTag
   } yield NBTPathRootNode.MatchObject(name, pattern)
 
   private def compoundChildNode: Parser[NBTPathRootNode.CompoundChild] =
-    (quotedString | unquotedString) ^^ NBTPathRootNode.CompoundChild.apply
-
+    (quotedString() | unquotedString) ^^ NBTPathRootNode.CompoundChild.apply
 
   private def node: Parser[NBTPathNode] =
     nonRootMatchObjectNode | allElementsNode | matchElementNode | indexedElementNode | nonRootCompoundChildNode
@@ -62,7 +61,7 @@ object NBTPathParser extends RegexParsers {
     "{" ~> repsep(whiteSpace ~> compoundPair <~ whiteSpace, ",") <~ "}" ^^ (p => CompoundTag(p.toMap))
 
   private def compoundPair: Parser[CompoundPair] = for {
-    key <- quotedString | unquotedString
+    key <- quotedString() | unquotedString
     _ <- whiteSpace <~ ":" <~ whiteSpace
     value <- compound | byte | short | long | float | int | double | string
       | compoundList | byteList | shortList | longList | floatList | intList | doubleList | stringList
@@ -70,7 +69,7 @@ object NBTPathParser extends RegexParsers {
 
 
   private def string: Parser[CompoundValue.VString] =
-    (quotedString | unquotedString) ^^ CompoundValue.VString.apply
+    (quotedString(true) | unquotedString) ^^ CompoundValue.VString.apply
 
   private def byte: Parser[CompoundValue.VByte] =
     (("""-?\d+""".r <~ ("b" | "B")) | ("false" ^^ (_ => "0")) | ("true" ^^ (_ => "1"))) ^^ (s => CompoundValue.VByte(s.toByte))
@@ -121,8 +120,16 @@ object NBTPathParser extends RegexParsers {
   private def toListParser[A](elemParser: Parser[A], header: String = ""): Parser[List[A]] =
     "[" ~> (if header != "" then s"$header;" else "").? ~> repsep(whiteSpace ~> elemParser <~ whiteSpace, ",") <~ "]"
 
+  private def unquotedString: Parser[String] = """[a-zA-Z0-9_\-.+]+""".r
 
-  private def unquotedString: Parser[String] = """[^".\[{]""".r
-
-  private def quotedString: Parser[String] = '"' ~> unquotedString <~ '"'
+  private def quotedString(allowEmpty: Boolean = false): Parser[String] = {
+    for {
+      quote <- "'" | "\""
+      str <- (
+        if (allowEmpty) rep
+        else rep1: ((=> Parser[String]) => Parser[List[String]])
+      )((s"[^$quote\\\\]").r | s"\\$quote" | "\\\\")
+      _ <- quote
+    } yield str.mkString
+  }
 }
