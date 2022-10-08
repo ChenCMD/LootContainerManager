@@ -1,14 +1,14 @@
 package com.github.chencmd.lootcontainerutil.nbtpath.definition
 
-case class NBTPath(root: NBTPathRootNode, nodes: List[NBTPathNode])
+case class NBTPath(root: NBTPathRootNode, nodes: List[NBTPathNode]) derives CanEqual
 
-enum NBTPathRootNode {
+enum NBTPathRootNode derives CanEqual {
   case MatchRootObject(pattern: CompoundTag)
   case MatchObject(name: String, pattern: CompoundTag)
   case CompoundChild(name: String)
 }
 
-enum NBTPathNode {
+enum NBTPathNode derives CanEqual {
   case MatchObject(name: String, pattern: CompoundTag)
   case AllElements()
   case MatchElement(pattern: CompoundTag)
@@ -16,11 +16,11 @@ enum NBTPathNode {
   case CompoundChild(name: String)
 }
 
-case class CompoundTag(value: Map[String, CompoundValue])
+case class CompoundTag(value: Map[String, CompoundValue]) derives CanEqual
 
 type CompoundPair = (String, CompoundValue)
 
-enum CompoundValue {
+enum CompoundValue derives CanEqual {
   case VCompound(value: CompoundTag)
   case VString(value: String)
   case VByte(value: Byte)
