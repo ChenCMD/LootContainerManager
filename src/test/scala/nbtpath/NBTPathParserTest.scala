@@ -14,28 +14,28 @@ class NBTPathParserTest extends AnyFunSpec {
   describe("NBTPathParser") {
     describe("RootNode") {
       it("Should parse succeed CompoundChild") {
-        val result = NBTPathParser.parseNBTPath("root")
+        val result = NBTPathParser.parse("root")
         val expect = NBTPath(NBTPathRootNode.CompoundChild("root"), List.empty)
 
         assert(result.exists(_ == expect))
       }
 
       it("Should parse succeed CompoundChild with single quoted") {
-        val result = NBTPathParser.parseNBTPath("'root'")
+        val result = NBTPathParser.parse("'root'")
         val expect = NBTPath(NBTPathRootNode.CompoundChild("root"), List.empty)
 
         assert(result.exists(_ == expect))
       }
 
       it("Should parse succeed CompoundChild with double quoted") {
-        val result = NBTPathParser.parseNBTPath("\"root\"")
+        val result = NBTPathParser.parse("\"root\"")
         val expect = NBTPath(NBTPathRootNode.CompoundChild("root"), List.empty)
 
         assert(result.exists(_ == expect))
       }
 
       it("Strings contains whitespace should successful to parse if quoted") {
-        val result = NBTPathParser.parseNBTPath("'contains space'")
+        val result = NBTPathParser.parse("'contains space'")
         val expect =
           NBTPath(NBTPathRootNode.CompoundChild("contains space"), List.empty)
 
@@ -43,13 +43,13 @@ class NBTPathParserTest extends AnyFunSpec {
       }
 
       it("Strings contains whitespace should fail to parse if not quoted") {
-        val result = NBTPathParser.parseNBTPath("contains space")
+        val result = NBTPathParser.parse("contains space")
 
         assert(result.isLeft)
       }
 
       it("Should parse succeed empty MatchRootObject") {
-        val result = NBTPathParser.parseNBTPath("{}")
+        val result = NBTPathParser.parse("{}")
         val expect = NBTPath(
           NBTPathRootNode.MatchRootObject(CompoundTag(Map.empty)),
           List.empty)
@@ -58,7 +58,7 @@ class NBTPathParserTest extends AnyFunSpec {
       }
 
       it("Should parse succeed empty MatchChildObject") {
-        val result = NBTPathParser.parseNBTPath("root{}")
+        val result = NBTPathParser.parse("root{}")
         val expect = NBTPath(
           NBTPathRootNode.MatchObject("root", CompoundTag(Map.empty)),
           List.empty)
@@ -67,19 +67,19 @@ class NBTPathParserTest extends AnyFunSpec {
       }
 
       it("Should parse failed indexed access") {
-        val result = NBTPathParser.parseNBTPath("[0]")
+        val result = NBTPathParser.parse("[0]")
 
         assert(result.isLeft)
       }
 
       it("Should parse failed foreach access") {
-        val result = NBTPathParser.parseNBTPath("[]")
+        val result = NBTPathParser.parse("[]")
 
         assert(result.isLeft)
       }
 
       it("Should parse success") {
-        val result = NBTPathParser.parseNBTPath(
+        val result = NBTPathParser.parse(
           "root{a:1,b:true}.hoge[2].fuga[].piyo{test:[I;0,1,2,3]}[{x:{},y:{z:[B;1b,2B,3b]}}]")
         val expect = NBTPath(
           NBTPathRootNode.MatchObject(
