@@ -29,11 +29,11 @@ object NBTPathParser extends RegexParsers {
     matchRootObjectNode | matchObjectNode | compoundChildNode
 
   private def matchRootObjectNode: Parser[NBTPathRootNode.MatchRootObject] =
-    compoundTag ^^ NBTPathRootNode.MatchRootObject.apply
+    compound ^^ NBTPathRootNode.MatchRootObject.apply
 
   private def matchObjectNode: Parser[NBTPathRootNode.MatchObject] = for {
     name <- quotedString() | unquotedString
-    pattern <- compoundTag
+    pattern <- compound
   } yield NBTPathRootNode.MatchObject(name, pattern)
 
   private def compoundChildNode: Parser[NBTPathRootNode.CompoundChild] =
@@ -49,7 +49,7 @@ object NBTPathParser extends RegexParsers {
     ".".? ~> "[]" ^^ (_ => NBTPathNode.AllElements())
 
   private def matchElementNode: Parser[NBTPathNode.MatchElement] =
-    ".".? ~> "[" ~> compoundTag <~ "]" ^^ NBTPathNode.MatchElement.apply
+    ".".? ~> "[" ~> compound <~ "]" ^^ NBTPathNode.MatchElement.apply
 
   private def indexedElementNode: Parser[NBTPathNode.IndexedElement] =
     ".".? ~> "[" ~> int <~ "]" ^^ (n => NBTPathNode.IndexedElement(n.value))
@@ -57,11 +57,13 @@ object NBTPathParser extends RegexParsers {
   private def nonRootCompoundChildNode: Parser[NBTPathNode.CompoundChild] =
     "." ~> compoundChildNode ^^ (n => NBTPathNode.CompoundChild(n.name))
 
-  private def compoundTag: Parser[CompoundTag] =
-    "{" ~> repsep(whiteSpace ~> compoundPair <~ whiteSpace, ",") <~ "}" ^^ (p =>
-      CompoundTag(p.toMap))
+  private def compound: Parser[NBTTagCompound] = for {
+    _ <- "{"
+    keyAndValue <- repsep(whiteSpace ~> compoundPair <~ whiteSpace, ",")
+    _ <- "}"
+  } yield NBTTagCompound(keyAndValue.toMap)
 
-  private def compoundPair: Parser[CompoundPair] = for {
+  private def compoundPair: Parser[(String, NBTTag)] = for {
     key <- quotedString() | unquotedString
     _ <- whiteSpace <~ ":" <~ whiteSpace
     value <-
@@ -90,9 +92,6 @@ object NBTPathParser extends RegexParsers {
   private def double: Parser[NBTTagDouble] =
     """-?(\d+\.)?\d+""".r <~ ("d" | "D").? ^^ (s => NBTTagDouble(s.toDouble))
 
-  private def compound: Parser[NBTTagCompound] =
-    compoundTag ^^ NBTTagCompound.apply
-
   private def list: Parser[NBTTagListType] = {
     compoundList | byteList | shortList | longList | floatList | intList | doubleList | stringList | nestedList
   }
@@ -119,7 +118,7 @@ object NBTPathParser extends RegexParsers {
     toListParser(double) ^^ (l => NBTTagDoubleList(l.map(_.value)))
 
   private def compoundList: Parser[NBTTagCompoundList] =
-    toListParser(compound) ^^ (l => NBTTagCompoundList(l.map(_.value)))
+    toListParser(compound) ^^ (l => NBTTagCompoundList(l))
 
   private def nestedList: Parser[NBTTagNestedList] =
     toListParser(list) ^^ NBTTagNestedList.apply

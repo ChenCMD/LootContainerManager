@@ -2,30 +2,28 @@ package com.github.chencmd.lootcontainerutil.nbtpath.definition
 
 case class NBTPath(root: NBTPathRootNode, nodes: List[NBTPathNode]) derives CanEqual
 
+import NBTTag.*
+
 enum NBTPathRootNode derives CanEqual {
-  case MatchRootObject(pattern: CompoundTag)
-  case MatchObject(name: String, pattern: CompoundTag)
+  case MatchRootObject(pattern: NBTTagCompound)
+  case MatchObject(name: String, pattern: NBTTagCompound)
   case CompoundChild(name: String)
 }
 
 enum NBTPathNode derives CanEqual {
-  case MatchObject(name: String, pattern: CompoundTag)
+  case MatchObject(name: String, pattern: NBTTagCompound)
   case AllElements()
-  case MatchElement(pattern: CompoundTag)
+  case MatchElement(pattern: NBTTagCompound)
   case IndexedElement(index: Int)
   case CompoundChild(name: String)
 }
-
-case class CompoundTag(value: Map[String, NBTTag]) derives CanEqual
-
-type CompoundPair = (String, NBTTag)
 
 private sealed trait NBTTagListTrait
 
 type NBTTagListType = NBTTag & NBTTagListTrait
 
 enum NBTTag derives CanEqual {
-  case NBTTagCompound(value: CompoundTag)
+  case NBTTagCompound(value: Map[String, NBTTag])
   case NBTTagString(value: String)
   case NBTTagByte(value: Byte)
   case NBTTagShort(value: Short)
@@ -33,7 +31,7 @@ enum NBTTag derives CanEqual {
   case NBTTagLong(value: Long)
   case NBTTagFloat(value: Float)
   case NBTTagDouble(value: Double)
-  case NBTTagCompoundList(value: List[CompoundTag]) extends NBTTag with NBTTagListTrait
+  case NBTTagCompoundList(value: List[NBTTagCompound]) extends NBTTag with NBTTagListTrait
   case NBTTagStringList(value: List[String]) extends NBTTag with NBTTagListTrait
   case NBTTagByteList(value: List[Byte]) extends NBTTag with NBTTagListTrait
   case NBTTagShortList(value: List[Short]) extends NBTTag with NBTTagListTrait
