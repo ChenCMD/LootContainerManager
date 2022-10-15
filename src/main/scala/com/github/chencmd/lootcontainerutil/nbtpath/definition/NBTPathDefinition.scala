@@ -16,25 +16,30 @@ enum NBTPathNode derives CanEqual {
   case CompoundChild(name: String)
 }
 
-case class CompoundTag(value: Map[String, CompoundValue]) derives CanEqual
+case class CompoundTag(value: Map[String, NBTTag]) derives CanEqual
 
-type CompoundPair = (String, CompoundValue)
+type CompoundPair = (String, NBTTag)
 
-enum CompoundValue derives CanEqual {
-  case VCompound(value: CompoundTag)
-  case VString(value: String)
-  case VByte(value: Byte)
-  case VShort(value: Short)
-  case VInt(value: Int)
-  case VLong(value: Long)
-  case VFloat(value: Float)
-  case VDouble(value: Double)
-  case VCompoundList(value: List[CompoundTag])
-  case VStringList(value: List[String])
-  case VByteList(value: List[Byte])
-  case VShortList(value: List[Short])
-  case VIntList(value: List[Int])
-  case VLongList(value: List[Long])
-  case VFloatList(value: List[Float])
-  case VDoubleList(value: List[Double])
+private sealed trait NBTTagListTrait
+
+type NBTTagListType = NBTTag & NBTTagListTrait
+
+enum NBTTag derives CanEqual {
+  case NBTTagCompound(value: CompoundTag)
+  case NBTTagString(value: String)
+  case NBTTagByte(value: Byte)
+  case NBTTagShort(value: Short)
+  case NBTTagInt(value: Int)
+  case NBTTagLong(value: Long)
+  case NBTTagFloat(value: Float)
+  case NBTTagDouble(value: Double)
+  case NBTTagCompoundList(value: List[CompoundTag]) extends NBTTag with NBTTagListTrait
+  case NBTTagStringList(value: List[String]) extends NBTTag with NBTTagListTrait
+  case NBTTagByteList(value: List[Byte]) extends NBTTag with NBTTagListTrait
+  case NBTTagShortList(value: List[Short]) extends NBTTag with NBTTagListTrait
+  case NBTTagIntList(value: List[Int]) extends NBTTag with NBTTagListTrait
+  case NBTTagLongList(value: List[Long]) extends NBTTag with NBTTagListTrait
+  case NBTTagFloatList(value: List[Float]) extends NBTTag with NBTTagListTrait
+  case NBTTagDoubleList(value: List[Double]) extends NBTTag with NBTTagListTrait
+  case NBTTagNestedList(value: List[NBTTagListTrait]) extends NBTTag with NBTTagListTrait
 }

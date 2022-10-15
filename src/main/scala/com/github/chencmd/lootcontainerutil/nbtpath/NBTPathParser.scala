@@ -7,6 +7,8 @@ import scala.util.parsing.combinator.RegexParsers
 
 object NBTPathParser extends RegexParsers {
 
+  import NBTTag.*
+
   override val whiteSpace: Regex = """\s*""".r
 
   override def skipWhitespace: Boolean = false
@@ -62,67 +64,75 @@ object NBTPathParser extends RegexParsers {
   private def compoundPair: Parser[CompoundPair] = for {
     key <- quotedString() | unquotedString
     _ <- whiteSpace <~ ":" <~ whiteSpace
-    value <- compound | byte | short | long | float | int | double | string
-      | compoundList | byteList | shortList | longList | floatList | intList | doubleList | stringList
+    value <-
+      compound | byte | short | long | float | int | double | string | list
   } yield (key, value)
 
-  private def string: Parser[CompoundValue.VString] =
-    (quotedString(true) | unquotedString) ^^ CompoundValue.VString.apply
+  private def string: Parser[NBTTagString] =
+    (quotedString(true) | unquotedString) ^^ NBTTagString.apply
 
-  private def byte: Parser[CompoundValue.VByte] =
+  private def byte: Parser[NBTTagByte] =
     (("""-?\d+""".r <~ ("b" | "B")) | ("false" ^^ (_ => "0")) | ("true" ^^ (_ =>
-      "1"))) ^^ (s => CompoundValue.VByte(s.toByte))
+      "1"))) ^^ (s => NBTTagByte(s.toByte))
 
-  private def short: Parser[CompoundValue.VShort] =
-    """-?\d""".r <~ ("s" | "S") ^^ (s => CompoundValue.VShort(s.toShort))
+  private def short: Parser[NBTTagShort] =
+    """-?\d""".r <~ ("s" | "S") ^^ (s => NBTTagShort(s.toShort))
 
-  private def int: Parser[CompoundValue.VInt] =
-    """-?\d+""".r ^^ (s => CompoundValue.VInt(s.toInt))
+  private def int: Parser[NBTTagInt] =
+    """-?\d+""".r ^^ (s => NBTTagInt(s.toInt))
 
-  private def long: Parser[CompoundValue.VLong] =
-    """-?\d+""".r <~ ("l" | "L") ^^ (s => CompoundValue.VLong(s.toLong))
+  private def long: Parser[NBTTagLong] =
+    """-?\d+""".r <~ ("l" | "L") ^^ (s => NBTTagLong(s.toLong))
 
-  private def float: Parser[CompoundValue.VFloat] =
-    """-?(\d+\.)?\d+""".r <~ ("f" | "F") ^^ (s =>
-      CompoundValue.VFloat(s.toFloat))
+  private def float: Parser[NBTTagFloat] =
+    """-?(\d+\.)?\d+""".r <~ ("f" | "F") ^^ (s => NBTTagFloat(s.toFloat))
 
-  private def double: Parser[CompoundValue.VDouble] =
-    """-?(\d+\.)?\d+""".r <~ ("d" | "D").? ^^ (s =>
-      CompoundValue.VDouble(s.toDouble))
+  private def double: Parser[NBTTagDouble] =
+    """-?(\d+\.)?\d+""".r <~ ("d" | "D").? ^^ (s => NBTTagDouble(s.toDouble))
 
-  private def compound: Parser[CompoundValue.VCompound] =
-    compoundTag ^^ CompoundValue.VCompound.apply
+  private def compound: Parser[NBTTagCompound] =
+    compoundTag ^^ NBTTagCompound.apply
 
-  private def stringList: Parser[CompoundValue.VStringList] =
-    toListParser(string) ^^ (l => CompoundValue.VStringList(l.map(_.value)))
+  private def list: Parser[NBTTagListType] = {
+    compoundList | byteList | shortList | longList | floatList | intList | doubleList | stringList | nestedList
+  }
 
-  private def byteList: Parser[CompoundValue.VByteList] =
-    toListParser(byte, "B") ^^ (l => CompoundValue.VByteList(l.map(_.value)))
+  private def stringList: Parser[NBTTagStringList] =
+    toListParser(string) ^^ (l => NBTTagStringList(l.map(_.value)))
 
-  private def shortList: Parser[CompoundValue.VShortList] =
-    toListParser(short) ^^ (l => CompoundValue.VShortList(l.map(_.value)))
+  private def byteList: Parser[NBTTagByteList] =
+    toListParser(byte, "B") ^^ (l => NBTTagByteList(l.map(_.value)))
 
-  private def intList: Parser[CompoundValue.VIntList] =
-    toListParser(int, "I") ^^ (l => CompoundValue.VIntList(l.map(_.value)))
+  private def shortList: Parser[NBTTagShortList] =
+    toListParser(short) ^^ (l => NBTTagShortList(l.map(_.value)))
 
-  private def longList: Parser[CompoundValue.VLongList] =
-    toListParser(long, "L") ^^ (l => CompoundValue.VLongList(l.map(_.value)))
+  private def intList: Parser[NBTTagIntList] =
+    toListParser(int, "I") ^^ (l => NBTTagIntList(l.map(_.value)))
 
-  private def floatList: Parser[CompoundValue.VFloatList] =
-    toListParser(float) ^^ (l => CompoundValue.VFloatList(l.map(_.value)))
+  private def longList: Parser[NBTTagLongList] =
+    toListParser(long, "L") ^^ (l => NBTTagLongList(l.map(_.value)))
 
-  private def doubleList: Parser[CompoundValue.VDoubleList] =
-    toListParser(double) ^^ (l => CompoundValue.VDoubleList(l.map(_.value)))
+  private def floatList: Parser[NBTTagFloatList] =
+    toListParser(float) ^^ (l => NBTTagFloatList(l.map(_.value)))
 
-  private def compoundList: Parser[CompoundValue.VCompoundList] =
-    toListParser(compound) ^^ (l => CompoundValue.VCompoundList(l.map(_.value)))
+  private def doubleList: Parser[NBTTagDoubleList] =
+    toListParser(double) ^^ (l => NBTTagDoubleList(l.map(_.value)))
+
+  private def compoundList: Parser[NBTTagCompoundList] =
+    toListParser(compound) ^^ (l => NBTTagCompoundList(l.map(_.value)))
+
+  private def nestedList: Parser[NBTTagNestedList] =
+    toListParser(list) ^^ NBTTagNestedList.apply
 
   private def toListParser[A](
       elemParser: Parser[A],
-      header: String = ""): Parser[List[A]] =
-    "[" ~> (if header != "" then s"$header;" else "").? ~> repsep(
-      whiteSpace ~> elemParser <~ whiteSpace,
-      ",") <~ "]"
+      header: String = ""
+  ): Parser[List[A]] = for {
+    _ <- "["
+    _ <- opt(if header != "" then s"$header;" else "")
+    list <- repsep(whiteSpace ~> elemParser <~ whiteSpace, ",")
+    _ <- "]"
+  } yield list
 
   private def unquotedString: Parser[String] = """[a-zA-Z0-9_\-.+]+""".r
 
