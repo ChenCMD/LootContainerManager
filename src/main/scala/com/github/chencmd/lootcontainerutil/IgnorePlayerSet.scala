@@ -4,8 +4,8 @@ import cats.implicits.*
 import cats.effect.kernel.Ref
 import cats.effect.unsafe.implicits.global
 import cats.effect.{IO, SyncIO}
-import com.github.chencmd.lootcontainerutil.generic.givens.PlayerCompare.given
-import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
+import generic.givens.PlayerCompare.given
+import minecraft.OnMinecraftThread
 import org.bukkit.entity.Player
 
 class IgnorePlayerSet(using mcThread: OnMinecraftThread[IO]) {

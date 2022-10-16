@@ -1,7 +1,7 @@
 package com.github.chencmd.lootcontainerutil
 
 import cats.effect.IO
-import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
+import minecraft.OnMinecraftThread
 import org.bukkit.Bukkit
 import org.bukkit.command.{Command, CommandSender}
 import org.bukkit.plugin.java.JavaPlugin

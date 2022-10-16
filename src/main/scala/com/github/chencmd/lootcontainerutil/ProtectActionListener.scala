@@ -2,8 +2,8 @@ package com.github.chencmd.lootcontainerutil
 
 import cats.effect.{IO, SyncIO}
 import cats.effect.unsafe.implicits.global
-import com.github.chencmd.lootcontainerutil.generic.extensions.CastOps.downcastOrNone
-import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
+import generic.extensions.CastOps.downcastOrNone
+import minecraft.OnMinecraftThread
 import org.bukkit.{Bukkit, ChatColor}
 import org.bukkit.block.Container
 import org.bukkit.entity.Player

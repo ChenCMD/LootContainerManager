@@ -3,11 +3,10 @@ package com.github.chencmd.lootcontainerutil
 import cats.data.OptionT
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
-import com.github.chencmd.lootcontainerutil.Prefix
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
-import com.github.chencmd.lootcontainerutil.generic.extensions.CastOps.downcastOrNone
-import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
+import generic.extensions.CastOps.downcastOrNone
+import minecraft.OnMinecraftThread
 import de.tr7zw.nbtapi.NbtApiException
 import org.bukkit.Bukkit
 
