@@ -1,4 +1,4 @@
-package com.github.chencmd.lootcontainerutil.nbtpath.definition
+package com.github.chencmd.lootcontainerutil.nbt.definition
 
 case class NBTPath(root: NBTPathRootNode, nodes: List[NBTPathNode]) derives CanEqual
 

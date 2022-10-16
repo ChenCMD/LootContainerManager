@@ -1,7 +1,7 @@
 package nbtpath
 
-import com.github.chencmd.lootcontainerutil.nbtpath.NBTPathParser
-import com.github.chencmd.lootcontainerutil.nbtpath.definition.{
+import com.github.chencmd.lootcontainerutil.nbt.NBTPathParser
+import com.github.chencmd.lootcontainerutil.nbt.definition.{
   NBTPath,
   NBTPathRootNode,
   NBTTag,

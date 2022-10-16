@@ -1,6 +1,6 @@
-package com.github.chencmd.lootcontainerutil.nbtpath
+package com.github.chencmd.lootcontainerutil.nbt
 
-import com.github.chencmd.lootcontainerutil.nbtpath.definition.*
+import com.github.chencmd.lootcontainerutil.nbt.definition.*
 
 import scala.util.matching.Regex
 import scala.util.parsing.combinator.RegexParsers
