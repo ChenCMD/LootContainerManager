@@ -1,13 +1,15 @@
 package nbtpath
 
 import com.github.chencmd.lootcontainerutil.nbt.NBTPathParser
+import com.github.chencmd.lootcontainerutil.nbt.definition.NBTTag.NBTTagIntList
 import com.github.chencmd.lootcontainerutil.nbt.definition.{
   NBTPath,
+  NBTPathNode,
   NBTPathRootNode,
-  NBTTag,
-  NBTPathNode
+  NBTTag
 }
 import org.scalatest.funspec.AnyFunSpec
+import scala.util.chaining.*
 
 class NBTPathParserTest extends AnyFunSpec {
   describe("NBTPathParser") {
@@ -79,21 +81,49 @@ class NBTPathParserTest extends AnyFunSpec {
         assert(result.isLeft)
       }
 
-      it("hoge") {
-        val result = NBTPathParser.parse("a{list:[[0,1,2,3],[a,b,c]]}")
+      it("Should parse") {
+        val result = NBTPathParser.parse("a{list:[0,1,2]}")
         val expect = NBTPath(
           NBTPathRootNode.MatchObject(
             "a",
             NBTTagCompound(
               Map(
-                (
-                  "list",
-                  NBTTag.NBTTagNestedList(
-                    List(
-                      NBTTagIntList(List(0, 1, 2, 3)),
-                      NBTTagStringList(List("a", "b", "c"))
-                    )))
-              ))
+                "list" -> NBTTagIntList(
+                  List(
+                    NBTTagInt(0),
+                    NBTTagInt(1),
+                    NBTTagInt(2)
+                  )
+                )
+              )
+            )
+          ),
+          List.empty
+        )
+
+        assert(result.exists(_ == expect))
+      }
+
+      it("Should parse NestedList") {
+        val result = NBTPathParser.parse("a{list:[[0,1,2]]}")
+        val expect = NBTPath(
+          NBTPathRootNode.MatchObject(
+            "a",
+            NBTTagCompound(
+              Map(
+                "list" -> NBTTagNestedList(
+                  List(
+                    NBTTagIntList(
+                      List(
+                        NBTTagInt(0),
+                        NBTTagInt(1),
+                        NBTTagInt(2)
+                      )
+                    )
+                  )
+                )
+              )
+            )
           ),
           List.empty
         )
@@ -102,47 +132,19 @@ class NBTPathParserTest extends AnyFunSpec {
       }
 
       it("Should parse success") {
-        val result = NBTPathParser.parse(
-          "root{a:1,b:true}.hoge[2].fuga[].piyo{test:[I;0,1,2,3]}[{x:{},y:{z:[B;1b,2B,3b]}}]")
+        val result = NBTPathParser.parse("root{b:[B;1b,2B,3b]}")
         val expect = NBTPath(
           NBTPathRootNode.MatchObject(
             "root",
             NBTTagCompound(
               Map(
-                ("a", NBTTag.NBTTagInt(1)),
-                ("b", NBTTag.NBTTagByte(1))
+                "b" -> NBTTagByteList(
+                  List(NBTTagByte(1), NBTTagByte(2), NBTTagByte(3))
+                )
               )
             )
           ),
-          List(
-            NBTPathNode.CompoundChild("hoge"),
-            NBTPathNode.IndexedElement(2),
-            NBTPathNode.CompoundChild("fuga"),
-            NBTPathNode.AllElements(),
-            NBTPathNode.MatchObject(
-              "piyo",
-              NBTTagCompound(
-                Map(
-                  ("test", NBTTagIntList(List(0, 1, 2, 3)))
-                )
-              )
-            ),
-            NBTPathNode.MatchElement(
-              NBTTagCompound(
-                Map(
-                  ("x", NBTTagCompound(Map.empty)),
-                  (
-                    "y",
-                    NBTTagCompound(
-                      Map(
-                        ("z", NBTTag.NBTTagByteList(List(1, 2, 3)))
-                      )
-                    )
-                  )
-                )
-              )
-            )
-          )
+          List.empty
         )
 
         assert(result.exists(_ == expect))
