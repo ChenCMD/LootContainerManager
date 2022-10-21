@@ -18,9 +18,9 @@ enum NBTPathNode derives CanEqual {
   case CompoundChild(name: String)
 }
 
-private sealed trait NBTTagListTrait
+private sealed trait NBTTagListTrait[+A <: NBTTag](val value: List[A])
 
-type NBTTagListType = NBTTag & NBTTagListTrait
+type NBTTagListType = NBTTag & NBTTagListTrait[NBTTag]
 
 enum NBTTag derives CanEqual {
   case NBTTagCompound(value: Map[String, NBTTag])
@@ -31,13 +31,31 @@ enum NBTTag derives CanEqual {
   case NBTTagLong(value: Long)
   case NBTTagFloat(value: Float)
   case NBTTagDouble(value: Double)
-  case NBTTagCompoundList(value: List[NBTTagCompound]) extends NBTTag with NBTTagListTrait
-  case NBTTagStringList(value: List[String]) extends NBTTag with NBTTagListTrait
-  case NBTTagByteList(value: List[Byte]) extends NBTTag with NBTTagListTrait
-  case NBTTagShortList(value: List[Short]) extends NBTTag with NBTTagListTrait
-  case NBTTagIntList(value: List[Int]) extends NBTTag with NBTTagListTrait
-  case NBTTagLongList(value: List[Long]) extends NBTTag with NBTTagListTrait
-  case NBTTagFloatList(value: List[Float]) extends NBTTag with NBTTagListTrait
-  case NBTTagDoubleList(value: List[Double]) extends NBTTag with NBTTagListTrait
-  case NBTTagNestedList(value: List[NBTTagListTrait]) extends NBTTag with NBTTagListTrait
+  case NBTTagCompoundList(override val value: List[NBTTagCompound])
+      extends NBTTag
+      with NBTTagListTrait[NBTTagCompound](value)
+  case NBTTagStringList(override val value: List[NBTTagString])
+      extends NBTTag
+      with NBTTagListTrait[NBTTagString](value)
+  case NBTTagByteList(override val value: List[NBTTagByte])
+      extends NBTTag
+      with NBTTagListTrait[NBTTagByte](value)
+  case NBTTagShortList(override val value: List[NBTTagShort])
+      extends NBTTag
+      with NBTTagListTrait[NBTTagShort](value)
+  case NBTTagIntList(override val value: List[NBTTagInt])
+      extends NBTTag
+      with NBTTagListTrait[NBTTagInt](value)
+  case NBTTagLongList(override val value: List[NBTTagLong])
+      extends NBTTag
+      with NBTTagListTrait[NBTTagLong](value)
+  case NBTTagFloatList(override val value: List[NBTTagFloat])
+      extends NBTTag
+      with NBTTagListTrait[NBTTagFloat](value)
+  case NBTTagDoubleList(override val value: List[NBTTagDouble])
+      extends NBTTag
+      with NBTTagListTrait[NBTTagDouble](value)
+  case NBTTagNestedList(override val value: List[NBTTagListType])
+      extends NBTTag
+      with NBTTagListTrait[NBTTagListType](value)
 }

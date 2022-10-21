@@ -97,28 +97,28 @@ object NBTPathParser extends RegexParsers {
   }
 
   private def stringList: Parser[NBTTagStringList] =
-    toListParser(string) ^^ (l => NBTTagStringList(l.map(_.value)))
+    toListParser(string) ^^ NBTTagStringList.apply
 
   private def byteList: Parser[NBTTagByteList] =
-    toListParser(byte, "B") ^^ (l => NBTTagByteList(l.map(_.value)))
+    toListParser(byte, "B") ^^ NBTTagByteList.apply
 
   private def shortList: Parser[NBTTagShortList] =
-    toListParser(short) ^^ (l => NBTTagShortList(l.map(_.value)))
+    toListParser(short) ^^ NBTTagShortList.apply
 
   private def intList: Parser[NBTTagIntList] =
-    toListParser(int, "I") ^^ (l => NBTTagIntList(l.map(_.value)))
+    toListParser(int, "I") ^^ NBTTagIntList.apply
 
   private def longList: Parser[NBTTagLongList] =
-    toListParser(long, "L") ^^ (l => NBTTagLongList(l.map(_.value)))
+    toListParser(long, "L") ^^ NBTTagLongList.apply
 
   private def floatList: Parser[NBTTagFloatList] =
-    toListParser(float) ^^ (l => NBTTagFloatList(l.map(_.value)))
+    toListParser(float) ^^ NBTTagFloatList.apply
 
   private def doubleList: Parser[NBTTagDoubleList] =
-    toListParser(double) ^^ (l => NBTTagDoubleList(l.map(_.value)))
+    toListParser(double) ^^ NBTTagDoubleList.apply
 
   private def compoundList: Parser[NBTTagCompoundList] =
-    toListParser(compound) ^^ (l => NBTTagCompoundList(l))
+    toListParser(compound) ^^ NBTTagCompoundList.apply
 
   private def nestedList: Parser[NBTTagNestedList] =
     toListParser(list) ^^ NBTTagNestedList.apply
