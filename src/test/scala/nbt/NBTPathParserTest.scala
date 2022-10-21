@@ -1,4 +1,4 @@
-package nbtpath
+package nbt
 
 import com.github.chencmd.lootcontainerutil.nbt.NBTPathParser
 import com.github.chencmd.lootcontainerutil.nbt.definition.NBTTag.NBTTagIntList
