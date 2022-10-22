@@ -13,7 +13,7 @@ case class NBTPath(root: NBTPathRootNode, nodes: List[NBTPathNode])
   def isAccessible(tag: NBTTagCompound): Boolean = {
     access(tag).nonEmpty
   }
-  
+
   def access(tag: NBTTagCompound): List[NBTTag] = {
     def advanceFromRoot(node: NBTPathRootNode) =
       StateT.modifyF[Option, NBTTag] { tag =>
@@ -147,4 +147,42 @@ enum NBTTag derives CanEqual {
   case NBTTagNestedList(override val value: List[NBTTagListType])
       extends NBTTag
       with NBTTagListTrait[NBTTagListType](value)
+
+  override def toString: String = {
+    def quote(str: String): String = str
+      .replace("\\", "\\\\")
+      .replace("\"", "\\\"")
+      .pipe(s => s"\"$s\"")
+    def listToString[A <: NBTTag](
+        list: List[A],
+        prefix: String = ""): String = {
+      val semicolonAddedPrefix = if prefix.nonEmpty then s"$prefix;" else ""
+      list
+        .map(_.toString)
+        .mkString(s"[$semicolonAddedPrefix", ",", "]")
+    }
+
+    this match {
+      case NBTTagCompound(value) =>
+        value
+          .map { case (k, v) => s"${quote(k)}:${v.toString}" }
+          .mkString("{", ",", "}")
+      case NBTTagString(value)       => quote(value)
+      case NBTTagByte(value)         => s"${value}b"
+      case NBTTagShort(value)        => s"${value}s"
+      case NBTTagInt(value)          => value.toString
+      case NBTTagLong(value)         => s"${value}L"
+      case NBTTagFloat(value)        => s"${"%.9f".format(value)}f"
+      case NBTTagDouble(value)       => s"${"%.9f".format(value)}d"
+      case NBTTagCompoundList(value) => listToString(value)
+      case NBTTagStringList(value)   => listToString(value)
+      case NBTTagByteList(value)     => listToString(value, "B")
+      case NBTTagShortList(value)    => listToString(value)
+      case NBTTagIntList(value)      => listToString(value, "I")
+      case NBTTagLongList(value)     => listToString(value, "L")
+      case NBTTagFloatList(value)    => listToString(value)
+      case NBTTagDoubleList(value)   => listToString(value)
+      case NBTTagNestedList(value)   => listToString(value)
+    }
+  }
 }
