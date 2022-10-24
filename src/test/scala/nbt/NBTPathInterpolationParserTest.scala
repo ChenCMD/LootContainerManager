@@ -4,7 +4,7 @@ import com.github.chencmd.lootcontainerutil.nbt.NBTPathInterpolationParser
 import com.github.chencmd.lootcontainerutil.nbt.definition.{NBTPath, NBTPathInterpolation, NBTPathRootNode}
 import org.scalatest.funspec.AnyFunSpec
 
-class NBTPathInterpolationTest extends AnyFunSpec {
+class NBTPathInterpolationParserTest extends AnyFunSpec {
   import NBTPathRootNode.*
   describe("NBTPathInterpolationParser") {
     it("parse no contain interpolation") {
