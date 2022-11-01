@@ -1,5 +1,7 @@
 package com.github.chencmd.lootcontainerutil.nbt.definition
 
+import java.text.{DecimalFormat, DecimalFormatSymbols}
+import java.util.Locale
 import scala.util.chaining.*
 
 private sealed trait NBTTagListTrait[+A <: NBTTag](val value: List[A])
@@ -59,6 +61,12 @@ enum NBTTag derives CanEqual {
         .mkString(s"[$semicolonAddedPrefix", ",", "]")
     }
 
+    def decimalFormat(number: Number, suffix: String): String = {
+      DecimalFormat("0", DecimalFormatSymbols.getInstance(Locale.ENGLISH))
+        .tap(_.setMaximumFractionDigits(340))
+        .pipe(_.format(number) + suffix)
+    }
+
     this match {
       case NBTTagCompound(value) =>
         value
@@ -69,8 +77,8 @@ enum NBTTag derives CanEqual {
       case NBTTagShort(value)        => s"${value}s"
       case NBTTagInt(value)          => value.toString
       case NBTTagLong(value)         => s"${value}L"
-      case NBTTagFloat(value)        => s"${"%.9f".format(value)}f"
-      case NBTTagDouble(value)       => s"${"%.9f".format(value)}d"
+      case NBTTagFloat(value)        => decimalFormat(value, "f")
+      case NBTTagDouble(value)       => decimalFormat(value, "d")
       case NBTTagCompoundList(value) => listToString(value)
       case NBTTagStringList(value)   => listToString(value)
       case NBTTagByteList(value)     => listToString(value, "B")
