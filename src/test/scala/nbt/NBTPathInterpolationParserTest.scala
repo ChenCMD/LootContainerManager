@@ -48,7 +48,7 @@ class NBTPathInterpolationParserTest extends AnyFunSpec {
     }
 
     it("parse contain escape percent char") {
-      val result = NBTPathInterpolationParser.parse("\\%%")
+      val result = NBTPathInterpolationParser.parse("""\%%""")
       val expect = Right(NBTPathInterpolation(
         "%%",
         List.empty
@@ -58,7 +58,7 @@ class NBTPathInterpolationParserTest extends AnyFunSpec {
     }
 
     it("parse escape percent char") {
-      val result = NBTPathInterpolationParser.parse("\\%\\%%%path%%\\%\\%")
+      val result = NBTPathInterpolationParser.parse("""\%\%%%path%%\%\%""")
       val expect = Right(NBTPathInterpolation(
         "%%",
         List(NBTPath(CompoundChild("path"), List.empty) -> "%%")
