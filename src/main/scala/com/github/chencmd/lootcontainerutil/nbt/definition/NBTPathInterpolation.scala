@@ -15,5 +15,5 @@ case class NBTPathInterpolation(
           data.map(_.toString).mkString(",") + str
         }
       }
-      .map(_.foldLeft(firstPart)(_ + _))
+      .map(restStrings => firstPart + restStrings.mkString)
 }
