@@ -63,7 +63,7 @@ class NBTTagTest extends AnyFunSpec {
       val expect =
         """"{'text':'{\\'text\\':\\'test\\'}','interpret':true},{\"text\":\"{\\\"text\\\":\\\"test\\\"}\",\"interpret\":true}""""
 
-      assertResult(result)(expect)
+      assert(result == expect)
     }
 
     it("toString from NBTTagByte") {
