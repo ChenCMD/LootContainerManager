@@ -13,7 +13,6 @@ object CanEquals {
   // Java Classes
   given CanEqual[UUID, UUID] = CanEqual.derived
 
-
   // Bukkit Classes
   given CanEqual[Material, Material] = CanEqual.derived
 
@@ -24,7 +23,6 @@ object CanEquals {
   given CanEqual[ItemStack, ItemStack] = CanEqual.derived
 
   given CanEqual[GameMode, GameMode] = CanEqual.derived
-
 
   // ProtocolLib Classes
   given CanEqual[ItemSlot, ItemSlot] = CanEqual.derived
