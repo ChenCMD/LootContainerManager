@@ -2,7 +2,7 @@ name := "LootContainerUtil"
 
 version := "0.1"
 
-scalaVersion := "3.2.1"
+scalaVersion := "3.3.1"
 
 resolvers ++= Seq(
   "spigot-repo" at "https://hub.spigotmc.org/nexus/content/repositories/snapshots",
@@ -12,10 +12,10 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "org.spigotmc" % "spigot-api" % "1.18.2-R0.1-SNAPSHOT",
-  "org.typelevel" %% "cats-core" % "2.8.0",
-  "org.typelevel" %% "cats-effect" % "3.3.14",
-  "org.scala-lang.modules" %% "scala-parser-combinators" % "2.1.1",
+  "org.spigotmc" % "spigot-api" % "1.20.4-R0.1-SNAPSHOT",
+  "org.typelevel" %% "cats-effect" % "3.4.8",
+  "org.typelevel" %% "cats-mtl" % "1.3.0",
+  "org.scala-lang.modules" %% "scala-parser-combinators" % "2.3.0",
   "org.scalatest" %% "scalatest" % "3.2.12" % Test
 )
 
@@ -26,11 +26,21 @@ excludeDependencies := Seq(
 )
 
 scalacOptions ++= Seq(
+  "-deprecation",
+  "-feature",
+  "-unchecked",
+  "-Ykind-projector:underscores",
+  "-no-indent",
+  "-Wunused:all",
+  "-source:future",
   "-language:strictEquality"
 )
 
 assembly / assemblyExcludedJars := {
-  (assembly / fullClasspath).value.filter(_.data.absolutePath.startsWith((baseDirectory.value / "localDependencies").absolutePath))
+  (assembly / fullClasspath).value.filter(
+    _.data.absolutePath.startsWith(
+      (baseDirectory.value / "localDependencies").absolutePath))
 }
 
-assembly / assemblyOutputPath := new File("C:\\Users\\scnme\\Chen_Data\\Minecraft\\minecraft Servers\\Plugin Server\\1.18.2\\plugins\\LootContainerUtil.jar")
+assembly / assemblyOutputPath := new File(
+  "C:\\Users\\scnme\\Chen_Data\\Minecraft\\minecraft Servers\\Plugin Server\\1.18.2\\plugins\\LootContainerUtil.jar")
