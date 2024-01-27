@@ -11,7 +11,7 @@ object NBTTagParser {
   def parse(input: String): Either[String, NBTTagCompound] = new NBTTagParser().parseNBTTag(input)
 }
 
-class NBTTagParser extends CommonParsers {
+open class NBTTagParser extends CommonParsers {
   override val whiteSpace: Regex = """\s*""".r
 
   override def skipWhitespace: Boolean = false
