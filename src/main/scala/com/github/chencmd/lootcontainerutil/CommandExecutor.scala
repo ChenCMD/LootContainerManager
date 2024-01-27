@@ -1,15 +1,16 @@
 package com.github.chencmd.lootcontainerutil
 
+import com.github.chencmd.lootcontainerutil.generic.extensions.CastOps.downcastOrNone
+import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
+
 import cats.data.OptionT
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
+
+import scala.concurrent.duration.*
+
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
-import generic.extensions.CastOps.downcastOrNone
-import minecraft.OnMinecraftThread
-import de.tr7zw.nbtapi.NbtApiException
-import org.bukkit.Bukkit
-import concurrent.duration.*
 
 class CommandExecutor(ignorePlayerSet: IgnorePlayerSet)(using mcThread: OnMinecraftThread[IO]) {
   def run(sender: CommandSender, args: Array[String]): Boolean = {
@@ -23,12 +24,14 @@ class CommandExecutor(ignorePlayerSet: IgnorePlayerSet)(using mcThread: OnMinecr
     }
 
     args(0) match {
-      case "ignore" =>
+      case "ignore"    =>
         val action = for {
           p <- OptionT.fromOption[IO](p)
           _ <- OptionT.liftF(ignorePlayerSet.registerIgnorePlayer(p))
           _ <- OptionT.liftF {
-            IO.sleep((8 * 20).second) *> ignorePlayerSet.removeIgnorePlayer(p).start
+            IO.sleep((8 * 20).second) *> ignorePlayerSet
+              .removeIgnorePlayer(p)
+              .start
           }
           _ <- OptionT.liftF(IO {
             p.sendMessage(s"${Prefix.SUCCESS}ルートコンテナーの保護を8秒間無効化しました。")
@@ -45,7 +48,7 @@ class CommandExecutor(ignorePlayerSet: IgnorePlayerSet)(using mcThread: OnMinecr
             .foreach(_.printStackTrace())
         )
         true
-      case _ => false
+      case _           => false
     }
   }
 }

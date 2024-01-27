@@ -1,10 +1,13 @@
 package com.github.chencmd.lootcontainerutil.nbt.definition
 
-import java.text.{DecimalFormat, DecimalFormatSymbols}
-import java.util.Locale
-import scala.util.chaining.*
-import cats.implicits.*
 import cats.data.NonEmptyList
+import cats.implicits.*
+
+import scala.util.chaining.*
+
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
+import java.util.Locale
 
 trait NBTTagListOps(value: Option[NBTNel]) {
   def toList: List[NBTTag] = value.map(_.values.toList).orEmpty
@@ -19,9 +22,9 @@ enum NBTTag(val value: Any) {
   case NBTTagFloat(override val value: Float)                  extends NBTTag(value)
   case NBTTagDouble(override val value: Double)                extends NBTTag(value)
   case NBTTagString(override val value: String)                extends NBTTag(value)
-  case NBTTagByteArray(override val value: Vector[NBTTagByte])    extends NBTTag(value)
-  case NBTTagIntArray(override val value: Vector[NBTTagInt])      extends NBTTag(value)
-  case NBTTagLongArray(override val value: Vector[NBTTagLong])    extends NBTTag(value)
+  case NBTTagByteArray(override val value: Vector[NBTTagByte]) extends NBTTag(value)
+  case NBTTagIntArray(override val value: Vector[NBTTagInt])   extends NBTTag(value)
+  case NBTTagLongArray(override val value: Vector[NBTTagLong]) extends NBTTag(value)
   case NBTTagList(override val value: Option[NBTNel])          extends NBTTag(value) with NBTTagListOps(value)
 
   def toSNBT: String = this match {

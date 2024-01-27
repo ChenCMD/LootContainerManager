@@ -1,27 +1,31 @@
 package com.github.chencmd.lootcontainerutil
 
-import cats.effect.{IO, SyncIO}
-import cats.effect.unsafe.implicits.global
-import generic.extensions.CastOps.downcastOrNone
-import minecraft.OnMinecraftThread
-import org.bukkit.{Bukkit, ChatColor}
-import org.bukkit.block.Container
-import org.bukkit.entity.Player
-import org.bukkit.event.inventory.InventoryOpenEvent
-import org.bukkit.event.world.LootGenerateEvent
-import org.bukkit.event.{EventHandler, Listener}
-import org.bukkit.loot.{LootTable, Lootable}
-import org.bukkit.metadata.{FixedMetadataValue, MetadataValue}
-import org.bukkit.plugin.java.JavaPlugin
-import scala.concurrent.duration.*
+import com.github.chencmd.lootcontainerutil.generic.extensions.CastOps.downcastOrNone
+import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
 
-import scala.util.chaining.*
+import cats.effect.IO
+import cats.effect.SyncIO
+import cats.effect.unsafe.implicits.global
+
+import scala.concurrent.duration.*
 import scala.jdk.CollectionConverters.*
+
+import org.bukkit.Bukkit
+import org.bukkit.ChatColor
 import org.bukkit.Sound
 import org.bukkit.SoundCategory
+import org.bukkit.block.Container
+import org.bukkit.entity.Player
+import org.bukkit.event.EventHandler
+import org.bukkit.event.Listener
+import org.bukkit.event.inventory.InventoryOpenEvent
+import org.bukkit.event.world.LootGenerateEvent
+import org.bukkit.loot.Lootable
+import org.bukkit.metadata.FixedMetadataValue
+import org.bukkit.plugin.java.JavaPlugin
 
 class ProtectActionListener(plugin: JavaPlugin, ignorePlayerSet: IgnorePlayerSet)(using
-    mcThread: OnMinecraftThread[IO]
+  mcThread: OnMinecraftThread[IO]
 ) extends Listener {
   Bukkit.getPluginManager.registerEvents(this, plugin)
 

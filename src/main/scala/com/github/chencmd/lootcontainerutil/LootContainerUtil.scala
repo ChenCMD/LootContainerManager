@@ -1,9 +1,13 @@
 package com.github.chencmd.lootcontainerutil
 
+import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
+
 import cats.effect.IO
-import minecraft.OnMinecraftThread
+import cats.effect.unsafe.implicits.global
+
 import org.bukkit.Bukkit
-import org.bukkit.command.{Command, CommandSender}
+import org.bukkit.command.Command
+import org.bukkit.command.CommandSender
 import org.bukkit.plugin.java.JavaPlugin
 
 class LootContainerUtil extends JavaPlugin {
@@ -21,10 +25,10 @@ class LootContainerUtil extends JavaPlugin {
   }
 
   override def onCommand(
-      sender: CommandSender,
-      command: Command,
-      label: String,
-      args: Array[String]
+    sender: CommandSender,
+    command: Command,
+    label: String,
+    args: Array[String]
   ): Boolean = {
     if (command.getName == "lcu") {
       cmdExecutor.get.run(sender, args)

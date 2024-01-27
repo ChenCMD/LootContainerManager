@@ -1,15 +1,15 @@
 package com.github.chencmd.lootcontainerutil.minecraft
 
+import cats.effect.SyncIO
 import cats.effect.kernel.Async
-import cats.effect.{IO, SyncIO}
-import cats.implicits.given
+import cats.implicits.*
 
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
 
 class OnMinecraftThread[F[_]: Async](taskOwner: JavaPlugin) {
-  private val errorHandler: PartialFunction[Throwable, F[Unit]] = { case e: Throwable =>
-    SyncIO(Bukkit.getLogger.finest(e.getStackTrace.mkString("\n"))).to[F]
+  private val errorHandler: PartialFunction[Throwable, F[Unit]] = {
+    case e: Throwable => SyncIO(Bukkit.getLogger.finest(e.getStackTrace.mkString("\n"))).to[F]
   }
 
   def run[A](syncAction: SyncIO[A]): F[A] = {
@@ -57,8 +57,8 @@ class OnMinecraftThread[F[_]: Async](taskOwner: JavaPlugin) {
   }
 
   private def makeRunnable[A](
-      syncAction: SyncIO[A],
-      callback: Either[Throwable, A] => Unit
+    syncAction: SyncIO[A],
+    callback: Either[Throwable, A] => Unit
   ): Runnable = { () =>
     callback {
       try Right(syncAction.unsafeRunSync())
