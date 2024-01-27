@@ -1,7 +1,7 @@
 package com.github.chencmd.lootcontainerutil.nbt
+import definition.{NBTTag, NBTNel}
 
-import definition.{NBTTag, NBTTagListType}
-
+import cats.data.NonEmptyList
 import scala.util.matching.Regex
 
 import NBTTag.*
@@ -19,25 +19,23 @@ class NBTTagParser extends CommonParsers {
     parseAll(compound, input) match {
       case Success(res, _) => Right(res)
       case Failure(err, _) => Left(err)
-      case Error(err, _) => Left(err)
+      case Error(err, _)   => Left(err)
     }
   }
 
   protected def compound: Parser[NBTTagCompound] = for {
-    _ <- "{"
+    _           <- "{"
     keyAndValue <- repsep(whiteSpace ~> compoundPair <~ whiteSpace, ",")
-    _ <- "}"
+    _           <- "}"
   } yield NBTTagCompound(keyAndValue.toMap)
 
   private def compoundPair: Parser[(String, NBTTag)] = for {
     key <- quotedString() | unquotedString
     _ <- whiteSpace ~ ":" ~ whiteSpace
-    value <-
-      compound | byte | short | long | float | int | double | string | list
+    value <- compound | byte | short | long | float | int | double | string | byteArray | intArray | longArray | list
   } yield (key, value)
 
-  private def string: Parser[NBTTagString] =
-    (quotedString(true) | unquotedString) ^^ NBTTagString.apply
+  private def string: Parser[NBTTagString] = (quotedString(true) | unquotedString) ^^ NBTTagString.apply
 
   private def byte: Parser[NBTTagByte] =
     (("""-?\d+""".r <~ ("b" | "B")) | ("false" ^^ (_ => "0")) | ("true" ^^ (_ =>
@@ -58,45 +56,52 @@ class NBTTagParser extends CommonParsers {
   private def double: Parser[NBTTagDouble] =
     """-?(\d+\.)?\d+""".r <~ ("d" | "D").? ^^ (s => NBTTagDouble(s.toDouble))
 
-  private def list: Parser[NBTTagListType] = {
-    compoundList | byteList | shortList | longList | floatList | intList | doubleList | stringList | nestedList
-  }
+  private def byteArray: Parser[NBTTagByteArray] =
+    toListParser(byte, "B") ^^ (l => NBTTagByteArray(l.toVector))
 
-  private def stringList: Parser[NBTTagStringList] =
-    toListParser(string) ^^ NBTTagStringList.apply
+  private def intArray: Parser[NBTTagIntArray] =
+    toListParser(int, "I") ^^ (l => NBTTagIntArray(l.toVector))
 
-  private def byteList: Parser[NBTTagByteList] =
-    toListParser(byte, "B") ^^ NBTTagByteList.apply
+  private def longArray: Parser[NBTTagLongArray] =
+    toListParser(long, "L") ^^ (l => NBTTagLongArray(l.toVector))
 
-  private def shortList: Parser[NBTTagShortList] =
-    toListParser(short) ^^ NBTTagShortList.apply
+  private def list: Parser[NBTTagList] = (
+    emptyList | compoundList | byteList | shortList | longList | floatList | intList | doubleList | stringList | nestedList
+  )
 
-  private def intList: Parser[NBTTagIntList] =
-    toListParser(int, "I") ^^ NBTTagIntList.apply
+  private def emptyList: Parser[NBTTagList] =
+    "[]" ^^ (_ => NBTTag.listFrom())
 
-  private def longList: Parser[NBTTagLongList] =
-    toListParser(long, "L") ^^ NBTTagLongList.apply
+  private def stringList: Parser[NBTTagList] =
+    toListParser(string) ^^ (a => NBTTag.listFrom(NBTNel.String(a)))
 
-  private def floatList: Parser[NBTTagFloatList] =
-    toListParser(float) ^^ NBTTagFloatList.apply
+  private def byteList: Parser[NBTTagList] =
+    toListParser(byte) ^^ (a => NBTTag.listFrom(NBTNel.Byte(a)))
 
-  private def doubleList: Parser[NBTTagDoubleList] =
-    toListParser(double) ^^ NBTTagDoubleList.apply
+  private def shortList: Parser[NBTTagList] =
+    toListParser(short) ^^ (a => NBTTag.listFrom(NBTNel.Short(a)))
 
-  private def compoundList: Parser[NBTTagCompoundList] =
-    toListParser(compound) ^^ NBTTagCompoundList.apply
+  private def intList: Parser[NBTTagList] =
+    toListParser(int) ^^ (a => NBTTag.listFrom(NBTNel.Int(a)))
 
-  private def nestedList: Parser[NBTTagNestedList] =
-    toListParser(list) ^^ NBTTagNestedList.apply
+  private def longList: Parser[NBTTagList] =
+    toListParser(long) ^^ (a => NBTTag.listFrom(NBTNel.Long(a)))
 
-  private def toListParser[A](
-      elemParser: Parser[A],
-      header: String = ""
-  ): Parser[List[A]] = for {
-    _ <- "["
-    _ <- opt(if header != "" then s"$header;" else "")
-    list <- repsep(whiteSpace ~> elemParser <~ whiteSpace, ",")
-    _ <- "]"
-  } yield list
+  private def floatList: Parser[NBTTagList] =
+    toListParser(float) ^^ (a => NBTTag.listFrom(NBTNel.Float(a)))
 
+  private def doubleList: Parser[NBTTagList] =
+    toListParser(double) ^^ (a => NBTTag.listFrom(NBTNel.Double(a)))
+
+  private def compoundList: Parser[NBTTagList] =
+    toListParser(compound) ^^ (a => NBTTag.listFrom(NBTNel.Compound(a)))
+
+  private def nestedList: Parser[NBTTagList] =
+    toListParser(list) ^^ (a => NBTTag.listFrom(NBTNel.List(a)))
+
+  private def toListParser[A](elemParser: Parser[A], header: String): Parser[List[A]] =
+    s"[$header;" ~> repsep(whiteSpace ~> elemParser <~ whiteSpace, ",") <~ "]"
+
+  private def toListParser[A](elemParser: Parser[A]): Parser[NonEmptyList[A]] =
+    "[" ~> rep1sep(whiteSpace ~> elemParser <~ whiteSpace, ",") <~ "]" ^^ NonEmptyList.fromListUnsafe
 }

@@ -1,15 +1,14 @@
 package com.github.chencmd.lootcontainerutil.nbt.definition
 
-import NBTTag.{NBTTagCompound, *}
+import NBTTag.*
 import cats.data.StateT
 import cats.arrow.FunctionK
-import cats.implicits.given
+import cats.implicits.*
 import com.github.chencmd.lootcontainerutil.generic.extensions.CastOps.downcastOrNone
 
 import scala.util.chaining.*
 
-case class NBTPath(root: NBTPathRootNode, nodes: List[NBTPathNode])
-    derives CanEqual {
+case class NBTPath(root: NBTPathRootNode, nodes: List[NBTPathNode]) {
   def isAccessible(tag: NBTTagCompound): Boolean = {
     access(tag).nonEmpty
   }
@@ -39,17 +38,21 @@ case class NBTPath(root: NBTPathRootNode, nodes: List[NBTPathNode])
             }.toList
           case NBTPathNode.AllElements() =>
             tag
-              .downcastOrNone[NBTTagListType]
-              .fold(List.empty)(_.value)
+                .downcastOrNone[NBTTagList]
+                .fold(List.empty)(_.toList)
           case NBTPathNode.MatchElement(pattern) =>
             tag
-              .downcastOrNone[NBTTagCompoundList]
-              .fold(List.empty)(_.value)
-              .filter(isMatch(_, pattern))
+              .downcastOrNone[NBTTagList]
+              .fold(List.empty)(_.toList)
+              .filter {
+                case compound: NBTTagCompound => isMatch(compound, pattern)
+                case _                        => false
+              }
+              .toList
           case NBTPathNode.IndexedElement(index) =>
             tag
-              .downcastOrNone[NBTTagListType]
-              .flatMap(_.value.pipe { list =>
+              .downcastOrNone[NBTTagList]
+              .flatMap(_.toList.pipe { list =>
                 list.lift(Math.floorMod(index, list.length))
               })
               .toList
@@ -59,7 +62,7 @@ case class NBTPath(root: NBTPathRootNode, nodes: List[NBTPathNode])
       }
 
     val optionToList =
-      FunctionK.lift[Option, List]([A] => (_: Option[A]).toList)
+      FunctionK.lift[Option, Seq]([A] => (_: Option[A]).toList)
     val state =
       advanceFromRoot(root)
         .mapK(optionToList) >> nodes
@@ -82,24 +85,30 @@ case class NBTPath(root: NBTPathRootNode, nodes: List[NBTPathNode])
             isMatch(tValue, eValue)
           }
         }
-      case (tList: NBTTagListType, eList: NBTTagListType) =>
-        eList.value.forall { eElement =>
-          tList.value.exists { tElement =>
+      case (tList: NBTTagList, eList: NBTTagList) => {
+        val eElems = eList.toList
+        val tElems = tList.toList
+        eElems.forall { eElement =>
+          tElems.exists { tElement =>
             isMatch(tElement, eElement)
           }
         }
-      case _ => target == expect
+      }
+      case (tList: NBTTagByteArray, eList: NBTTagByteArray) => tList.value.sameElements(eList.value)
+      case (tList: NBTTagIntArray, eList: NBTTagIntArray) => tList.value.sameElements(eList.value)
+      case (tList: NBTTagLongArray, eList: NBTTagLongArray) => tList.value.sameElements(eList.value)
+      case _ => target.value == expect.value
     }
   }
 }
 
-enum NBTPathRootNode derives CanEqual {
+enum NBTPathRootNode {
   case MatchRootObject(pattern: NBTTagCompound)
   case MatchObject(name: String, pattern: NBTTagCompound)
   case CompoundChild(name: String)
 }
 
-enum NBTPathNode derives CanEqual {
+enum NBTPathNode {
   case MatchObject(name: String, pattern: NBTTagCompound)
   case AllElements()
   case MatchElement(pattern: NBTTagCompound)
