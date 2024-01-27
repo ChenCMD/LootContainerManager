@@ -32,8 +32,7 @@ scalacOptions ++= Seq(
   "-Ykind-projector:underscores",
   "-no-indent",
   "-Wunused:all",
-  "-source:future",
-  "-language:strictEquality"
+  "-source:future"
 )
 
 assembly / assemblyExcludedJars := {

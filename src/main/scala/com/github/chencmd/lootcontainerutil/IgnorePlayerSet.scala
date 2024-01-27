@@ -4,7 +4,6 @@ import cats.implicits.*
 import cats.effect.kernel.Ref
 import cats.effect.unsafe.implicits.global
 import cats.effect.{IO, SyncIO}
-import generic.givens.PlayerCompare.given
 import minecraft.OnMinecraftThread
 import org.bukkit.entity.Player
 import concurrent.duration.*
@@ -18,6 +17,5 @@ class IgnorePlayerSet {
   def removeIgnorePlayer(p: Player): IO[Unit] =
     ignorePlayers.update(_ - p)
 
-  def isIgnorePlayer(p: Player): IO[Boolean] =
-    ignorePlayers.get.map(_.exists(_ === p))
+  def isIgnorePlayer(p: Player): IO[Boolean] = ignorePlayers.get.map(_.exists(_.getUniqueId() === p.getUniqueId()))
 }
