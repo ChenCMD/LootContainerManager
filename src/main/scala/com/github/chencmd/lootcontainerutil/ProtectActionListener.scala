@@ -10,7 +10,6 @@ import cats.effect.unsafe.implicits.global
 import scala.concurrent.duration.*
 import scala.jdk.CollectionConverters.*
 
-import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Sound
 import org.bukkit.SoundCategory
@@ -27,8 +26,6 @@ import org.bukkit.plugin.java.JavaPlugin
 class ProtectActionListener(plugin: JavaPlugin, ignorePlayerSet: IgnorePlayerSet)(using
   mcThread: OnMinecraftThread[IO]
 ) extends Listener {
-  Bukkit.getPluginManager.registerEvents(this, plugin)
-
   @EventHandler def onLootGenerate(e: LootGenerateEvent): Unit = {
     val pOpt = e.getEntity.downcastOrNone[Player]
 

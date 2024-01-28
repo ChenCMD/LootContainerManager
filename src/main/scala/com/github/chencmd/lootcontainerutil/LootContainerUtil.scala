@@ -2,38 +2,39 @@ package com.github.chencmd.lootcontainerutil
 
 import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
 
-import cats.effect.IO
-import cats.effect.unsafe.implicits.global
+import cats.implicits.*
 
 import org.bukkit.Bukkit
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
-import org.bukkit.plugin.java.JavaPlugin
+import cats.effect.kernel.Ref
+import cats.effect.kernel.Async
 
-class LootContainerUtil extends JavaPlugin {
-  var cmdExecutor: Option[CommandExecutor] = None
+class LootContainerUtil extends IOJavaPlugin {
+  val cmdExecutor: Ref[F, Option[CommandExecutor]] = Ref.unsafe(None)
 
-  override def onEnable(): Unit = {
-    Bukkit.getConsoleSender.sendMessage("LootContainerUtil enabled.")
-
-    given mcThread: OnMinecraftThread[IO] = new OnMinecraftThread[IO](this)
-
-    val ignorePlayerSet = new IgnorePlayerSet()
-
-    new ProtectActionListener(this, ignorePlayerSet)
-    cmdExecutor = Some(new CommandExecutor(ignorePlayerSet))
+  override def onEnableIO() = Effect.Sync {
+    given OnMinecraftThread[F] = new OnMinecraftThread[F](this)
+    val ignorePlayerSet        = new IgnorePlayerSet()
+    for {
+      _   <- Async[F].delay {
+        Bukkit.getPluginManager.registerEvents(new ProtectActionListener(this, ignorePlayerSet), this)
+      }
+      res <- cmdExecutor.set(Some(new CommandExecutor(ignorePlayerSet)))
+      _   <- Async[F].delay(Bukkit.getConsoleSender.sendMessage("LootContainerUtil enabled."))
+    } yield res
   }
 
-  override def onCommand(
+  override def onCommandIO(
     sender: CommandSender,
     command: Command,
     label: String,
     args: Array[String]
-  ): Boolean = {
+  ) = Effect.Sync {
     if (command.getName == "lcu") {
-      cmdExecutor.get.run(sender, args)
+      cmdExecutor.get.map(_.map(_.run(sender, args)).getOrElse(false))
     } else {
-      false
+      false.pure[F]
     }
   }
 }
