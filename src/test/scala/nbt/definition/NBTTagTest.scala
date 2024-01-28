@@ -6,25 +6,35 @@ import com.github.chencmd.lootcontainerutil.nbt.definition.NBTTag
 
 import cats.implicits.toTraverseOps
 
+import scala.language.adhocExtensions
+import com.github.chencmd.lootcontainerutil.nbt.definition.NBTNel
+import com.github.chencmd.lootcontainerutil.generic.extensions.MapExt.*
+import cats.data.NonEmptyList
+
 class NBTTagTest extends AnyFunSpec {
   import NBTTag.*
   describe("NBTTag") {
-    it("toString from NBTTagCompound") {
+    it("toSNBT from NBTTagCompound") {
       val tag = NBTTagCompound(
         Map(
           "a" -> NBTTagCompound(
             Map(
               "x" -> NBTTagByte(1),
               "y" -> NBTTagFloat(2)
-            )),
-          "b" -> NBTTagCompoundList(
-            List(
-              NBTTagCompound(Map("x" -> NBTTagInt(1))),
-              NBTTagCompound(Map("y" -> NBTTagInt(2), "z" -> NBTTagInt(3)))
-            ))
-        ))
+            )
+          ),
+          "b" -> NBTTag.listFrom(
+            NBTNel.Compound(
+              NonEmptyList.of(
+                NBTTagCompound(Map("x" -> NBTTagInt(1))),
+                NBTTagCompound(Map("y" -> NBTTagInt(2), "z" -> NBTTagInt(3)))
+              )
+            )
+          )
+        )
+      )
 
-      val result = tag.toString
+      val result  = tag.toSNBT
       val expects = SNBTStructure
         .VCompound(
           Map(
@@ -32,102 +42,116 @@ class NBTTagTest extends AnyFunSpec {
               Map(
                 "x" -> SNBTStructure.VLiteral("1b"),
                 "y" -> SNBTStructure.VLiteral("2f")
-              )),
-            "b" -> SNBTStructure.VList(List(
-              SNBTStructure.VCompound(Map(
-                "x" -> SNBTStructure.VLiteral("1")
-              )),
-              SNBTStructure.VCompound(Map(
-                "y" -> SNBTStructure.VLiteral("2"),
-                "z" -> SNBTStructure.VLiteral("3")
-              ))
-            ))
-          ))
+              )
+            ),
+            "b" -> SNBTStructure.VList(
+              List(
+                SNBTStructure.VCompound(
+                  Map(
+                    "x" -> SNBTStructure.VLiteral("1")
+                  )
+                ),
+                SNBTStructure.VCompound(
+                  Map(
+                    "y" -> SNBTStructure.VLiteral("2"),
+                    "z" -> SNBTStructure.VLiteral("3")
+                  )
+                )
+              )
+            )
+          )
+        )
         .allPossibleRepresentations
 
       assert(expects.contains(result))
     }
 
-    it("toString from NBTTagString") {
-      val tag = NBTTagString("test")
-      val result = tag.toString
+    it("toSNBT from NBTTagString") {
+      val tag    = NBTTagString("test")
+      val result = tag.toSNBT
       val expect = """"test""""
 
       assert(result == expect)
     }
 
-    it("toString from NBTTagString with contains quotation") {
-      val tag = NBTTagString(
-        """{'text':'{\'text\':\'test\'}','interpret':true},{"text":"{\"text\":\"test\"}","interpret":true}""")
-      val result = tag.toString
+    it("toSNBT from NBTTagString with contains quotation") {
+      val tag    = NBTTagString(
+        """{'text':'{\'text\':\'test\'}','interpret':true},{"text":"{\"text\":\"test\"}","interpret":true}"""
+      )
+      val result = tag.toSNBT
       val expect =
         """"{'text':'{\\'text\\':\\'test\\'}','interpret':true},{\"text\":\"{\\\"text\\\":\\\"test\\\"}\",\"interpret\":true}""""
 
       assert(result == expect)
     }
 
-    it("toString from NBTTagByte") {
-      val tag = NBTTagByte(1)
-      val result = tag.toString
+    it("toSNBT from NBTTagByte") {
+      val tag    = NBTTagByte(1)
+      val result = tag.toSNBT
       val expect = "1b"
 
       assert(result == expect)
     }
 
-    it("toString from NBTTagShort") {
-      val tag = NBTTagShort(1)
-      val result = tag.toString
+    it("toSNBT from NBTTagShort") {
+      val tag    = NBTTagShort(1)
+      val result = tag.toSNBT
       val expect = "1s"
 
       assert(result == expect)
     }
 
-    it("toString from NBTTagInt") {
-      val tag = NBTTagInt(1)
-      val result = tag.toString
+    it("toSNBT from NBTTagInt") {
+      val tag    = NBTTagInt(1)
+      val result = tag.toSNBT
       val expect = "1"
 
       assert(result == expect)
     }
 
-    it("toString from NBTTagLong") {
-      val tag = NBTTagLong(1)
-      val result = tag.toString
+    it("toSNBT from NBTTagLong") {
+      val tag    = NBTTagLong(1)
+      val result = tag.toSNBT
       val expect = "1L"
 
       assert(result == expect)
     }
 
-    it("toString from NBTTagFloat") {
-      val tag = NBTTagFloat(1.125)
-      val result = tag.toString
+    it("toSNBT from NBTTagFloat") {
+      val tag    = NBTTagFloat(1.125)
+      val result = tag.toSNBT
       val expect = "1.125f"
 
       assert(result == expect)
     }
 
-    it("toString from NBTTagDouble") {
-      val tag = NBTTagDouble(1.125)
-      val result = tag.toString
+    it("toSNBT from NBTTagDouble") {
+      val tag    = NBTTagDouble(1.125)
+      val result = tag.toSNBT
       val expect = "1.125d"
 
       assert(result == expect)
     }
 
-    it("toString from NBTTagCompoundList") {
-      val tag = NBTTagCompoundList(
-        List(
-          NBTTagCompound(
-            Map(
-              "y" -> NBTTagInt(2),
-              "x" -> NBTTagInt(1)
-            )),
-          NBTTagCompound(
-            Map(
-              "a" -> NBTTagString("b")
-            ))
-        ))
-      val result = tag.toString
+    it("toSNBT from NBTTagCompoundList") {
+      val tag     = NBTTag.listFrom(
+        NBTNel.Compound(
+          NonEmptyList.of(
+            NBTTagCompound(
+              Map(
+                "y" -> NBTTagInt(2),
+                "x" -> NBTTagInt(1)
+              )
+            ),
+            NBTTagCompound(
+              Map(
+                "a" -> NBTTagString("b")
+              )
+            )
+          )
+        )
+      )
+      val result  = tag.toSNBT
       val expects = SNBTStructure
         .VList(
           List(
@@ -135,118 +159,124 @@ class NBTTagTest extends AnyFunSpec {
               Map(
                 "x" -> SNBTStructure.VLiteral("1"),
                 "y" -> SNBTStructure.VLiteral("2")
-              )),
+              )
+            ),
             SNBTStructure.VCompound(
               Map(
                 "a" -> SNBTStructure.VLiteral(""""b"""")
-              ))
-          ))
+              )
+            )
+          )
+        )
         .allPossibleRepresentations
 
       assert(expects.contains(result))
     }
 
-    it("toString from NBTTagStringList") {
-      val tag = NBTTagStringList(List(
-        NBTTagString("a"),
-        NBTTagString("b"),
-        NBTTagString("c")
-      ))
-      val result = tag.toString
+    it("toSNBT from NBTTagStringList") {
+      val tag    = NBTTag.listFrom(
+        NBTNel.String(NonEmptyList.of("a", "b", "c").map(NBTTagString.apply))
+      )
+      val result = tag.toSNBT
       val expect = """["a","b","c"]"""
 
       assert(result == expect)
     }
 
-    it("toString from NBTTagByteList") {
-      val tag = NBTTagByteList(List(
-        NBTTagByte(1),
-        NBTTagByte(2),
-        NBTTagByte(3)
-      ))
-      val result = tag.toString
+    it("toSNBT from NBTTagByteArray") {
+      val tag    = NBTTag.NBTTagByteArray(Vector(1, 2, 3).map(i => NBTTagByte(i.toByte)))
+      val result = tag.toSNBT
       val expect = """[B;1b,2b,3b]"""
 
       assert(result == expect)
     }
 
-    it("toString from NBTTagShortList") {
-      val tag = NBTTagShortList(List(
-        NBTTagShort(1),
-        NBTTagShort(2),
-        NBTTagShort(3)
-      ))
-      val result = tag.toString
-      val expect = """[1s,2s,3s]"""
-
-      assert(result == expect)
-    }
-
-    it("toString from NBTTagIntList") {
-      val tag = NBTTagIntList(List(
-        NBTTagInt(1),
-        NBTTagInt(2),
-        NBTTagInt(3)
-      ))
-      val result = tag.toString
+    it("toSNBT from NBTTagIntArray") {
+      val tag    = NBTTag.NBTTagIntArray(Vector(1, 2, 3).map(NBTTagInt.apply))
+      val result = tag.toSNBT
       val expect = """[I;1,2,3]"""
 
       assert(result == expect)
     }
 
-    it("toString from NBTTagLongList") {
-      val tag = NBTTagLongList(List(
-        NBTTagLong(1),
-        NBTTagLong(2),
-        NBTTagLong(3)
-      ))
-      val result = tag.toString
+    it("toSNBT from NBTTagLongArray") {
+      val tag    = NBTTag.NBTTagLongArray(Vector(1, 2, 3).map(i => NBTTagLong(i.toLong)))
+      val result = tag.toSNBT
       val expect = """[L;1L,2L,3L]"""
 
       assert(result == expect)
     }
 
-    it("toString from NBTTagFloatList") {
-      val tag = NBTTagFloatList(List(
-        NBTTagFloat(1),
-        NBTTagFloat(2),
-        NBTTagFloat(3)
-      ))
-      val result = tag.toString
+    it("toSNBT from NBTTagByteList") {
+      val tag    = NBTTag.listFrom(NBTNel.Byte(NonEmptyList.of(1, 2, 3).map(i => NBTTagByte(i.toByte))))
+      val result = tag.toSNBT
+      val expect = """[1b,2b,3b]"""
+
+      assert(result == expect)
+    }
+
+    it("toSNBT from NBTTagShortList") {
+      val tag    = NBTTag.listFrom(
+        NBTNel.Short(NonEmptyList.of(1, 2, 3).map(i => NBTTagShort(i.toShort)))
+      )
+      val result = tag.toSNBT
+      val expect = """[1s,2s,3s]"""
+
+      assert(result == expect)
+    }
+
+    it("toSNBT from NBTTagIntList") {
+      val tag    = NBTTag.listFrom(
+        NBTNel.Int(NonEmptyList.of(1, 2, 3).map(NBTTagInt.apply))
+      )
+      val result = tag.toSNBT
+      val expect = """[1,2,3]"""
+
+      assert(result == expect)
+    }
+
+    it("toSNBT from NBTTagLongList") {
+      val tag    = NBTTag.listFrom(NBTNel.Long(NonEmptyList.of(1, 2, 3).map(i => NBTTagLong(i.toLong))))
+      val result = tag.toSNBT
+      val expect = """[1L,2L,3L]"""
+
+      assert(result == expect)
+    }
+
+    it("toSNBT from NBTTagFloatList") {
+      val tag    = NBTTag.listFrom(NBTNel.Float(NonEmptyList.of(1, 2, 3).map(i => NBTTagFloat(i.toFloat))))
+      val result = tag.toSNBT
       val expect = """[1f,2f,3f]"""
 
       assert(result == expect)
     }
 
-    it("toString from NBTTagDoubleList") {
-      val tag = NBTTagDoubleList(List(
-        NBTTagDouble(1),
-        NBTTagDouble(2),
-        NBTTagDouble(3)
-      ))
-      val result = tag.toString
+    it("toSNBT from NBTTagDoubleList") {
+      val tag    = NBTTag.listFrom(NBTNel.Double(NonEmptyList.of(1, 2, 3).map(i => NBTTagDouble(i.toDouble))))
+      val result = tag.toSNBT
       val expect = """[1d,2d,3d]"""
 
       assert(result == expect)
     }
 
-    it("toString from NBTTagNestedList") {
-      val tag = NBTTagNestedList(List(
-        NBTTagByteList(List(
-          NBTTagByte(1),
-          NBTTagByte(2)
-        )),
-        NBTTagIntList(List(
-          NBTTagInt(3),
-          NBTTagInt(4)
-        )),
-        NBTTagLongList(List(
-          NBTTagLong(5),
-          NBTTagLong(6)
-        ))
-      ))
-      val result = tag.toString
-      val expect = """[[B;1b,2b],[I;3,4],[L;5L,6L]]"""
+    it("toSNBT from NBTTagNestedList") {
+      val tag    = NBTTag.listFrom(
+        NBTNel.List(
+          NonEmptyList.of(
+            NBTTag.listFrom(),
+            NBTTag.listFrom(NBTNel.Byte(NonEmptyList.of(1, 2).map(i => NBTTagByte(i.toByte)))),
+            NBTTag.listFrom(NBTNel.Short(NonEmptyList.of(3, 4).map(i => NBTTagShort(i.toShort)))),
+            NBTTag.listFrom(NBTNel.Int(NonEmptyList.of(5, 6).map(NBTTagInt.apply))),
+            NBTTag.listFrom(NBTNel.Long(NonEmptyList.of(7, 8).map(i => NBTTagLong(i.toLong)))),
+            NBTTagByteArray(Vector(9, 10).map(i => NBTTagByte(i.toByte))),
+            NBTTagIntArray(Vector(11, 12).map(NBTTagInt.apply)),
+            NBTTagLongArray(Vector(13, 14).map(i => NBTTagLong(i.toLong))),
+            NBTTag.listFrom(NBTNel.Compound(NonEmptyList.of(NBTTagCompound(Map("x" -> NBTTagInt(15))))))
+          )
+        )
+      )
+      val result = tag.toSNBT
+      val expect = """[[],[1b,2b],[3s,4s],[5,6],[7L,8L],[B;9b,10b],[I;11,12],[L;13L,14L],[{"x":15}]]"""
 
       assert(result == expect)
     }
@@ -263,20 +293,15 @@ class NBTTagTest extends AnyFunSpec {
     // List[List[A]] => (List[A] => A) => List[A]
     def allPossibleRepresentations: List[String] = {
       this match {
-        case VLiteral(repr) => List(repr)
-        case VLiteralList(prefix, items) =>
-          List(items.mkString(s"[$prefix", ",", "]"))
-        case VList(items) =>
-          items
+        case VLiteral(repr)              => List(repr)
+        case VLiteralList(prefix, items) => List(items.mkString(s"[$prefix", ",", "]"))
+        case VList(items)                => items
             .traverse(_.allPossibleRepresentations)
             .map(_.mkString("[", ",", "]"))
-        case VCompound(map) =>
-          map
-            .mapValues(_.allPossibleRepresentations)
+        case VCompound(map)              => map
+            .mapV(_.allPossibleRepresentations)
             .toList
-            .traverse { case (key, reprs) =>
-              reprs.map(repr => s""""$key":$repr""")
-            }
+            .traverse { case (key, reprs) => reprs.map(repr => s""""$key":$repr""") }
             .flatMap(_.permutations.toList)
             .map(_.mkString("{", ",", "}"))
       }

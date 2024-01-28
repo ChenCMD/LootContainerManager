@@ -4,6 +4,8 @@ import com.github.chencmd.lootcontainerutil.nbt.NBTPathInterpolationParser
 import com.github.chencmd.lootcontainerutil.nbt.definition.{NBTPath, NBTPathInterpolation, NBTPathRootNode}
 import org.scalatest.funspec.AnyFunSpec
 
+import scala.language.adhocExtensions
+
 class NBTPathInterpolationParserTest extends AnyFunSpec {
   import NBTPathRootNode.*
   describe("NBTPathInterpolationParser") {
@@ -29,7 +31,7 @@ class NBTPathInterpolationParserTest extends AnyFunSpec {
       val expect = NBTPathInterpolation(
         "text",
         List(
-          NBTPath(CompoundChild("path"), List.empty) -> "text2",
+          NBTPath(CompoundChild("path"), List.empty)  -> "text2",
           NBTPath(CompoundChild("path2"), List.empty) -> "text3"
         )
       )

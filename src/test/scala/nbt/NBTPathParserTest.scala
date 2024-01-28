@@ -1,15 +1,12 @@
 package nbt
 
 import com.github.chencmd.lootcontainerutil.nbt.NBTPathParser
-import com.github.chencmd.lootcontainerutil.nbt.definition.NBTTag.NBTTagIntList
-import com.github.chencmd.lootcontainerutil.nbt.definition.{
-  NBTPath,
-  NBTPathNode,
-  NBTPathRootNode,
-  NBTTag
-}
+import com.github.chencmd.lootcontainerutil.nbt.definition.{NBTPath, NBTPathRootNode, NBTTag}
 import org.scalatest.funspec.AnyFunSpec
-import scala.util.chaining.*
+
+import scala.language.adhocExtensions
+import cats.data.NonEmptyList
+import com.github.chencmd.lootcontainerutil.nbt.definition.NBTNel
 
 class NBTPathParserTest extends AnyFunSpec {
   describe("NBTPathParser") {
@@ -38,8 +35,7 @@ class NBTPathParserTest extends AnyFunSpec {
 
       it("Strings contains whitespace should successful to parse if quoted") {
         val result = NBTPathParser.parse("'contains space'")
-        val expect =
-          NBTPath(NBTPathRootNode.CompoundChild("contains space"), List.empty)
+        val expect = NBTPath(NBTPathRootNode.CompoundChild("contains space"), List.empty)
 
         assert(result.exists(_ == expect))
       }
@@ -62,9 +58,7 @@ class NBTPathParserTest extends AnyFunSpec {
 
       it("Should parse succeed empty MatchChildObject") {
         val result = NBTPathParser.parse("root{}")
-        val expect = NBTPath(
-          NBTPathRootNode.MatchObject("root", NBTTagCompound(Map.empty)),
-          List.empty)
+        val expect = NBTPath(NBTPathRootNode.MatchObject("root", NBTTagCompound(Map.empty)), List.empty)
 
         assert(result.exists(_ == expect))
       }
@@ -88,13 +82,7 @@ class NBTPathParserTest extends AnyFunSpec {
             "a",
             NBTTagCompound(
               Map(
-                "list" -> NBTTagIntList(
-                  List(
-                    NBTTagInt(0),
-                    NBTTagInt(1),
-                    NBTTagInt(2)
-                  )
-                )
+                "list" -> NBTTag.listFrom(NBTNel.Int(NonEmptyList.of(0, 1, 2).map(NBTTagInt.apply)))
               )
             )
           ),
@@ -111,14 +99,10 @@ class NBTPathParserTest extends AnyFunSpec {
             "a",
             NBTTagCompound(
               Map(
-                "list" -> NBTTagNestedList(
-                  List(
-                    NBTTagIntList(
-                      List(
-                        NBTTagInt(0),
-                        NBTTagInt(1),
-                        NBTTagInt(2)
-                      )
+                "list" -> NBTTag.listFrom(
+                  NBTNel.List(
+                    NonEmptyList.of(
+                      NBTTag.listFrom(NBTNel.Int(NonEmptyList.of(0, 1, 2).map(NBTTagInt.apply)))
                     )
                   )
                 )
@@ -137,11 +121,7 @@ class NBTPathParserTest extends AnyFunSpec {
           NBTPathRootNode.MatchObject(
             "root",
             NBTTagCompound(
-              Map(
-                "b" -> NBTTagByteList(
-                  List(NBTTagByte(1), NBTTagByte(2), NBTTagByte(3))
-                )
-              )
+              Map("b" -> NBTTagByteArray(Vector(1, 2, 3).map(i => NBTTagByte(i.toByte))))
             )
           ),
           List.empty
