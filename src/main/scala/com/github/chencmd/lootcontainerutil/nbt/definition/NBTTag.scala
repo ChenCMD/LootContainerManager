@@ -29,7 +29,7 @@ enum NBTTag(val value: Any) {
 
   def toSNBT: String = this match {
     case NBTTagCompound(value)  => value
-        .map { case (k, v) => s"${quote(k)}:${v.toString}" }
+        .map { case (k, v) => s"${quote(k)}:${v.toSNBT}" }
         .mkString("{", ",", "}")
     case NBTTagByte(value)      => s"${value}b"
     case NBTTagShort(value)     => s"${value}s"
@@ -105,7 +105,8 @@ object NBTNel       {
   case class LongArray(val values: NonEmptyList[NBTTagLong])    extends NBTNel {
     type Elems = NBTTagLong
   }
-  case class List(val values: NonEmptyList[NBTTagList])         extends NBTNel {
-    type Elems = NBTTagList
+  case class List(val values: NonEmptyList[NBTTagList | NBTTagByteArray | NBTTagIntArray | NBTTagLongArray])
+      extends NBTNel {
+    type Elems = NBTTagList | NBTTagByteArray | NBTTagIntArray | NBTTagLongArray
   }
 }

@@ -10,7 +10,7 @@ case class NBTPathInterpolation(firstPart: String, pairRest: List[(NBTPath, Stri
       case (path: NBTPath, str) =>
         val data = path.access(compound)
         Option.when(data.nonEmpty) {
-          data.map(_.toString).mkString(",") + str
+          data.map(_.toSNBT).mkString(",") + str
         }
     }
     .map(restStrings => firstPart + restStrings.mkString)
