@@ -14,23 +14,18 @@ class OnMinecraftThread[F[_]: Async](taskOwner: JavaPlugin) {
 
   def run[A](syncAction: SyncIO[A]): F[A] = {
     val tryRunning: SyncIO[Option[A]] = SyncIO {
-      if Bukkit.getServer.isPrimaryThread then Some(syncAction.unsafeRunSync())
-      else None
+      Option.when(Bukkit.getServer.isPrimaryThread)(syncAction.unsafeRunSync())
     }
 
-    Async[F].flatMap(tryRunning.to[F]) { opt =>
-      val whenEmpty = Async[F].async[A] { callback =>
-        Async[F].delay {
-          val runnable = makeRunnable(syncAction, callback)
-
-          val task = Bukkit.getScheduler.runTask(taskOwner, runnable)
-
-          Some(Async[F].delay {
-            task.cancel()
-          })
+    tryRunning.to[F].flatMap {
+      case Some(value) => value.pure[F]
+      case None        => Async[F].async[A] { callback =>
+          Async[F].delay {
+            val runnable = makeRunnable(syncAction, callback)
+            val task     = Bukkit.getScheduler.runTask(taskOwner, runnable)
+            Async[F].delay(task.cancel()).some
+          }
         }
-      }
-      opt.fold[F[A]](whenEmpty)(Async[F].pure)
     }
   }
 
@@ -42,12 +37,8 @@ class OnMinecraftThread[F[_]: Async](taskOwner: JavaPlugin) {
     Async[F].async { callback =>
       Async[F].delay {
         val runnable = makeRunnable(syncAction, callback)
-
-        val task = Bukkit.getScheduler.runTaskLater(taskOwner, runnable, delay)
-
-        Some(Async[F].delay {
-          task.cancel()
-        })
+        val task     = Bukkit.getScheduler.runTaskLater(taskOwner, runnable, delay)
+        Async[F].delay(task.cancel()).some
       }
     }
   }
