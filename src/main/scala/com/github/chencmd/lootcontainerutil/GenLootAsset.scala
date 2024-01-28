@@ -21,7 +21,7 @@ object GenLootAsset {
       val vec = loc.getDirection.normalize().multiply(1d / acc)
 
       (0 until (5 * acc)).view
-        .map(i => loc.clone() add (vec.clone() multiply i))
+        .map(i => loc.clone().add(vec.clone().multiply(i)))
         .map(p.getWorld.getBlockAt)
         .flatMap(_.getState.downcastOrNone[Container])
         .headOption
