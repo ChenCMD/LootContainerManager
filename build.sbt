@@ -2,7 +2,7 @@ name := "LootContainerUtil"
 
 version := "0.1"
 
-scalaVersion := "3.4.0-RC3"
+scalaVersion := "3.3.2-RC3"
 
 resolvers ++= Seq(
   "spigot-repo" at "https://hub.spigotmc.org/nexus/content/repositories/snapshots",
@@ -38,7 +38,7 @@ scalacOptions ++= Seq(
   "-source:future"
 )
 
-assembly / assemblyExcludedJars := {
+assembly / assemblyExcludedJars  := {
   (assembly / fullClasspath).value.filter(
     _.data.absolutePath.startsWith((baseDirectory.value / "localDependencies").absolutePath)
   )
