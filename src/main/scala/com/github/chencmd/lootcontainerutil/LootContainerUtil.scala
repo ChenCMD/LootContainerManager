@@ -1,40 +1,50 @@
 package com.github.chencmd.lootcontainerutil
 
+import com.github.chencmd.lootcontainerutil.feature.containerprotection.ProtectActionListener
 import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
+import com.github.chencmd.lootcontainerutil.generic.EitherTIOExtra.*
+import com.github.chencmd.lootcontainerutil.utils.CommonErrorHandler.given
 
+import cats.data.EitherT
+import cats.effect.IO
+import cats.effect.kernel.Async
+import cats.effect.kernel.Ref
+import cats.effect.unsafe.implicits.global
 import cats.implicits.*
 
 import org.bukkit.Bukkit
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
-import cats.effect.kernel.Ref
-import cats.effect.kernel.Async
+import org.bukkit.plugin.java.JavaPlugin
+import cats.data.NonEmptyChain
 
-class LootContainerUtil extends IOJavaPlugin {
-  val cmdExecutor: Ref[F, Option[CommandExecutor]] = Ref.unsafe(None)
+class LootContainerUtil extends JavaPlugin {
+  type F = EitherT[IO, String, _]
 
-  override def onEnableIO() = Effect.Sync {
+  val cmdExecutor: Ref[F, Option[CommandExecutor[F]]] = Ref.unsafe(None)
+
+  override def onEnable() = {
     given OnMinecraftThread[F] = new OnMinecraftThread[F](this)
-    val ignorePlayerSet        = new IgnorePlayerSet()
-    for {
-      _   <- Async[F].delay {
-        Bukkit.getPluginManager.registerEvents(new ProtectActionListener(this, ignorePlayerSet), this)
-      }
-      res <- cmdExecutor.set(Some(new CommandExecutor(ignorePlayerSet)))
-      _   <- Async[F].delay(Bukkit.getConsoleSender.sendMessage("LootContainerUtil enabled."))
-    } yield res
+
+    val program = for {
+      _ <- Async[F].delay(Bukkit.getPluginManager.registerEvents(new ProtectActionListener, this))
+      _ <- cmdExecutor.set(Some(new CommandExecutor))
+      _ <- Async[F].delay(Bukkit.getConsoleSender.sendMessage("LootContainerUtil enabled."))
+    } yield ()
+    program.catchError.unsafeRunSync()
   }
 
-  override def onCommandIO(
+  override def onCommand(
     sender: CommandSender,
     command: Command,
     label: String,
     args: Array[String]
-  ) = Effect.Sync {
+  ): Boolean = {
     if (command.getName == "lcu") {
-      cmdExecutor.get.map(_.map(_.run(sender, args)).getOrElse(false))
+      cmdExecutor.get.flatMap(_.traverse_(_.run(sender, args.toList))).catchError.unsafeRunAndForget()
+      true
     } else {
-      false.pure[F]
+      false
     }
   }
 }

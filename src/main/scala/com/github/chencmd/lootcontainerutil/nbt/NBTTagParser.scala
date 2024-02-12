@@ -33,7 +33,7 @@ open class NBTTagParser extends CommonParsers {
   private def compoundPair: Parser[(String, NBTTag)] = for {
     key   <- quotedString() | unquotedString
     _     <- whiteSpace ~ ":" ~ whiteSpace
-    value <- compound | byte | short | long | float | int | double | string | byteArray | intArray | longArray | list
+    value <- compound | byte | short | long | float | double | int | string | byteArray | intArray | longArray | list
   } yield (key, value)
 
   private def string: Parser[NBTTagString] = (quotedString(true) | unquotedString) ^^ NBTTagString.apply
@@ -41,15 +41,19 @@ open class NBTTagParser extends CommonParsers {
   private def byte: Parser[NBTTagByte] =
     (("""-?\d+""".r <~ ("b" | "B")) | ("false" ^^ (_ => "0")) | ("true" ^^ (_ => "1"))) ^^ (s => NBTTagByte(s.toByte))
 
-  private def short: Parser[NBTTagShort] = """-?\d""".r <~ ("s" | "S") ^^ (s => NBTTagShort(s.toShort))
+  private def short: Parser[NBTTagShort] = """-?\d+""".r <~ ("s" | "S") ^^ (s => NBTTagShort(s.toShort))
 
   private def int: Parser[NBTTagInt] = """-?\d+""".r ^^ (s => NBTTagInt(s.toInt))
 
   private def long: Parser[NBTTagLong] = """-?\d+""".r <~ ("l" | "L") ^^ (s => NBTTagLong(s.toLong))
 
-  private def float: Parser[NBTTagFloat] = """-?(\d+\.)?\d+""".r <~ ("f" | "F") ^^ (s => NBTTagFloat(s.toFloat))
+  private def float: Parser[NBTTagFloat] = """-?(\d*\.)?\d+""".r <~ ("f" | "F") ^^ (s => NBTTagFloat(s.toFloat))
 
-  private def double: Parser[NBTTagDouble] = """-?(\d+\.)?\d+""".r <~ ("d" | "D").? ^^ (s => NBTTagDouble(s.toDouble))
+  private def double: Parser[NBTTagDouble] =
+    (
+      ("""-?(\d*\.)?\d+""".r <~ ("d" | "D"))
+        | """-?\d*\.\d+""".r
+    ) ^^ (s => NBTTagDouble(s.toDouble))
 
   private def byteArray: Parser[NBTTagByteArray] = toListParser(byte, "B") ^^ (l => NBTTagByteArray(l.toVector))
 

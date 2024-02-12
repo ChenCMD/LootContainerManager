@@ -7,11 +7,11 @@ import cats.implicits.*
 case class NBTPathInterpolation(firstPart: String, pairRest: List[(NBTPath, String)]) {
   def interpolate(compound: NBTTagCompound): Option[String] = pairRest
     .traverse {
-      case (path: NBTPath, str) =>
-        val data = path.access(compound)
-        Option.when(data.nonEmpty) {
-          data.map(_.toSNBT).mkString(",") + str
-        }
+      case (path, str) => path
+          .access(compound)
+          .pure[Option]
+          .filter(_.nonEmpty)
+          .map(_.map(_.toSNBT).mkString(",") + str)
     }
-    .map(restStrings => firstPart + restStrings.mkString)
+    .map(firstPart + _.mkString)
 }

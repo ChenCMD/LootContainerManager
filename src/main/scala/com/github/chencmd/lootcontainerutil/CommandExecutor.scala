@@ -4,51 +4,32 @@ import com.github.chencmd.lootcontainerutil.generic.extensions.CastOps.downcastO
 import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
 
 import cats.data.OptionT
-import cats.effect.IO
-import cats.effect.unsafe.implicits.global
-
-import scala.concurrent.duration.*
+import cats.effect.kernel.Async
+import cats.implicits.*
 
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
+import cats.mtl.Raise
+import com.github.chencmd.lootcontainerutil.feature.genasset.GenLootAsset
 
-class CommandExecutor(ignorePlayerSet: IgnorePlayerSet)(using mcThread: OnMinecraftThread[IO]) {
-  def run(sender: CommandSender, args: Array[String]): Boolean = {
+class CommandExecutor[F[_]: Async](using mcThread: OnMinecraftThread[F], config: Config) {
+  def run(sender: CommandSender, args: List[String])(using R: Raise[F, String]): F[Unit] = {
     val p: Option[Player] = sender.downcastOrNone[Player]
 
     if (args.length == 0) {
-      return IO
-        .whenA(sender.isOp)(IO(sender.sendMessage(s"${Prefix.ERROR}/lcu <ignore>")))
+      return Async[F]
+        .whenA(sender.isOp)(Async[F].delay(sender.sendMessage(s"${Prefix.ERROR}/lcu <gen_asset>")))
         .as(sender.isOp)
-        .unsafeRunSync()
     }
 
     args(0) match {
-      case "ignore"    =>
-        val action = for {
-          p <- OptionT.fromOption[IO](p)
-          _ <- OptionT.liftF(ignorePlayerSet.registerIgnorePlayer(p))
-          _ <- OptionT.liftF {
-            IO.sleep((8 * 20).second) *> ignorePlayerSet
-              .removeIgnorePlayer(p)
-              .start
-          }
-          _ <- OptionT.liftF(IO {
-            p.sendMessage(s"${Prefix.SUCCESS}ルートコンテナーの保護を8秒間無効化しました。")
-          })
-        } yield true
-        action.value.map(_.getOrElse(false)).unsafeRunSync()
       case "gen_asset" =>
         val action = for {
-          p <- OptionT.fromOption[IO](p)
+          p <- OptionT.fromOption[F](p)
           _ <- OptionT.liftF(GenLootAsset.generateLootAsset(p))
         } yield ()
-        action.value.unsafeRunAsync(
-          _.left.toOption
-            .foreach(_.printStackTrace())
-        )
-        true
-      case _           => false
+        action.value.void
+      case _           => Async[F].unit
     }
   }
 }
