@@ -9,3 +9,5 @@ itemMap:
   #   to: ["preset:artifact_shard/%%tag.TSB.ShardRarity%%", "%%Count%%", ""]
   - from: "{}"
     to: ["%%id%%", "%%Count%%", "%%tag%%"]
+spreadsheetId: ""
+googleCredentialsPath: "client_secret.json"

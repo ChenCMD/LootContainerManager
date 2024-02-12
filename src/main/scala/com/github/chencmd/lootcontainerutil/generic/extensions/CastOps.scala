@@ -4,6 +4,7 @@ import cats.implicits.*
 import scala.reflect.ClassTag
 import scala.reflect.TypeTest
 import cats.mtl.Raise
+import cats.data.EitherNec
 import cats.Applicative
 
 object CastOps {
@@ -37,6 +38,11 @@ object CastOps {
     def downcastOrLeft[B](using tt: TypeTest[A, B], ctA: ClassTag[A], ctB: ClassTag[B]): Either[String, A & B] = value match {
       case tt(b) => Right(b)
       case _     => Left(s"Downcast failed: $ctA to $ctB")
+    }
+
+    def downcastOrLeftNec[B](using tt: TypeTest[A, B], ctA: ClassTag[A], ctB: ClassTag[B]): EitherNec[String, A & B] = value match {
+      case tt(b) => Right(b)
+      case _     => Either.leftNec(s"Downcast failed: $ctA to $ctB")
     }
 
     def downcastOrElse[B] = new DowncastOrElseOps[A, B](value)
