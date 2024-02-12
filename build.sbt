@@ -44,6 +44,9 @@ assembly / assemblyExcludedJars := {
   )
 }
 
-assembly / assemblyOutputPath   := new File(
-  "C:\\Users\\scnme\\Chen_Data\\Minecraft\\minecraft Servers\\Plugin Server\\1.18.2\\plugins\\LootContainerUtil.jar"
-)
+assembly / assemblyMergeStrategy := {
+  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+  case x                             => MergeStrategy.deduplicate
+}
+
+assembly / assemblyOutputPath    := new File(baseDirectory.value, "dist/LootContainerUtil.jar")
