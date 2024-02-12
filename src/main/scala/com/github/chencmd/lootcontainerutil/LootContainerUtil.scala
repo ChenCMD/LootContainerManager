@@ -26,11 +26,15 @@ class LootContainerUtil extends JavaPlugin {
   override def onEnable() = {
     given OnMinecraftThread[F] = new OnMinecraftThread[F](this)
 
-    val program = for {
-      _ <- Async[F].delay(Bukkit.getPluginManager.registerEvents(new ProtectActionListener, this))
-      _ <- cmdExecutor.set(Some(new CommandExecutor))
-      _ <- Async[F].delay(Bukkit.getConsoleSender.sendMessage("LootContainerUtil enabled."))
-    } yield ()
+    val program = EitherT[IO, NonEmptyChain[String], Config](Config.tryRead(this)).flatMap { cfg =>
+      val program = for {
+        _ <- Async[F].delay(Bukkit.getPluginManager.registerEvents(new ProtectActionListener, this))
+        given Config = cfg
+        _ <- cmdExecutor.set(Some(new CommandExecutor))
+        _ <- Async[F].delay(Bukkit.getConsoleSender.sendMessage("LootContainerUtil enabled."))
+      } yield ()
+      program.leftMap(NonEmptyChain.one)
+    }
     program.catchError.unsafeRunSync()
   }
 

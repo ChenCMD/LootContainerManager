@@ -1,0 +1,11 @@
+itemMap:
+  # - from: "tag.TSB.ID"
+  #   to: ["artifact:%%tag.TSB.ID%%", "1", ""]
+  # - from: "tag.TSB{Currency:1b}"
+  #   to: ["preset:currency/", "%%Count%%", ""]
+  # - from: "tag.TSB{Currency:2b}"
+  #   to: ["preset:currency/high", "%%Count%%", ""]
+  # - from: "tag.TSB.ShardRarity"
+  #   to: ["preset:artifact_shard/%%tag.TSB.ShardRarity%%", "%%Count%%", ""]
+  - from: "{}"
+    to: ["%%id%%", "%%Count%%", "%%tag%%"]
