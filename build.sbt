@@ -13,11 +13,9 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "org.spigotmc"            % "spigot-api"                 % "1.20.4-R0.1-SNAPSHOT",
-  "com.google.api-client"   % "google-api-client"          % "2.3.0",
-  "com.google.oauth-client" % "google-oauth-client-jetty"  % "1.35.0",
-  "com.google.apis"         % "google-api-services-sheets" % "v4-rev612-1.25.0",
   "org.typelevel"          %% "cats-effect"                % "3.4.8",
   "org.typelevel"          %% "cats-mtl"                   % "1.3.0",
+  "org.scalikejdbc"        %% "scalikejdbc"                % "4.2.1",
   "org.scala-lang.modules" %% "scala-parser-combinators"   % "2.3.0",
   "org.scalatest"          %% "scalatest"                  % "3.2.12" % Test
 )
