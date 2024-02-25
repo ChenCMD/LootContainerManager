@@ -1,13 +1,47 @@
-itemMap:
-  # - from: "tag.TSB.ID"
-  #   to: ["artifact:%%tag.TSB.ID%%", "1", ""]
-  # - from: "tag.TSB{Currency:1b}"
-  #   to: ["preset:currency/", "%%Count%%", ""]
-  # - from: "tag.TSB{Currency:2b}"
-  #   to: ["preset:currency/high", "%%Count%%", ""]
-  # - from: "tag.TSB.ShardRarity"
-  #   to: ["preset:artifact_shard/%%tag.TSB.ShardRarity%%", "%%Count%%", ""]
-  - from: "{}"
-    to: ["%%id%%", "%%Count%%", "%%tag%%"]
-spreadsheetId: ""
-googleCredentialsPath: "client_secret.json"
+genAsset:
+  toItemIdentifier:
+    - from: "tag.TSB.ID"
+      to: "artifact:%%tag.TSB.ID%%"
+    - from: "tag.TSB{Currency:1b}"
+      to: "preset:currency/"
+    - from: "tag.TSB{Currency:2b}"
+      to: "preset:currency/high"
+    - from: "tag.TSB.ShardRarity"
+      to: "preset:artifact_shard/%%tag.TSB.ShardRarity%%"
+    - from: "{}"
+      to: "%%id%%"
+  toItem:
+    - predicate: "^artifact:"
+      generationType: "mcfunction"
+      id: "api:artifact/box/from_id"
+      functionOutput:
+        target: "block"
+        world: "minecraft:overworld"
+        x: 10000
+        y: 0
+        z: 10000
+        path: "Items[0]"
+      preCommands:
+      - "data modify storage api: Argument.ID set value %%id%%"
+    - predicate: "^preset:currency/$"
+      generationType: "loot_table"
+      id: "currency/"
+    - predicate: "^preset:currency/high$"
+      generationType: "loot_table"
+      id: "currency/high"
+    - predicate: "^preset:sacred_shard/lv-1$"
+      generationType: "loot_table"
+      id: "sacred_shard/lv-1"
+    - predicate: "^preset:sacred_shard/lv-2$"
+      generationType: "loot_table"
+      id: "sacred_shard/lv-2"
+    - predicate: "^preset:sacred_shard/lv-3$"
+      generationType: "loot_table"
+      id: "sacred_shard/lv-3"
+    - predicate: "^preset:sacred_shard/lv-4$"
+      generationType: "loot_table"
+      id: "sacred_shard/lv-4"
+db:
+  url: ""
+  user: ""
+  password: ""

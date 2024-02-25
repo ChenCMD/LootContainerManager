@@ -18,5 +18,6 @@ case class Location(w: World, x: Double, y: Double, z: Double) {
 }
 
 object Location {
-  def apply(l: BukkitLocation): Location = Location(l.getWorld, l.getX, l.getY, l.getZ)
+  def apply(w: World, x: Double, y: Double, z: Double): Location = new Location(w, x, y, z)
+  def apply(l: BukkitLocation): Location                         = new Location(l.getWorld, l.getX, l.getY, l.getZ)
 }
