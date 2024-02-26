@@ -20,6 +20,7 @@ import scala.reflect.ClassTag
 import scala.reflect.TypeTest
 import com.github.chencmd.lootcontainerutil.nbt.definition.NBTPath
 import com.github.chencmd.lootcontainerutil.feature.genasset.ItemMapper
+import java.io.File
 
 object Config {
   private def apply(genAsset: GenAssetConfig, db: DBConfig): Config = new Config(genAsset, db)
@@ -119,11 +120,16 @@ object Config {
   }
 
   def getDBConfig(config: FileConfiguration): EitherNec[String, DBConfig] = for {
-    db                    <- Option(config.getConfigurationSection("db")).toRightNec("missing key 'db'")
+    db       <- Option(config.getConfigurationSection("db")).toRightNec("missing key 'db'")
     dbConfig <- (
       Option(db.getString("url")).toRightNec("missing key 'db.url'"),
       Option(db.getString("user")).toRightNec("missing key 'db.user'"),
-      Option(db.getString("password")).toRightNec("missing key 'db.password'")
+      Option(db.getString("password")).toRightNec("missing key 'db.password'"),
+      Option(db.getString("filePath"))
+        .toRight("missing key 'db.filePath'")
+        .filterOrElse(_.endsWith(".db"), "db.filePath must have extension '.db'")
+        .map(new File(_))
+        .toEitherNec
     ).parMapN(DBConfig.apply)
   } yield dbConfig
 

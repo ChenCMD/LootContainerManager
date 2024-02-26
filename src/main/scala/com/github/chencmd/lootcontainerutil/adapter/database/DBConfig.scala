@@ -1,3 +1,5 @@
 package com.github.chencmd.lootcontainerutil.adapter.database
 
-case class DBConfig(url: String, user: String, password: String)
+import java.io.File
+
+case class DBConfig(url: String, user: String, password: String, filePath: File)
