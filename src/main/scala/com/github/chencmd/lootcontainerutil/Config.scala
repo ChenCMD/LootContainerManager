@@ -20,6 +20,7 @@ import scala.reflect.ClassTag
 import scala.reflect.TypeTest
 import com.github.chencmd.lootcontainerutil.nbt.definition.NBTPath
 import com.github.chencmd.lootcontainerutil.feature.genasset.ItemMapper
+import java.io.File
 
 object Config {
   private def apply(genAsset: GenAssetConfig, db: DBConfig): Config = new Config(genAsset, db)
@@ -55,9 +56,9 @@ object Config {
         target match {
           case "block"   => (
               getValueWithType[String](fnOut, p)("world"),
-              getValueWithType[Double](fnOut, p)("x"),
-              getValueWithType[Double](fnOut, p)("y"),
-              getValueWithType[Double](fnOut, p)("z")
+              getValueWithType[Int](fnOut, p)("x"),
+              getValueWithType[Int](fnOut, p)("y"),
+              getValueWithType[Int](fnOut, p)("z")
             ).parMapN(DataSource.Block(_, _, _, _, path))
           case "storage" => getValueWithType[String](fnOut, p)("namespace").map(DataSource.Storage(_, path))
           case "entity"  => getValueWithType[String](fnOut, p)("id").map(DataSource.Entity(_, path))
@@ -119,11 +120,16 @@ object Config {
   }
 
   def getDBConfig(config: FileConfiguration): EitherNec[String, DBConfig] = for {
-    db                    <- Option(config.getConfigurationSection("db")).toRightNec("missing key 'db'")
+    db       <- Option(config.getConfigurationSection("db")).toRightNec("missing key 'db'")
     dbConfig <- (
       Option(db.getString("url")).toRightNec("missing key 'db.url'"),
       Option(db.getString("user")).toRightNec("missing key 'db.user'"),
-      Option(db.getString("password")).toRightNec("missing key 'db.password'")
+      Option(db.getString("password")).toRightNec("missing key 'db.password'"),
+      Option(db.getString("filePath"))
+        .toRight("missing key 'db.filePath'")
+        .filterOrElse(_.endsWith(".db"), "db.filePath must have extension '.db'")
+        .map(new File(_))
+        .toEitherNec
     ).parMapN(DBConfig.apply)
   } yield dbConfig
 

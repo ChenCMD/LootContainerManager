@@ -1,5 +1,8 @@
 package com.github.chencmd.lootcontainerutil
 
+import com.github.chencmd.lootcontainerutil.adapter.TSBAdapter
+import com.github.chencmd.lootcontainerutil.adapter.database.LootAssetRepository
+import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAssetPersistenceInstr
 import com.github.chencmd.lootcontainerutil.feature.containerprotection.ProtectActionListener
 import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
 import com.github.chencmd.lootcontainerutil.generic.EitherTIOExtra.*
@@ -17,6 +20,10 @@ import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.plugin.java.JavaPlugin
 import cats.data.NonEmptyChain
+import doobie.*
+import doobie.implicits.*
+import com.github.chencmd.lootcontainerutil.feature.genasset.ItemConversionInstr
+import com.github.chencmd.lootcontainerutil.adapter.database.SQLite
 
 class LootContainerUtil extends JavaPlugin {
   type F = EitherT[IO, String, _]
@@ -29,7 +36,9 @@ class LootContainerUtil extends JavaPlugin {
     val program = EitherT[IO, NonEmptyChain[String], Config](Config.tryRead(this)).flatMap { cfg =>
       val program = for {
         _ <- Async[F].delay(Bukkit.getPluginManager.registerEvents(new ProtectActionListener, this))
-        given Config = cfg
+        transactor = SQLite.createTransactor[F](cfg.db)
+        given LootAssetPersistenceInstr[F] = LootAssetRepository.createInstr[F](transactor)
+        given ItemConversionInstr[F] = TSBAdapter.createInstr[F](this, cfg)
         _ <- cmdExecutor.set(Some(new CommandExecutor))
         _ <- Async[F].delay(Bukkit.getConsoleSender.sendMessage("LootContainerUtil enabled."))
       } yield ()
