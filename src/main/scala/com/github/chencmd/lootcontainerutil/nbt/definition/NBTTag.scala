@@ -2,14 +2,14 @@ package com.github.chencmd.lootcontainerutil.nbt.definition
 
 import cats.data.NonEmptyList
 import cats.implicits.*
+import cats.kernel.Monoid
+import cats.kernel.Semigroup
 
 import scala.util.chaining.*
 
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.Locale
-import cats.kernel.Monoid
-import cats.kernel.Semigroup
 
 trait NBTTagListOps(value: Option[NBTNel]) {
   def toList: List[NBTTag] = value.map(_.values.toList).orEmpty

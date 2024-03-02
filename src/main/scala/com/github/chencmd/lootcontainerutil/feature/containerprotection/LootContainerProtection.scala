@@ -1,4 +1,5 @@
 package com.github.chencmd.lootcontainerutil.feature.containerprotection
+
 import com.github.chencmd.lootcontainerutil.Prefix
 import com.github.chencmd.lootcontainerutil.generic.OptionTExtra
 import com.github.chencmd.lootcontainerutil.generic.SyncContinuation

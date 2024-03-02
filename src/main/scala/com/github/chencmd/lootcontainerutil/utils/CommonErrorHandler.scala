@@ -1,11 +1,13 @@
 package com.github.chencmd.lootcontainerutil.utils
 
 import com.github.chencmd.lootcontainerutil.generic.EitherTIOExtra.ErrorProcessor
-import cats.effect.IO
-import org.bukkit.Bukkit
+
 import cats.data.NonEmptyChain
-import cats.implicits.*
+import cats.effect.IO
 import cats.effect.SyncIO
+import cats.implicits.*
+
+import org.bukkit.Bukkit
 
 object CommonErrorHandler {
   given ErrorProcessor[String, Unit] with                {
