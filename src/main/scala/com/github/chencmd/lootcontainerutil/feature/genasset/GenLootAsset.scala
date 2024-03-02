@@ -4,8 +4,9 @@ import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAss
 import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAssetItem
 import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAssetPersistenceInstr
 import com.github.chencmd.lootcontainerutil.generic.extensions.CastOps.*
-import com.github.chencmd.lootcontainerutil.minecraft.Location
+import com.github.chencmd.lootcontainerutil.minecraft.BlockLocation
 import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
+import com.github.chencmd.lootcontainerutil.minecraft.Position
 import com.github.chencmd.lootcontainerutil.minecraft.Vector
 
 import cats.effect.SyncIO
@@ -35,14 +36,14 @@ object GenLootAsset {
         val vec           = Vector.of(loc.getDirection).normalize * (1d / acc)
         val w             = p.getWorld
         val targetedBlock = (0 until (5 * acc)).view
-          .map(i => w.getBlockAt((Location.of(loc) + vec * i).toBukkit))
+          .map(i => w.getBlockAt((Position.of(loc) + vec * i).toBukkit))
           .flatMap(_.getState.downcastOrNone[Container])
           .headOption
 
         targetedBlock.map { block =>
           val data = block.getBlockData()
           (
-            Location.ofInt(block.getLocation()),
+            BlockLocation.of(block.getLocation()),
             block.getType().getKey().toString(),
             Option(block.getCustomName()),
             data.downcastOrNone[Directional].map(_.getFacing),

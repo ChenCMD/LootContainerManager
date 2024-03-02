@@ -1,6 +1,6 @@
 package com.github.chencmd.lootcontainerutil.feature.genasset.persistence
 
-import com.github.chencmd.lootcontainerutil.minecraft.Location
+import com.github.chencmd.lootcontainerutil.minecraft.BlockLocation
 
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.`type`.Chest
@@ -12,7 +12,7 @@ case class LootAssetItem(
 )
 
 case class LootAsset(
-  location: Location[Int],
+  location: BlockLocation,
   blockId: String,
   name: Option[String],
   facing: Option[BlockFace],

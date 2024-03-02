@@ -3,7 +3,7 @@ package com.github.chencmd.lootcontainerutil.adapter.database
 import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAsset
 import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAssetItem
 import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAssetPersistenceInstr
-import com.github.chencmd.lootcontainerutil.minecraft.Location
+import com.github.chencmd.lootcontainerutil.minecraft.BlockLocation
 
 import cats.data.NonEmptyList
 import cats.effect.kernel.Async
@@ -30,7 +30,7 @@ object LootAssetRepository {
       chestType: Option[String]
     )
 
-    def locationToRepr(location: Location[Int]): LocationRecordRepr = LocationRecordRepr(
+    def locationToRepr(location: BlockLocation): LocationRecordRepr = LocationRecordRepr(
       location.w.getKey.toString,
       location.x,
       location.y,
@@ -72,7 +72,7 @@ object LootAssetRepository {
           _.pure[F]
         )
       lootAsset = LootAsset(
-        Location(world, repr.location.x, repr.location.y, repr.location.z),
+        BlockLocation(world, repr.location.x, repr.location.y, repr.location.z),
         repr.blockId,
         repr.name,
         facing,
@@ -140,7 +140,7 @@ object LootAssetRepository {
         program.transact(transactor)
       }
 
-      override def findLootAsset(location: Location[Int])(using R: Raise[F, String]): F[Option[LootAsset]] = for {
+      override def findLootAsset(location: BlockLocation)(using R: Raise[F, String]): F[Option[LootAsset]] = for {
         whereFr     <- Async[F].pure {
           Fragments.whereAnd(
             fr"loot_assets.world = ${location.w.getKey.toString}",
@@ -174,7 +174,7 @@ object LootAssetRepository {
         program.transact(transactor)
       }
 
-      override def deleteLootAsset(location: Location[Int])(using R: Raise[F, String]): F[Unit] = {
+      override def deleteLootAsset(location: BlockLocation)(using R: Raise[F, String]): F[Unit] = {
         Update[LocationRecordRepr](ITEMS_DELETE_QUERY)
           .run(locationToRepr(location))
           .transact(transactor)

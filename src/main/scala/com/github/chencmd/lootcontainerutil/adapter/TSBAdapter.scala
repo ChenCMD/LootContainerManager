@@ -7,8 +7,8 @@ import com.github.chencmd.lootcontainerutil.feature.genasset.ItemGenerator
 import com.github.chencmd.lootcontainerutil.feature.genasset.ItemIdentifier
 import com.github.chencmd.lootcontainerutil.generic.EitherTExtra
 import com.github.chencmd.lootcontainerutil.generic.extensions.CastOps.*
-import com.github.chencmd.lootcontainerutil.minecraft.Location
 import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
+import com.github.chencmd.lootcontainerutil.minecraft.Position
 import com.github.chencmd.lootcontainerutil.nbt.NBTTagParser
 import com.github.chencmd.lootcontainerutil.nbt.definition.NBTNel
 import com.github.chencmd.lootcontainerutil.nbt.definition.NBTTag
@@ -75,7 +75,7 @@ object TSBAdapter {
               _   <- res.fold(R.raise("Failed to run preCommand."))(_ => Async[F].unit)
               rng <- Async[F].delay(java.util.Random())
               lt = server.getLootTable(NamespacedKey(plugin, g.id))
-              lc = LootContext.Builder(Location(Bukkit.getWorlds.asScala.head, 0, 0, 0).toBukkit).build()
+              lc = LootContext.Builder(Position(Bukkit.getWorlds.asScala.head, 0, 0, 0).toBukkit).build()
               items <- Async[F].delay(lt.populateLoot(rng, lc).asScala.toList)
               head  <- items.headOption.fold(R.raise("LootTable did not return any items."))(_.pure[F])
             } yield head
