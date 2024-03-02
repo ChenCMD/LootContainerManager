@@ -1,22 +1,26 @@
 package com.github.chencmd.lootcontainerutil
 
+import com.github.chencmd.lootcontainerutil.adapter.database.LootAssetRepository
+import com.github.chencmd.lootcontainerutil.adapter.database.SQLite
 import com.github.chencmd.lootcontainerutil.feature.containerprotection.ProtectActionListener
-import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
+import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAssetPersistenceInstr
 import com.github.chencmd.lootcontainerutil.generic.EitherTIOExtra.*
+import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
 import com.github.chencmd.lootcontainerutil.utils.CommonErrorHandler.given
 
 import cats.data.EitherT
+import cats.data.NonEmptyChain
 import cats.effect.IO
 import cats.effect.kernel.Async
 import cats.effect.kernel.Ref
 import cats.effect.unsafe.implicits.global
 import cats.implicits.*
 
+import doobie.*
 import org.bukkit.Bukkit
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.plugin.java.JavaPlugin
-import cats.data.NonEmptyChain
 
 class LootContainerUtil extends JavaPlugin {
   type F = EitherT[IO, String, _]
@@ -29,7 +33,10 @@ class LootContainerUtil extends JavaPlugin {
     val program = EitherT[IO, NonEmptyChain[String], Config](Config.tryRead(this)).flatMap { cfg =>
       val program = for {
         _ <- Async[F].delay(Bukkit.getPluginManager.registerEvents(new ProtectActionListener, this))
-        given Config = cfg
+        transactor = SQLite.createTransactor[F](cfg.db)
+        lootAssetRepos = LootAssetRepository.createInstr[F](transactor)
+        _ <- lootAssetRepos.initialize()
+        given LootAssetPersistenceInstr[F] = lootAssetRepos
         _ <- cmdExecutor.set(Some(new CommandExecutor))
         _ <- Async[F].delay(Bukkit.getConsoleSender.sendMessage("LootContainerUtil enabled."))
       } yield ()
