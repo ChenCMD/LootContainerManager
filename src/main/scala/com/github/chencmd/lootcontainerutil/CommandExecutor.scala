@@ -1,18 +1,24 @@
 package com.github.chencmd.lootcontainerutil
 
+import com.github.chencmd.lootcontainerutil.feature.genasset.GenLootAsset
+import com.github.chencmd.lootcontainerutil.feature.genasset.ItemConversionInstr
+import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAssetPersistenceInstr
 import com.github.chencmd.lootcontainerutil.generic.extensions.CastOps.downcastOrNone
 import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
 
 import cats.data.OptionT
 import cats.effect.kernel.Async
 import cats.implicits.*
+import cats.mtl.Raise
 
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
-import cats.mtl.Raise
-import com.github.chencmd.lootcontainerutil.feature.genasset.GenLootAsset
 
-class CommandExecutor[F[_]: Async](using mcThread: OnMinecraftThread[F], config: Config) {
+class CommandExecutor[F[_]: Async](using
+  mcThread: OnMinecraftThread[F],
+  Converter: ItemConversionInstr[F],
+  LAP: LootAssetPersistenceInstr[F]
+) {
   def run(sender: CommandSender, args: List[String])(using R: Raise[F, String]): F[Unit] = {
     val p: Option[Player] = sender.downcastOrNone[Player]
 

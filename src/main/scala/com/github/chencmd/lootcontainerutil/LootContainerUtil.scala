@@ -1,8 +1,10 @@
 package com.github.chencmd.lootcontainerutil
 
+import com.github.chencmd.lootcontainerutil.adapter.TSBAdapter
 import com.github.chencmd.lootcontainerutil.adapter.database.LootAssetRepository
 import com.github.chencmd.lootcontainerutil.adapter.database.SQLite
 import com.github.chencmd.lootcontainerutil.feature.containerprotection.ProtectActionListener
+import com.github.chencmd.lootcontainerutil.feature.genasset.ItemConversionInstr
 import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAssetPersistenceInstr
 import com.github.chencmd.lootcontainerutil.generic.EitherTIOExtra.*
 import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
@@ -37,6 +39,7 @@ class LootContainerUtil extends JavaPlugin {
         lootAssetRepos = LootAssetRepository.createInstr[F](transactor)
         _ <- lootAssetRepos.initialize()
         given LootAssetPersistenceInstr[F] = lootAssetRepos
+        given ItemConversionInstr[F] = TSBAdapter.createInstr[F](this, cfg)
         _ <- cmdExecutor.set(Some(new CommandExecutor))
         _ <- Async[F].delay(Bukkit.getConsoleSender.sendMessage("LootContainerUtil enabled."))
       } yield ()
