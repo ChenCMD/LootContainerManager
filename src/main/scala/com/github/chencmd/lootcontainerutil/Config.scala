@@ -1,26 +1,26 @@
 package com.github.chencmd.lootcontainerutil
 
 import com.github.chencmd.lootcontainerutil.adapter.database.DBConfig
+import com.github.chencmd.lootcontainerutil.feature.genasset.DataSource
 import com.github.chencmd.lootcontainerutil.feature.genasset.GenAssetConfig
+import com.github.chencmd.lootcontainerutil.feature.genasset.ItemGenerator
+import com.github.chencmd.lootcontainerutil.feature.genasset.ItemMapper
+import com.github.chencmd.lootcontainerutil.generic.extensions.CastOps.*
 import com.github.chencmd.lootcontainerutil.nbt.NBTPathInterpolationParser
 import com.github.chencmd.lootcontainerutil.nbt.NBTPathParser
+import com.github.chencmd.lootcontainerutil.nbt.definition.NBTPath
 
 import cats.data.EitherNec
 import cats.effect.kernel.Async
 import cats.implicits.*
 
 import scala.jdk.CollectionConverters.*
-
-import org.bukkit.configuration.file.FileConfiguration
-import org.bukkit.plugin.java.JavaPlugin
-import com.github.chencmd.lootcontainerutil.generic.extensions.CastOps.*
-import com.github.chencmd.lootcontainerutil.feature.genasset.DataSource
-import com.github.chencmd.lootcontainerutil.feature.genasset.ItemGenerator
 import scala.reflect.ClassTag
 import scala.reflect.TypeTest
-import com.github.chencmd.lootcontainerutil.nbt.definition.NBTPath
-import com.github.chencmd.lootcontainerutil.feature.genasset.ItemMapper
+
 import java.io.File
+import org.bukkit.configuration.file.FileConfiguration
+import org.bukkit.plugin.java.JavaPlugin
 
 object Config {
   private def apply(genAsset: GenAssetConfig, db: DBConfig): Config = new Config(genAsset, db)
@@ -56,9 +56,9 @@ object Config {
         target match {
           case "block"   => (
               getValueWithType[String](fnOut, p)("world"),
-              getValueWithType[Double](fnOut, p)("x"),
-              getValueWithType[Double](fnOut, p)("y"),
-              getValueWithType[Double](fnOut, p)("z")
+              getValueWithType[Int](fnOut, p)("x"),
+              getValueWithType[Int](fnOut, p)("y"),
+              getValueWithType[Int](fnOut, p)("z")
             ).parMapN(DataSource.Block(_, _, _, _, path))
           case "storage" => getValueWithType[String](fnOut, p)("namespace").map(DataSource.Storage(_, path))
           case "entity"  => getValueWithType[String](fnOut, p)("id").map(DataSource.Entity(_, path))
