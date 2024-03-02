@@ -10,7 +10,7 @@ import cats.implicits.*
 import org.bukkit.Bukkit
 
 object CommonErrorHandler {
-  given ErrorProcessor[String, Unit] with                {
+  given ErrorProcessor[String, Unit] with {
     def processError(err: String): IO[Unit] = SyncIO(Bukkit.getConsoleSender.sendMessage(err)).to[IO]
   }
 

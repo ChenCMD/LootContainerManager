@@ -9,21 +9,21 @@ import org.bukkit.World
 import org.bukkit.util.Vector as BukkitVector
 
 case class Vector[A: Numeric](x: A, y: A, z: A) {
-  infix def +(other: Vector[A]): Vector[A]                         = Vector(x + other.x, y + other.y, z + other.z)
+  infix def +(other: Vector[A]): Vector[A] = Vector(x + other.x, y + other.y, z + other.z)
 
-  infix def -(other: Vector[A]): Vector[A]                         = Vector(x - other.x, y - other.y, z - other.z)
+  infix def -(other: Vector[A]): Vector[A] = Vector(x - other.x, y - other.y, z - other.z)
 
-  infix def *(other: Vector[A]): Vector[A]                         = Vector(x * other.x, y * other.y, z * other.z)
+  infix def *(other: Vector[A]): Vector[A] = Vector(x * other.x, y * other.y, z * other.z)
 
   infix def /(other: Vector[A])(using I: Integral[A]): Vector[A]   = Vector(x / other.x, y / other.y, z / other.z)
   infix def /(other: Vector[A])(using F: Fractional[A]): Vector[A] = Vector(x / other.x, y / other.y, z / other.z)
 
-  infix def *(n: A): Vector[A]                                     = Vector(x * n, y * n, z * n)
+  infix def *(n: A): Vector[A] = Vector(x * n, y * n, z * n)
 
-  infix def /(n: A)(using I: Integral[A]): Vector[A]               = Vector(x / n, y / n, z / n)
-  infix def /(n: A)(using F: Fractional[A]): Vector[A]             = Vector(x / n, y / n, z / n)
+  infix def /(n: A)(using I: Integral[A]): Vector[A]   = Vector(x / n, y / n, z / n)
+  infix def /(n: A)(using F: Fractional[A]): Vector[A] = Vector(x / n, y / n, z / n)
 
-  def normalize: Vector[Double]                                    = {
+  def normalize: Vector[Double] = {
     val dx = x.toDouble
     val dy = y.toDouble
     val dz = z.toDouble

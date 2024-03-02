@@ -35,11 +35,11 @@ class LootContainerUtil extends JavaPlugin {
     val program = EitherT[IO, NonEmptyChain[String], Config](Config.tryRead(this)).flatMap { cfg =>
       val program = for {
         _ <- Async[F].delay(Bukkit.getPluginManager.registerEvents(new ProtectActionListener, this))
-        transactor = SQLite.createTransactor[F](cfg.db)
+        transactor     = SQLite.createTransactor[F](cfg.db)
         lootAssetRepos = LootAssetRepository.createInstr[F](transactor)
         _ <- lootAssetRepos.initialize()
         given LootAssetPersistenceInstr[F] = lootAssetRepos
-        given ItemConversionInstr[F] = TSBAdapter.createInstr[F](this, cfg)
+        given ItemConversionInstr[F]       = TSBAdapter.createInstr[F](this, cfg)
         _ <- cmdExecutor.set(Some(new CommandExecutor))
         _ <- Async[F].delay(Bukkit.getConsoleSender.sendMessage("LootContainerUtil enabled."))
       } yield ()

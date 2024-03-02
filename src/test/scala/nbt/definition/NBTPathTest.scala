@@ -148,8 +148,7 @@ class NBTPathTest extends AnyFunSpec {
         RootNode.CompoundChild("foo"),
         List(Node.IndexedElement(1))
       )
-      val expected            = List(NBTTagCompound(Map("bar" -> NBTTagInt(2), "baz" -> NBTTagInt(1)))
-      )
+      val expected            = List(NBTTagCompound(Map("bar" -> NBTTagInt(2), "baz" -> NBTTagInt(1))))
       assert(path.access(tag) == expected)
     }
     it("should be get child with compound child") {
@@ -159,8 +158,7 @@ class NBTPathTest extends AnyFunSpec {
             Map(
               "bar" -> NBTTagInt(1),
               "baz" -> NBTTagInt(2),
-              "qux" -> NBTTagCompound(Map("quux" -> NBTTagInt(3))
-              )
+              "qux" -> NBTTagCompound(Map("quux" -> NBTTagInt(3)))
             )
           )
         )
@@ -169,8 +167,7 @@ class NBTPathTest extends AnyFunSpec {
         RootNode.CompoundChild("foo"),
         List(Node.CompoundChild("qux"))
       )
-      val expected            = List(NBTTagCompound(Map("quux" -> NBTTagInt(3)))
-      )
+      val expected            = List(NBTTagCompound(Map("quux" -> NBTTagInt(3))))
       assert(path.access(tag) == expected)
     }
   }

@@ -25,6 +25,5 @@ object TupleExtra {
       pa: PrecomputedAddition[n.type, 1]
     ): Replace[X, n.type, A] = replace(n, f(tuple(n)))
 
-
   }
 }

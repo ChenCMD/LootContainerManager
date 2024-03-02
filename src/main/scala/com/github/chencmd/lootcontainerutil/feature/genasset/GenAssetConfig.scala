@@ -9,8 +9,8 @@ type ItemMapper = (NBTPath, NBTPathInterpolation)
 
 enum DataSource(val path: NBTPath) {
   case Block(val world: String, val x: Int, val y: Int, val z: Int, override val path: NBTPath) extends DataSource(path)
-  case Storage(val namespace: String, override val path: NBTPath) extends DataSource(path)
-  case Entity(val selector: String, override val path: NBTPath) extends DataSource(path)
+  case Storage(val namespace: String, override val path: NBTPath)                               extends DataSource(path)
+  case Entity(val selector: String, override val path: NBTPath)                                 extends DataSource(path)
 }
 
 enum ItemGenerator(

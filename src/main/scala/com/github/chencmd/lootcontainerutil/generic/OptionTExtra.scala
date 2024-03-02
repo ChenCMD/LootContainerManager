@@ -13,4 +13,3 @@ object OptionTExtra {
     exitWhenF(!cond)(action)
   }
 }
-

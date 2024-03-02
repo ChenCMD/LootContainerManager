@@ -10,7 +10,12 @@ import scala.reflect.TypeTest
 
 object CastOps {
   final class DowncastOrRaiseOps[A, B](val value: A) extends AnyVal {
-    def apply[F[_]: Applicative]()(using R: Raise[F, String], tt: TypeTest[A, B], ctA: ClassTag[A], ctB: ClassTag[B]): F[A & B] = value match {
+    def apply[F[_]: Applicative]()(using
+      R: Raise[F, String],
+      tt: TypeTest[A, B],
+      ctA: ClassTag[A],
+      ctB: ClassTag[B]
+    ): F[A & B] = value match {
       case tt(b) => b.pure[F]
       case _     => R.raise(s"Downcast failed: $ctA to $ctB")
     }
@@ -36,15 +41,17 @@ object CastOps {
       case _     => None
     }
 
-    def downcastOrLeft[B](using tt: TypeTest[A, B], ctA: ClassTag[A], ctB: ClassTag[B]): Either[String, A & B] = value match {
-      case tt(b) => Right(b)
-      case _     => Left(s"Downcast failed: $ctA to $ctB")
-    }
+    def downcastOrLeft[B](using tt: TypeTest[A, B], ctA: ClassTag[A], ctB: ClassTag[B]): Either[String, A & B] =
+      value match {
+        case tt(b) => Right(b)
+        case _     => Left(s"Downcast failed: $ctA to $ctB")
+      }
 
-    def downcastOrLeftNec[B](using tt: TypeTest[A, B], ctA: ClassTag[A], ctB: ClassTag[B]): EitherNec[String, A & B] = value match {
-      case tt(b) => Right(b)
-      case _     => Either.leftNec(s"Downcast failed: $ctA to $ctB")
-    }
+    def downcastOrLeftNec[B](using tt: TypeTest[A, B], ctA: ClassTag[A], ctB: ClassTag[B]): EitherNec[String, A & B] =
+      value match {
+        case tt(b) => Right(b)
+        case _     => Either.leftNec(s"Downcast failed: $ctA to $ctB")
+      }
 
     def downcastOrElse[B] = new DowncastOrElseOps[A, B](value)
 

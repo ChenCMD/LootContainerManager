@@ -18,8 +18,10 @@ case class Location[A: Numeric](w: World, x: A, y: A, z: A) {
   infix def *(other: Location[A]): Location[A] = Location(w, x * other.x, y * other.y, z * other.z)
   infix def *(vec: Vector[A]): Location[A]     = Location(w, x * vec.x, y * vec.y, z * vec.z)
 
-  infix def /(other: Location[A])(using I: Integral[A]): Location[A]   = Location(w, x / other.x, y / other.y, z / other.z)
-  infix def /(other: Location[A])(using F: Fractional[A]): Location[A] = Location(w, x / other.x, y / other.y, z / other.z)
+  infix def /(other: Location[A])(using I: Integral[A]): Location[A]   =
+    Location(w, x / other.x, y / other.y, z / other.z)
+  infix def /(other: Location[A])(using F: Fractional[A]): Location[A] =
+    Location(w, x / other.x, y / other.y, z / other.z)
   infix def /(vec: Vector[A])(using I: Integral[A]): Location[A]       = Location(w, x / vec.x, y / vec.y, z / vec.z)
   infix def /(vec: Vector[A])(using F: Fractional[A]): Location[A]     = Location(w, x / vec.x, y / vec.y, z / vec.z)
 
