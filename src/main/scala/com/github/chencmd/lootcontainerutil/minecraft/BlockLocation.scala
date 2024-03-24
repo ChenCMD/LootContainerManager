@@ -21,8 +21,8 @@ final case class BlockLocation(w: World, x: Int, y: Int, z: Int) {
   infix def /(n: Double): Position = Position(w, x / n, y / n, z / n)
 
   def toBukkit: BukkitLocation = new BukkitLocation(w, x, y, z)
-  def toPosition: Position          = Position(w, x.toDouble, y.toDouble, z.toDouble)
-  def toVector: Vector              = Vector(x.toDouble, y.toDouble, z.toDouble)
+  def toPosition: Position     = Position(w, x.toDouble, y.toDouble, z.toDouble)
+  def toVector: Vector         = Vector(x.toDouble, y.toDouble, z.toDouble)
 }
 
 object BlockLocation {

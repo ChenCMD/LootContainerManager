@@ -1,6 +1,7 @@
 package com.github.chencmd.lootcontainerutil
 
 import com.github.chencmd.lootcontainerutil.adapter.database.DBConfig
+import com.github.chencmd.lootcontainerutil.exceptions.ConfigurationException
 import com.github.chencmd.lootcontainerutil.feature.genasset.DataSource
 import com.github.chencmd.lootcontainerutil.feature.genasset.GenAssetConfig
 import com.github.chencmd.lootcontainerutil.feature.genasset.ItemGenerator
@@ -21,7 +22,6 @@ import scala.reflect.TypeTest
 import java.io.File
 import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.plugin.java.JavaPlugin
-import com.github.chencmd.lootcontainerutil.exceptions.ConfigurationException
 
 object Config {
   private def apply(genAsset: GenAssetConfig, db: DBConfig): Config = new Config(genAsset, db)

@@ -1,8 +1,8 @@
 package com.github.chencmd.lootcontainerutil.adapter
 
+import com.github.chencmd.lootcontainerutil.Config
 import com.github.chencmd.lootcontainerutil.exceptions.ConfigurationException
 import com.github.chencmd.lootcontainerutil.exceptions.SystemException
-import com.github.chencmd.lootcontainerutil.Config
 import com.github.chencmd.lootcontainerutil.feature.genasset.DataSource
 import com.github.chencmd.lootcontainerutil.feature.genasset.ItemConversionInstr
 import com.github.chencmd.lootcontainerutil.feature.genasset.ItemGenerator
@@ -78,7 +78,8 @@ object TSBAdapter {
               lt = server.getLootTable(NamespacedKey(plugin, g.id))
               lc = LootContext.Builder(Position(Bukkit.getWorlds.asScala.head, 0, 0, 0).toBukkit).build()
               items <- Async[F].delay(lt.populateLoot(rng, lc).asScala.toList)
-              head  <- items.headOption.fold(ConfigurationException.raise("LootTable did not return any items."))(_.pure[F])
+              head  <-
+                items.headOption.fold(ConfigurationException.raise("LootTable did not return any items."))(_.pure[F])
             } yield head
           case ItemGenerator.WithMCFunction(predicate, id, preCommand, functionOutput) => for {
               nbtDataEither <- mcThread.run {
@@ -100,7 +101,9 @@ object TSBAdapter {
                         container <- EitherT(SyncIO {
                           w.getBlockAt(x, y, z)
                             .getState()
-                            .downcastOrLeft[Container](ConfigurationException(s"Block at $x, $y, $z was not a container."))
+                            .downcastOrLeft[Container](
+                              ConfigurationException(s"Block at $x, $y, $z was not a container.")
+                            )
                         })
                         blockData <- EitherT(SyncIO {
                           val s = NBTTileEntity(container).getCompound().toString()
@@ -115,7 +118,8 @@ object TSBAdapter {
               nbtData       <- nbtDataEither.fold(Async[F].raiseError, _.pure[F])
               itemData      <- {
                 val isAccessible = functionOutput.path.isAccessible(nbtData)
-                if (!isAccessible) ConfigurationException.raise(s"Path ${functionOutput.path} did not return any items.")
+                if (!isAccessible)
+                  ConfigurationException.raise(s"Path ${functionOutput.path} did not return any items.")
 
                 val head = functionOutput.path.access(nbtData).headOption
                 if (head.isEmpty) ConfigurationException.raise(s"Path ${functionOutput.path} did not return any items.")
@@ -125,9 +129,11 @@ object TSBAdapter {
                   case _                        => ConfigurationException.raise("Path did not return a compound.")
                 }
               }
-              itemID        <- itemData.value.get("id").fold(ConfigurationException.raise("Item did not have an id."))(_.pure[F])
+              itemID        <-
+                itemData.value.get("id").fold(ConfigurationException.raise("Item did not have an id."))(_.pure[F])
               itemID        <- itemID.downcastOrRaise[NBTTag.NBTTagString]()
-              count         <- itemData.value.get("Count").fold(ConfigurationException.raise("Item did not have a count."))(_.pure[F])
+              count         <-
+                itemData.value.get("Count").fold(ConfigurationException.raise("Item did not have a count."))(_.pure[F])
               count         <- count.downcastOrRaise[NBTTag.NBTTagInt]()
               itemStack = new ItemStack(Material.matchMaterial(itemID.value), count.value)
               _ <- mcThread.run(SyncIO {

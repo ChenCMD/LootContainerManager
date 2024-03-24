@@ -1,5 +1,6 @@
 package com.github.chencmd.lootcontainerutil
 
+import com.github.chencmd.lootcontainerutil.exceptions.UserException
 import com.github.chencmd.lootcontainerutil.feature.genasset.GenLootAsset
 import com.github.chencmd.lootcontainerutil.feature.genasset.ItemConversionInstr
 import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAssetPersistenceInstr
@@ -12,7 +13,6 @@ import cats.implicits.*
 
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
-import com.github.chencmd.lootcontainerutil.exceptions.UserException
 
 class CommandExecutor[F[_]: Async](using
   mcThread: OnMinecraftThread[F],
