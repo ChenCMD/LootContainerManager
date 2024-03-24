@@ -1,6 +1,6 @@
 package com.github.chencmd.lootcontainerutil.feature.genasset.persistence
 
-import com.github.chencmd.lootcontainerutil.minecraft.BlockLocation
+import com.github.chencmd.lootcontainerutil.minecraft.bukkit.BlockLocation
 
 trait LootAssetPersistenceInstr[F[_]] {
   def initialize(): F[Unit]

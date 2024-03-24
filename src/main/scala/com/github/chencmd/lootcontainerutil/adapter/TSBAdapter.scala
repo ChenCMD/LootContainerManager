@@ -10,7 +10,7 @@ import com.github.chencmd.lootcontainerutil.feature.genasset.ItemIdentifier
 import com.github.chencmd.lootcontainerutil.generic.EitherTExtra
 import com.github.chencmd.lootcontainerutil.generic.extensions.CastOps.*
 import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
-import com.github.chencmd.lootcontainerutil.minecraft.Position
+import com.github.chencmd.lootcontainerutil.minecraft.bukkit.Position
 import com.github.chencmd.lootcontainerutil.nbt.NBTTagParser
 import com.github.chencmd.lootcontainerutil.nbt.definition.NBTNel
 import com.github.chencmd.lootcontainerutil.nbt.definition.NBTTag

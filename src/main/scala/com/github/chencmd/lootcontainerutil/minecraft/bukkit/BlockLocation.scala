@@ -1,11 +1,9 @@
-package com.github.chencmd.lootcontainerutil.minecraft
-
-import scala.util.chaining.*
+package com.github.chencmd.lootcontainerutil.minecraft.bukkit
 
 import org.bukkit.Location as BukkitLocation
 import org.bukkit.World
 
-case class Position(w: World, x: Double, y: Double, z: Double) {
+final case class BlockLocation(w: World, x: Int, y: Int, z: Int) {
   infix def +(other: Position): Position = Position(w, x + other.x, y + other.y, z + other.z)
   infix def +(vec: Vector): Position     = Position(w, x + vec.x, y + vec.y, z + vec.z)
 
@@ -22,13 +20,11 @@ case class Position(w: World, x: Double, y: Double, z: Double) {
 
   infix def /(n: Double): Position = Position(w, x / n, y / n, z / n)
 
-  def toVector: Vector = Vector(x, y, z)
-
-  def toBlockLocation: BlockLocation = BlockLocation(w, x.toInt, y.toInt, z.toInt)
-
   def toBukkit: BukkitLocation = new BukkitLocation(w, x, y, z)
+  def toPosition: Position     = Position(w, x.toDouble, y.toDouble, z.toDouble)
+  def toVector: Vector         = Vector(x.toDouble, y.toDouble, z.toDouble)
 }
 
-object Position {
-  def of(l: BukkitLocation): Position = new Position(l.getWorld, l.getX, l.getY, l.getZ)
+object BlockLocation {
+  def of(l: BukkitLocation): BlockLocation = new BlockLocation(l.getWorld, l.getBlockX, l.getBlockY, l.getBlockZ)
 }

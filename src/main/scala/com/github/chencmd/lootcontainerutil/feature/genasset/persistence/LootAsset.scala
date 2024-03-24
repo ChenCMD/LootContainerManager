@@ -1,6 +1,6 @@
 package com.github.chencmd.lootcontainerutil.feature.genasset.persistence
 
-import com.github.chencmd.lootcontainerutil.minecraft.BlockLocation
+import com.github.chencmd.lootcontainerutil.minecraft.bukkit.BlockLocation
 
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.`type`.Chest

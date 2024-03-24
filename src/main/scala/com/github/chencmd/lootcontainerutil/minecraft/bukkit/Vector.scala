@@ -1,4 +1,4 @@
-package com.github.chencmd.lootcontainerutil.minecraft
+package com.github.chencmd.lootcontainerutil.minecraft.bukkit
 
 import scala.util.chaining.*
 
