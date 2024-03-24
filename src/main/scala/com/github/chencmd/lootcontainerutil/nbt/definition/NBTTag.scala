@@ -15,19 +15,19 @@ trait NBTTagListOps(value: Option[NBTNel]) {
   def toList: List[NBTTag] = value.map(_.values.toList).orEmpty
 }
 
-enum NBTTag(val value: Any) {
-  case NBTTagCompound(override val value: Map[String, NBTTag]) extends NBTTag(value)
-  case NBTTagByte(override val value: Byte)                    extends NBTTag(value)
-  case NBTTagShort(override val value: Short)                  extends NBTTag(value)
-  case NBTTagInt(override val value: Int)                      extends NBTTag(value)
-  case NBTTagLong(override val value: Long)                    extends NBTTag(value)
-  case NBTTagFloat(override val value: Float)                  extends NBTTag(value)
-  case NBTTagDouble(override val value: Double)                extends NBTTag(value)
-  case NBTTagString(override val value: String)                extends NBTTag(value)
-  case NBTTagByteArray(override val value: Vector[NBTTagByte]) extends NBTTag(value)
-  case NBTTagIntArray(override val value: Vector[NBTTagInt])   extends NBTTag(value)
-  case NBTTagLongArray(override val value: Vector[NBTTagLong]) extends NBTTag(value)
-  case NBTTagList(override val value: Option[NBTNel])          extends NBTTag(value) with NBTTagListOps(value)
+enum NBTTag {
+  case NBTTagCompound(value: Map[String, NBTTag])
+  case NBTTagByte(value: Byte)
+  case NBTTagShort(value: Short)
+  case NBTTagInt(value: Int)
+  case NBTTagLong(value: Long)
+  case NBTTagFloat(value: Float)
+  case NBTTagDouble(value: Double)
+  case NBTTagString(value: String)
+  case NBTTagByteArray(value: Vector[NBTTagByte])
+  case NBTTagIntArray(value: Vector[NBTTagInt])
+  case NBTTagLongArray(value: Vector[NBTTagLong])
+  case NBTTagList(value: Option[NBTNel]) extends NBTTag with NBTTagListOps(value)
 
   def toSNBT: String = this match {
     case NBTTagCompound(value)  => value

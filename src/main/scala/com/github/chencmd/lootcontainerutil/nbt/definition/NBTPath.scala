@@ -85,7 +85,7 @@ case class NBTPath(root: NBTPathRootNode, nodes: List[NBTPathNode]) {
       case (tList: NBTTagByteArray, eList: NBTTagByteArray) => tList.value.sameElements(eList.value)
       case (tList: NBTTagIntArray, eList: NBTTagIntArray)   => tList.value.sameElements(eList.value)
       case (tList: NBTTagLongArray, eList: NBTTagLongArray) => tList.value.sameElements(eList.value)
-      case _                                                => target.value == expect.value
+      case _                                                => target == expect
     }
   }
 }
