@@ -10,6 +10,7 @@ import com.github.chencmd.lootcontainerutil.feature.genasset.ItemConversionInstr
 import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAssetPersistenceInstr
 import com.github.chencmd.lootcontainerutil.generic.EitherTIOExtra.*
 import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
+import com.github.chencmd.lootcontainerutil.minecraft.bukkit.OnBukkitServerThread
 
 import cats.effect.IO
 import cats.effect.kernel.Async
@@ -29,7 +30,7 @@ class LootContainerUtil extends JavaPlugin {
   val cmdExecutor: Ref[F, Option[CommandExecutor[F]]] = Ref.unsafe(None)
 
   override def onEnable() = {
-    given OnMinecraftThread[F] = new OnMinecraftThread[F](this)
+    given OnMinecraftThread[F] = OnBukkitServerThread.createInstr[F](this)
 
     val program = for {
       cfg <- Config.tryRead[F](this)
