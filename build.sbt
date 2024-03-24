@@ -15,7 +15,6 @@ lazy val doobieVersion = "1.0.0-RC5"
 libraryDependencies ++= Seq(
   "org.spigotmc"            % "spigot-api"               % "1.20.4-R0.1-SNAPSHOT",
   "org.typelevel"          %% "cats-effect"              % "3.4.8",
-  "org.typelevel"          %% "cats-mtl"                 % "1.3.0",
   "org.tpolecat"           %% "doobie-core"              % doobieVersion,
   "org.tpolecat"           %% "doobie-specs2"            % doobieVersion,
   "org.xerial"              % "sqlite-jdbc"              % "3.45.1.0",
