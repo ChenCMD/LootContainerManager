@@ -14,3 +14,4 @@ project/project/
 project/.bloop/
 target/
 dist/
+*.worksheet.sc
