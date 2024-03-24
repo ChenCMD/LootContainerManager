@@ -1,5 +1,6 @@
 package com.github.chencmd.lootcontainerutil.adapter.database
 
+import com.github.chencmd.lootcontainerutil.exceptions.SystemException
 import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAsset
 import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAssetItem
 import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAssetPersistenceInstr
@@ -8,7 +9,6 @@ import com.github.chencmd.lootcontainerutil.minecraft.BlockLocation
 import cats.data.NonEmptyList
 import cats.effect.kernel.Async
 import cats.implicits.*
-import cats.mtl.Raise
 
 import scala.jdk.CollectionConverters.*
 
@@ -54,21 +54,19 @@ object LootAssetRepository {
       (repr, lootAsset.items)
     }
 
-    def reprToLootAsset(repr: LootAssetRecordRepr, items: List[LootAssetItem])(using
-      R: Raise[F, String]
-    ): F[LootAsset] = for {
+    def reprToLootAsset(repr: LootAssetRecordRepr, items: List[LootAssetItem]): F[LootAsset] = for {
       worldOpt  <- Async[F].delay(Bukkit.getWorlds().asScala.toList.find(_.getKey.toString == repr.location.world))
-      world     <- worldOpt.fold(R.raise("World not found"))(_.pure[F])
+      world     <- worldOpt.fold(SystemException.raise(s"Missing world: ${repr.location.world}"))(_.pure[F])
       facing    <- Either
         .catchNonFatal(repr.facing.map(BlockFace.valueOf))
         .fold(
-          _ => R.raise(s"Invalid block face: ${repr.facing}"),
+          _ => SystemException.raise(s"Invalid block face: ${repr.facing}"),
           _.pure[F]
         )
       chestType <- Either
         .catchNonFatal(repr.chestType.map(Chest.Type.valueOf))
         .fold(
-          _ => R.raise(s"Invalid chest type: ${repr.chestType}"),
+          _ => SystemException.raise(s"Invalid chest type: ${repr.chestType}"),
           _.pure[F]
         )
       lootAsset = LootAsset(
@@ -109,7 +107,7 @@ object LootAssetRepository {
         sql"INSERT INTO loot_asset_items" ++ Fragments.values(items)
       }
 
-      override def initialize()(using R: Raise[F, String]): F[Unit] = {
+      override def initialize(): F[Unit] = {
         val program = for {
           _ <- sql"""|
           |CREATE TABLE IF NOT EXISTS loot_assets (
@@ -140,7 +138,7 @@ object LootAssetRepository {
         program.transact(transactor)
       }
 
-      override def findLootAsset(location: BlockLocation)(using R: Raise[F, String]): F[Option[LootAsset]] = for {
+      override def findLootAsset(location: BlockLocation): F[Option[LootAsset]] = for {
         whereFr     <- Async[F].pure {
           Fragments.whereAnd(
             fr"loot_assets.world = ${location.w.getKey.toString}",
@@ -156,7 +154,7 @@ object LootAssetRepository {
         lootAsset   <- queryResult.traverse((repr, item) => reprToLootAsset(repr, item.toList))
       } yield lootAsset
 
-      override def getLootAssets()(using R: Raise[F, String]): F[List[LootAsset]] = for {
+      override def getLootAssets(): F[List[LootAsset]] = for {
         queryResult <- ASSET_SELECT_QUERY
           .query[(LootAssetRecordRepr, Option[LootAssetItem])]
           .to[List]
@@ -164,7 +162,7 @@ object LootAssetRepository {
         lootAsset   <- queryResult.traverse((repr, item) => reprToLootAsset(repr, item.toList))
       } yield lootAsset
 
-      override def storeLootAsset(lootAsset: LootAsset)(using R: Raise[F, String]): F[Unit] = {
+      override def storeLootAsset(lootAsset: LootAsset): F[Unit] = {
         val (assetRepr, items) = lootAssetToRepr(lootAsset)
         val program            = for {
           _ <- makeAssetUpsertQuery(assetRepr).update.run
@@ -174,7 +172,7 @@ object LootAssetRepository {
         program.transact(transactor)
       }
 
-      override def deleteLootAsset(location: BlockLocation)(using R: Raise[F, String]): F[Unit] = {
+      override def deleteLootAsset(location: BlockLocation): F[Unit] = {
         Update[LocationRecordRepr](ITEMS_DELETE_QUERY)
           .run(locationToRepr(location))
           .transact(transactor)

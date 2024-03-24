@@ -21,11 +21,12 @@ import scala.reflect.TypeTest
 import java.io.File
 import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.plugin.java.JavaPlugin
+import com.github.chencmd.lootcontainerutil.exceptions.ConfigurationException
 
 object Config {
   private def apply(genAsset: GenAssetConfig, db: DBConfig): Config = new Config(genAsset, db)
 
-  def tryRead[F[_]: Async](plugin: JavaPlugin): F[EitherNec[String, Config]] = for {
+  def tryRead[F[_]: Async](plugin: JavaPlugin): F[Config] = for {
     _          <- Async[F].delay {
       plugin.saveDefaultConfig()
       plugin.reloadConfig()
@@ -34,7 +35,10 @@ object Config {
     dataFolder <- Async[F].delay(plugin.getDataFolder.toPath)
     genAssetConfig = getGenAssetConfig(config)
     dbConfig       = getDBConfig(config)
-  } yield (genAssetConfig, dbConfig).parMapN(apply)
+    config <- (genAssetConfig, dbConfig)
+      .parMapN(Config.apply)
+      .fold(s => ConfigurationException.raise(s.mkString_("\n")), _.pure[F])
+  } yield config
 
   def getGenAssetConfig(config: FileConfiguration): EitherNec[String, GenAssetConfig] = {
     def toItemIdentifier(sec: Map[Any, Any], i: Int): EitherNec[String, ItemMapper] = for {

@@ -1,5 +1,6 @@
 package com.github.chencmd.lootcontainerutil.feature.genasset
 
+import com.github.chencmd.lootcontainerutil.exceptions.UserException
 import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAsset
 import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAssetItem
 import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAssetPersistenceInstr
@@ -12,7 +13,6 @@ import com.github.chencmd.lootcontainerutil.minecraft.Vector
 import cats.effect.SyncIO
 import cats.effect.kernel.Async
 import cats.implicits.*
-import cats.mtl.Raise
 
 import org.bukkit.block.Container
 import org.bukkit.block.data.Directional
@@ -25,7 +25,6 @@ object GenLootAsset {
   def generateLootAsset[F[_]: Async](
     p: Player
   )(using
-    R: Raise[F, String],
     mcThread: OnMinecraftThread[F],
     Converter: ItemConversionInstr[F],
     LAP: LootAssetPersistenceInstr[F]
@@ -54,7 +53,7 @@ object GenLootAsset {
         }
       })
       (location, blockId, name, facing, waterlogged, chestType, items) <-
-        blockDataOpt.fold(R.raise("No container was found."))(_.pure[F])
+        blockDataOpt.fold(UserException.raise("No container was found."))(_.pure[F])
 
       asset <- items
         .traverseWithIndexM { (item, slot) =>

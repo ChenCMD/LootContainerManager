@@ -9,22 +9,22 @@ import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
 import cats.data.OptionT
 import cats.effect.kernel.Async
 import cats.implicits.*
-import cats.mtl.Raise
 
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
+import com.github.chencmd.lootcontainerutil.exceptions.UserException
 
 class CommandExecutor[F[_]: Async](using
   mcThread: OnMinecraftThread[F],
   Converter: ItemConversionInstr[F],
   LAP: LootAssetPersistenceInstr[F]
 ) {
-  def run(sender: CommandSender, args: List[String])(using R: Raise[F, String]): F[Unit] = {
+  def run(sender: CommandSender, args: List[String]): F[Unit] = {
     val p: Option[Player] = sender.downcastOrNone[Player]
 
     if (args.length == 0) {
       return Async[F]
-        .whenA(sender.isOp)(Async[F].delay(sender.sendMessage(s"${Prefix.ERROR}/lcu <gen_asset>")))
+        .whenA(sender.isOp)(UserException.raise(s"${Prefix.ERROR}/lcu <gen_asset>"))
         .as(sender.isOp)
     }
 

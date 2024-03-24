@@ -3,21 +3,33 @@ package com.github.chencmd.lootcontainerutil.generic.extensions
 import cats.Applicative
 import cats.data.EitherNec
 import cats.implicits.*
-import cats.mtl.Raise
 
 import scala.reflect.ClassTag
 import scala.reflect.TypeTest
 
 object CastOps {
+  final class DowncastOrLeftOps[A, B](val value: A) extends AnyVal {
+    def apply[E](onFailed: => E)(using tt: TypeTest[A, B]): Either[E, A & B] = value match {
+      case tt(b) => Right(b)
+      case _     => Left(onFailed)
+    }
+  }
+
+  final class DowncastOrLeftNecOps[A, B](val value: A) extends AnyVal {
+    def apply[E](onFailed: => E)(using tt: TypeTest[A, B]): EitherNec[E, A & B] = value match {
+      case tt(b) => Right(b)
+      case _     => Either.leftNec(onFailed)
+    }
+  }
+
   final class DowncastOrRaiseOps[A, B](val value: A) extends AnyVal {
     def apply[F[_]: Applicative]()(using
-      R: Raise[F, String],
       tt: TypeTest[A, B],
       ctA: ClassTag[A],
       ctB: ClassTag[B]
     ): F[A & B] = value match {
       case tt(b) => b.pure[F]
-      case _     => R.raise(s"Downcast failed: $ctA to $ctB")
+      case _     => Applicative[F].pure(???) /* s"Downcast failed: $ctA to $ctB" */
     }
   }
 
@@ -52,6 +64,10 @@ object CastOps {
         case tt(b) => Right(b)
         case _     => Either.leftNec(s"Downcast failed: $ctA to $ctB")
       }
+
+    def downcastOrLeft[B] = new DowncastOrLeftOps[A, B](value)
+
+    def downcastOrLeftNec[B] = new DowncastOrLeftNecOps[A, B](value)
 
     def downcastOrElse[B] = new DowncastOrElseOps[A, B](value)
 
