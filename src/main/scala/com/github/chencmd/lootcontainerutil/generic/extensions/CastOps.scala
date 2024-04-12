@@ -6,6 +6,7 @@ import cats.implicits.*
 
 import scala.reflect.ClassTag
 import scala.reflect.TypeTest
+import cats.ApplicativeError
 
 object CastOps {
   final class DowncastOrLeftOps[A, B](val value: A) extends AnyVal {
@@ -26,10 +27,11 @@ object CastOps {
     def apply[F[_]: Applicative]()(using
       tt: TypeTest[A, B],
       ctA: ClassTag[A],
-      ctB: ClassTag[B]
+      ctB: ClassTag[B],
+      AE: ApplicativeError[F, Throwable]
     ): F[A & B] = value match {
       case tt(b) => b.pure[F]
-      case _     => Applicative[F].pure(???) /* s"Downcast failed: $ctA to $ctB" */
+      case _     => AE.raiseError(new ClassCastException(s"Downcast failed: $ctA to $ctB"))
     }
   }
 
