@@ -42,7 +42,7 @@ object TSBAdapter {
   ): ItemConversionInstr[F] = new ItemConversionInstr[F] {
     def toItemIdentifier(item: ItemStack): F[ItemIdentifier] = for {
       nbtItem <- mcThread.run(SyncIO(NBTItem(item)))
-      item    <- NBTTagParser.parse(nbtItem.toString).fold(SystemException.raise, _.value.pure[F])
+      item    <- NBTTagParser.parse(nbtItem.toString).fold(SystemException.raise(_), _.value.pure[F])
       tag     <- item
         .get("tag")
         .traverse(_.downcastOrRaise[NBTTag.NBTTagCompound][F]())
