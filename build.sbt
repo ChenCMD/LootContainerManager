@@ -14,6 +14,7 @@ resolvers ++= Seq(
 lazy val doobieVersion = "1.0.0-RC5"
 libraryDependencies ++= Seq(
   "org.spigotmc"            % "spigot-api"               % "1.20.4-R0.1-SNAPSHOT",
+  "dev.array21"             % "bukkit-reflection-util"   % "1.3.1",
   "org.typelevel"          %% "cats-effect"              % "3.4.8",
   "org.tpolecat"           %% "doobie-core"              % doobieVersion,
   "org.tpolecat"           %% "doobie-specs2"            % doobieVersion,

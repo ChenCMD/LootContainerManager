@@ -9,7 +9,9 @@ import com.github.chencmd.lootcontainerutil.feature.containerprotection.ProtectA
 import com.github.chencmd.lootcontainerutil.feature.genasset.ItemConversionInstr
 import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAssetPersistenceInstr
 import com.github.chencmd.lootcontainerutil.generic.EitherTIOExtra.*
+import com.github.chencmd.lootcontainerutil.minecraft.ManageItemNBT
 import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
+import com.github.chencmd.lootcontainerutil.minecraft.bukkit.ManageBukkitItemNBT
 import com.github.chencmd.lootcontainerutil.minecraft.bukkit.OnBukkitServerThread
 
 import cats.effect.IO
@@ -31,6 +33,7 @@ class LootContainerUtil extends JavaPlugin {
 
   override def onEnable() = {
     given OnMinecraftThread[F] = OnBukkitServerThread.createInstr[F](this)
+    given ManageItemNBT        = ManageBukkitItemNBT.createInstr
 
     val program = for {
       cfg <- Config.tryRead[F](this)
