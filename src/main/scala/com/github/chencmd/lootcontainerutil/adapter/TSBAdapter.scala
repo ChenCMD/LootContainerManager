@@ -110,7 +110,10 @@ object TSBAdapter {
                           NBTTagParser.parse(s).leftMap(ConfigurationException.apply)
                         })
                       } yield blockData
-                    case _                                      => ???
+                    case x                                      => EitherT.liftF {
+                        ConfigurationException
+                          .raise[SyncIO, NBTTag.NBTTagCompound](s"DataSource ${x} is not implemented.")
+                      }
                   }
                 } yield item
                 program.value
