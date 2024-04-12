@@ -1,9 +1,6 @@
 package com.github.chencmd.lootcontainerutil.minecraft.bukkit
 
 import com.github.chencmd.lootcontainerutil
-import com.github.chencmd.lootcontainerutil.exceptions.SystemException
-import com.github.chencmd.lootcontainerutil.nbt.NBTTagParser
-import com.github.chencmd.lootcontainerutil.nbt.definition.NBTTag.NBTTagCompound
 
 import cats.effect.SyncIO
 import cats.implicits.*

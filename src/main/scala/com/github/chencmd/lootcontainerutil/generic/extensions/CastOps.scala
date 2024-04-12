@@ -1,12 +1,12 @@
 package com.github.chencmd.lootcontainerutil.generic.extensions
 
 import cats.Applicative
+import cats.ApplicativeError
 import cats.data.EitherNec
 import cats.implicits.*
 
 import scala.reflect.ClassTag
 import scala.reflect.TypeTest
-import cats.ApplicativeError
 
 object CastOps {
   final class DowncastOrLeftOps[A, B](val value: A) extends AnyVal {
