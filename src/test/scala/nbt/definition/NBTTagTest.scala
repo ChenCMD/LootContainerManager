@@ -268,15 +268,13 @@ class NBTTagTest extends AnyFunSpec {
             NBTTag.listFrom(NBTNel.Short(NonEmptyList.of(3, 4).map(i => NBTTagShort(i.toShort)))),
             NBTTag.listFrom(NBTNel.Int(NonEmptyList.of(5, 6).map(NBTTagInt.apply))),
             NBTTag.listFrom(NBTNel.Long(NonEmptyList.of(7, 8).map(i => NBTTagLong(i.toLong)))),
-            NBTTagByteArray(Vector(9, 10).map(i => NBTTagByte(i.toByte))),
-            NBTTagIntArray(Vector(11, 12).map(NBTTagInt.apply)),
-            NBTTagLongArray(Vector(13, 14).map(i => NBTTagLong(i.toLong))),
-            NBTTag.listFrom(NBTNel.Compound(NonEmptyList.of(NBTTagCompound(Map("x" -> NBTTagInt(15))))))
+            NBTTag.listFrom(NBTNel.String(NonEmptyList.of("9", "10").map(i => NBTTagString(i)))),
+            NBTTag.listFrom(NBTNel.Compound(NonEmptyList.of(NBTTagCompound(Map("x" -> NBTTagInt(11))))))
           )
         )
       )
       val result = tag.toSNBT
-      val expect = """[[],[1b,2b],[3s,4s],[5,6],[7L,8L],[B;9b,10b],[I;11,12],[L;13L,14L],[{"x":15}]]"""
+      val expect = """[[],[1b,2b],[3s,4s],[5,6],[7L,8L],["9","10"],[{"x":11}]]"""
 
       assert(result == expect)
     }

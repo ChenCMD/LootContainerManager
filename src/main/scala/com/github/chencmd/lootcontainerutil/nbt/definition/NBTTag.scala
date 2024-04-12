@@ -130,19 +130,18 @@ sealed trait NBTNel {
 }
 object NBTNel       {
   import NBTTag.*
-  type ListTypes = NBTTagList | NBTTagByteArray | NBTTagIntArray | NBTTagLongArray
-  case class Compound(val values: NonEmptyList[NBTTagCompound]) extends NBTNel { type Elems = NBTTagCompound }
-  case class Byte(val values: NonEmptyList[NBTTagByte])         extends NBTNel { type Elems = NBTTagByte     }
-  case class Short(val values: NonEmptyList[NBTTagShort])       extends NBTNel { type Elems = NBTTagShort    }
-  case class Int(val values: NonEmptyList[NBTTagInt])           extends NBTNel { type Elems = NBTTagInt      }
-  case class Long(val values: NonEmptyList[NBTTagLong])         extends NBTNel { type Elems = NBTTagLong     }
-  case class Float(val values: NonEmptyList[NBTTagFloat])       extends NBTNel { type Elems = NBTTagFloat    }
-  case class Double(val values: NonEmptyList[NBTTagDouble])     extends NBTNel { type Elems = NBTTagDouble   }
-  case class String(val values: NonEmptyList[NBTTagString])     extends NBTNel { type Elems = NBTTagString   }
-  case class ByteArray(val values: NonEmptyList[NBTTagByte])    extends NBTNel { type Elems = NBTTagByte     }
-  case class IntArray(val values: NonEmptyList[NBTTagInt])      extends NBTNel { type Elems = NBTTagInt      }
-  case class LongArray(val values: NonEmptyList[NBTTagLong])    extends NBTNel { type Elems = NBTTagLong     }
-  case class List(val values: NonEmptyList[ListTypes])          extends NBTNel { type Elems = ListTypes      }
+  case class Compound(val values: NonEmptyList[NBTTagCompound])   extends NBTNel { type Elems = NBTTagCompound  }
+  case class Byte(val values: NonEmptyList[NBTTagByte])           extends NBTNel { type Elems = NBTTagByte      }
+  case class Short(val values: NonEmptyList[NBTTagShort])         extends NBTNel { type Elems = NBTTagShort     }
+  case class Int(val values: NonEmptyList[NBTTagInt])             extends NBTNel { type Elems = NBTTagInt       }
+  case class Long(val values: NonEmptyList[NBTTagLong])           extends NBTNel { type Elems = NBTTagLong      }
+  case class Float(val values: NonEmptyList[NBTTagFloat])         extends NBTNel { type Elems = NBTTagFloat     }
+  case class Double(val values: NonEmptyList[NBTTagDouble])       extends NBTNel { type Elems = NBTTagDouble    }
+  case class String(val values: NonEmptyList[NBTTagString])       extends NBTNel { type Elems = NBTTagString    }
+  case class List(val values: NonEmptyList[NBTTagList])           extends NBTNel { type Elems = NBTTagList      }
+  case class ByteArray(val values: NonEmptyList[NBTTagByteArray]) extends NBTNel { type Elems = NBTTagByteArray }
+  case class IntArray(val values: NonEmptyList[NBTTagIntArray])   extends NBTNel { type Elems = NBTTagIntArray  }
+  case class LongArray(val values: NonEmptyList[NBTTagLongArray]) extends NBTNel { type Elems = NBTTagLongArray }
 
   given Semigroup[Compound] with  {
     def combine(x: Compound, y: Compound): Compound = Compound(x.values ::: y.values)
@@ -168,6 +167,9 @@ object NBTNel       {
   given Semigroup[String] with    {
     def combine(x: String, y: String): String = String(x.values ::: y.values)
   }
+  given Semigroup[List] with      {
+    def combine(x: List, y: List): List = List(x.values ::: y.values)
+  }
   given Semigroup[ByteArray] with {
     def combine(x: ByteArray, y: ByteArray): ByteArray = ByteArray(x.values ::: y.values)
   }
@@ -176,8 +178,5 @@ object NBTNel       {
   }
   given Semigroup[LongArray] with {
     def combine(x: LongArray, y: LongArray): LongArray = LongArray(x.values ::: y.values)
-  }
-  given Semigroup[List] with      {
-    def combine(x: List, y: List): List = List(x.values ::: y.values)
   }
 }
