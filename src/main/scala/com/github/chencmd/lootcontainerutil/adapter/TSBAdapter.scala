@@ -9,10 +9,10 @@ import com.github.chencmd.lootcontainerutil.feature.genasset.ItemGenerator
 import com.github.chencmd.lootcontainerutil.feature.genasset.ItemIdentifier
 import com.github.chencmd.lootcontainerutil.generic.EitherTExtra
 import com.github.chencmd.lootcontainerutil.generic.extensions.CastOps.*
+import com.github.chencmd.lootcontainerutil.minecraft.ManageItemNBT
 import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
 import com.github.chencmd.lootcontainerutil.minecraft.bukkit.Position
 import com.github.chencmd.lootcontainerutil.nbt.NBTTagParser
-import com.github.chencmd.lootcontainerutil.nbt.definition.NBTNel
 import com.github.chencmd.lootcontainerutil.nbt.definition.NBTTag
 
 import cats.data.EitherT
@@ -24,12 +24,9 @@ import cats.implicits.*
 import scala.jdk.CollectionConverters.*
 
 import de.tr7zw.nbtapi
-import de.tr7zw.nbtapi.NBT
 import de.tr7zw.nbtapi.NBTItem
 import de.tr7zw.nbtapi.NBTTileEntity
-import de.tr7zw.nbtapi.iface.ReadWriteNBT
 import org.bukkit.Bukkit
-import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.block.Container
 import org.bukkit.inventory.ItemStack
@@ -38,7 +35,8 @@ import org.bukkit.plugin.java.JavaPlugin
 
 object TSBAdapter {
   def createInstr[F[_]: Async](plugin: JavaPlugin, config: Config)(using
-    mcThread: OnMinecraftThread[F]
+    mcThread: OnMinecraftThread[F],
+    ManageItemNBT: ManageItemNBT
   ): ItemConversionInstr[F] = new ItemConversionInstr[F] {
     def toItemIdentifier(item: ItemStack): F[ItemIdentifier] = for {
       nbtItem <- mcThread.run(SyncIO(NBTItem(item)))
@@ -132,47 +130,11 @@ object TSBAdapter {
                   case _                        => ConfigurationException.raise("Path did not return a compound.")
                 }
               }
-              itemID        <-
-                itemData.value.get("id").fold(ConfigurationException.raise("Item did not have an id."))(_.pure[F])
-              itemID        <- itemID.downcastOrRaise[NBTTag.NBTTagString]()
-              count         <-
-                itemData.value.get("Count").fold(ConfigurationException.raise("Item did not have a count."))(_.pure[F])
-              count         <- count.downcastOrRaise[NBTTag.NBTTagInt]()
-              itemStack = new ItemStack(Material.matchMaterial(itemID.value), count.value)
-              _ <- mcThread.run(SyncIO {
-                def replaceCompound(rwNBT: ReadWriteNBT, overrides: NBTTag.NBTTagCompound): Unit = {
-                  overrides.value.foreach {
-                    case (k, NBTTag.NBTTagString(v))     => rwNBT.setString(k, v)
-                    case (k, NBTTag.NBTTagInt(v))        => rwNBT.setInteger(k, v)
-                    case (k, NBTTag.NBTTagLong(v))       => rwNBT.setLong(k, v)
-                    case (k, NBTTag.NBTTagShort(v))      => rwNBT.setShort(k, v)
-                    case (k, NBTTag.NBTTagByte(v))       => rwNBT.setByte(k, v)
-                    case (k, NBTTag.NBTTagFloat(v))      => rwNBT.setFloat(k, v)
-                    case (k, NBTTag.NBTTagDouble(v))     => rwNBT.setDouble(k, v)
-                    case (k, NBTTag.NBTTagByteArray(v))  => rwNBT.setByteArray(k, v.map(_.value).toArray)
-                    case (k, NBTTag.NBTTagIntArray(v))   => rwNBT.setIntArray(k, v.map(_.value).toArray)
-                    case (k, NBTTag.NBTTagLongArray(v))  => rwNBT.setLongArray(k, v.map(_.value).toArray)
-                    case (k, NBTTag.NBTTagList(None))    => ???
-                    case (k, NBTTag.NBTTagList(Some(v))) => v match {
-                        case NBTNel.Byte(v)      => ???
-                        case NBTNel.Short(v)     => ???
-                        case NBTNel.Int(v)       => ???
-                        case NBTNel.Long(v)      => ???
-                        case NBTNel.String(v)    => rwNBT.getStringList(k)
-                        case NBTNel.Float(v)     => ???
-                        case NBTNel.Double(v)    => ???
-                        case NBTNel.ByteArray(v) => ???
-                        case NBTNel.IntArray(v)  => ???
-                        case NBTNel.LongArray(v) => ???
-                        case NBTNel.Compound(v)  =>
-                          v.toList.foreach(replaceCompound(rwNBT.getCompoundList(k).addCompound(), _))
-                        case NBTNel.List(v)      => ???
-                      }
-                    case (k, v: NBTTag.NBTTagCompound)   => replaceCompound(rwNBT.getCompound(k), v)
-                  }
-                }
-                NBT.modify[Unit](itemStack, replaceCompound(_, itemData))
-              })
+
+              itemStackOrErr <- mcThread.run {
+                ManageItemNBT.createItemFromNBT(itemData).map(Right.apply).handleError(Left.apply)
+              }
+              itemStack      <- itemStackOrErr.fold(Async[F].raiseError, _.pure[F])
             } yield itemStack
         }
     }
