@@ -5,8 +5,8 @@ import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAss
 import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAssetItem
 import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAssetPersistenceInstr
 import com.github.chencmd.lootcontainerutil.generic.extensions.CastOps.*
-import com.github.chencmd.lootcontainerutil.minecraft.bukkit.BlockLocation
 import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
+import com.github.chencmd.lootcontainerutil.minecraft.bukkit.BlockLocation
 import com.github.chencmd.lootcontainerutil.minecraft.bukkit.Position
 import com.github.chencmd.lootcontainerutil.minecraft.bukkit.Vector
 

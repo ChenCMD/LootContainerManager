@@ -45,7 +45,7 @@ object TSBAdapter {
       item    <- NBTTagParser.parse(nbtItem.toString).fold(SystemException.raise(_), _.value.pure[F])
       tag     <- item
         .get("tag")
-        .traverse(_.downcastOrRaise[NBTTag.NBTTagCompound][F]())
+        .traverse(_.downcastOrRaise[NBTTag.NBTTagCompound]())
         .map(_.getOrElse(NBTTag.NBTTagCompound(Map.empty)): NBTTag.NBTTagCompound)
 
       (_, usingInterpolation) <- config.genAsset.toItemIdentifier
@@ -82,7 +82,7 @@ object TSBAdapter {
                 items.headOption.fold(ConfigurationException.raise("LootTable did not return any items."))(_.pure[F])
             } yield head
           case ItemGenerator.WithMCFunction(predicate, id, preCommand, functionOutput) => for {
-              nbtDataEither <- mcThread.run {
+              nbtDataOrErr <- mcThread.run {
                 val program = for {
                   _    <- preCommand.traverse { cmd =>
                     val res = SyncIO(server.dispatchCommand(Bukkit.getConsoleSender(), cmd))
@@ -115,8 +115,8 @@ object TSBAdapter {
                 } yield item
                 program.value
               }
-              nbtData       <- nbtDataEither.fold(Async[F].raiseError, _.pure[F])
-              itemData      <- {
+              nbtData      <- nbtDataOrErr.fold(Async[F].raiseError, _.pure[F])
+              itemData     <- {
                 val isAccessible = functionOutput.path.isAccessible(nbtData)
                 if (!isAccessible)
                   ConfigurationException.raise(s"Path ${functionOutput.path} did not return any items.")
