@@ -1,9 +1,9 @@
-package com.github.chencmd.lootcontainerutil.feature.genasset
+package com.github.chencmd.lootcontainerutil.feature.asset
 
 import com.github.chencmd.lootcontainerutil.exceptions.UserException
-import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAsset
-import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAssetItem
-import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAssetPersistenceInstr
+import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAsset
+import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetItem
+import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetPersistenceInstr
 import com.github.chencmd.lootcontainerutil.generic.extensions.CastOps.*
 import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
 import com.github.chencmd.lootcontainerutil.minecraft.bukkit.BlockLocation

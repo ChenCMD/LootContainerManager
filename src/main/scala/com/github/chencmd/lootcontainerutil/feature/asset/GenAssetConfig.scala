@@ -1,4 +1,4 @@
-package com.github.chencmd.lootcontainerutil.feature.genasset
+package com.github.chencmd.lootcontainerutil.feature.asset
 
 import com.github.chencmd.lootcontainerutil.nbt.definition.NBTPath
 import com.github.chencmd.lootcontainerutil.nbt.definition.NBTPathInterpolation

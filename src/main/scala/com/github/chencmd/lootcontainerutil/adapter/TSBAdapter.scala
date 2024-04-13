@@ -3,10 +3,10 @@ package com.github.chencmd.lootcontainerutil.adapter
 import com.github.chencmd.lootcontainerutil.Config
 import com.github.chencmd.lootcontainerutil.exceptions.ConfigurationException
 import com.github.chencmd.lootcontainerutil.exceptions.SystemException
-import com.github.chencmd.lootcontainerutil.feature.genasset.DataSource
-import com.github.chencmd.lootcontainerutil.feature.genasset.ItemConversionInstr
-import com.github.chencmd.lootcontainerutil.feature.genasset.ItemGenerator
-import com.github.chencmd.lootcontainerutil.feature.genasset.ItemIdentifier
+import com.github.chencmd.lootcontainerutil.feature.asset.DataSource
+import com.github.chencmd.lootcontainerutil.feature.asset.ItemConversionInstr
+import com.github.chencmd.lootcontainerutil.feature.asset.ItemGenerator
+import com.github.chencmd.lootcontainerutil.feature.asset.ItemIdentifier
 import com.github.chencmd.lootcontainerutil.generic.EitherTExtra
 import com.github.chencmd.lootcontainerutil.generic.extensions.CastOps.*
 import com.github.chencmd.lootcontainerutil.minecraft.ManageItemNBT

@@ -1,9 +1,9 @@
 package com.github.chencmd.lootcontainerutil.adapter.database
 
 import com.github.chencmd.lootcontainerutil.exceptions.SystemException
-import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAsset
-import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAssetItem
-import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAssetPersistenceInstr
+import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAsset
+import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetItem
+import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetPersistenceInstr
 import com.github.chencmd.lootcontainerutil.minecraft.bukkit.BlockLocation
 
 import cats.data.NonEmptyList

@@ -2,10 +2,10 @@ package com.github.chencmd.lootcontainerutil
 
 import com.github.chencmd.lootcontainerutil.adapter.database.DBConfig
 import com.github.chencmd.lootcontainerutil.exceptions.ConfigurationException
-import com.github.chencmd.lootcontainerutil.feature.genasset.DataSource
-import com.github.chencmd.lootcontainerutil.feature.genasset.GenAssetConfig
-import com.github.chencmd.lootcontainerutil.feature.genasset.ItemGenerator
-import com.github.chencmd.lootcontainerutil.feature.genasset.ItemMapper
+import com.github.chencmd.lootcontainerutil.feature.asset.DataSource
+import com.github.chencmd.lootcontainerutil.feature.asset.GenAssetConfig
+import com.github.chencmd.lootcontainerutil.feature.asset.ItemGenerator
+import com.github.chencmd.lootcontainerutil.feature.asset.ItemMapper
 import com.github.chencmd.lootcontainerutil.generic.extensions.CastOps.*
 import com.github.chencmd.lootcontainerutil.nbt.NBTPathInterpolationParser
 import com.github.chencmd.lootcontainerutil.nbt.NBTPathParser

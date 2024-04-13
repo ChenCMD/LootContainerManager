@@ -1,9 +1,9 @@
 package com.github.chencmd.lootcontainerutil
 
 import com.github.chencmd.lootcontainerutil.exceptions.UserException
-import com.github.chencmd.lootcontainerutil.feature.genasset.GenLootAsset
-import com.github.chencmd.lootcontainerutil.feature.genasset.ItemConversionInstr
-import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAssetPersistenceInstr
+import com.github.chencmd.lootcontainerutil.feature.asset.GenLootAsset
+import com.github.chencmd.lootcontainerutil.feature.asset.ItemConversionInstr
+import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetPersistenceInstr
 import com.github.chencmd.lootcontainerutil.generic.extensions.CastOps.downcastOrNone
 import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
 

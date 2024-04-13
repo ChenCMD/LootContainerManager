@@ -1,4 +1,4 @@
-package com.github.chencmd.lootcontainerutil.feature.genasset
+package com.github.chencmd.lootcontainerutil.feature.asset
 
 import org.bukkit.inventory.ItemStack
 

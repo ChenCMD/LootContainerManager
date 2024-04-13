@@ -1,4 +1,4 @@
-package com.github.chencmd.lootcontainerutil.feature.genasset.persistence
+package com.github.chencmd.lootcontainerutil.feature.asset.persistence
 
 import com.github.chencmd.lootcontainerutil.minecraft.bukkit.BlockLocation
 

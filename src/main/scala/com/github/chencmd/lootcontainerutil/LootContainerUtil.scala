@@ -5,9 +5,9 @@ import com.github.chencmd.lootcontainerutil.adapter.database.LootAssetRepository
 import com.github.chencmd.lootcontainerutil.adapter.database.SQLite
 import com.github.chencmd.lootcontainerutil.exceptions.ConfigurationException
 import com.github.chencmd.lootcontainerutil.exceptions.UserException
+import com.github.chencmd.lootcontainerutil.feature.asset.ItemConversionInstr
+import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetPersistenceInstr
 import com.github.chencmd.lootcontainerutil.feature.containerprotection.ProtectActionListener
-import com.github.chencmd.lootcontainerutil.feature.genasset.ItemConversionInstr
-import com.github.chencmd.lootcontainerutil.feature.genasset.persistence.LootAssetPersistenceInstr
 import com.github.chencmd.lootcontainerutil.generic.EitherTIOExtra.*
 import com.github.chencmd.lootcontainerutil.minecraft.ManageItemNBT
 import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
