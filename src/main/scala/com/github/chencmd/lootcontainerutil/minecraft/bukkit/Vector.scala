@@ -22,9 +22,9 @@ case class Vector(x: Double, y: Double, z: Double) {
     Math.sqrt(x * x + y * y + z * z).pipe(mag => Vector(x / mag, y / mag, z / mag))
   }
 
-  def toLocation(w: World): Position = Position(w, x, y, z)
-
   def toBukkit: BukkitVector = new BukkitVector(x, y, z)
+  def toPosition(w: World): Position = Position(w, x, y, z)
+  def toBlockLocation(w: World): BlockLocation = BlockLocation(w, x.toInt, y.toInt, z.toInt)
 }
 
 object Vector {

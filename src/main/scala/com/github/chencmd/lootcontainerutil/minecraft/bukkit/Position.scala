@@ -22,11 +22,10 @@ case class Position(w: World, x: Double, y: Double, z: Double) {
 
   infix def /(n: Double): Position = Position(w, x / n, y / n, z / n)
 
+  def toBukkit: BukkitLocation = new BukkitLocation(w, x, y, z)
+  def toBlockLocation: BlockLocation = BlockLocation(w, x.toInt, y.toInt, z.toInt)
   def toVector: Vector = Vector(x, y, z)
 
-  def toBlockLocation: BlockLocation = BlockLocation(w, x.toInt, y.toInt, z.toInt)
-
-  def toBukkit: BukkitLocation = new BukkitLocation(w, x, y, z)
 }
 
 object Position {
