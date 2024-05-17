@@ -61,7 +61,7 @@ object GenLootAsset {
         }
         .map(LootAsset(location, blockId, name, facing, waterlogged, chestType, _))
 
-      _ <- LAP.storeLootAsset(asset)
+      _ <- LAP.upsertLootAsset(asset)
     } yield ()
 
     action

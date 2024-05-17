@@ -154,7 +154,7 @@ object LootAssetRepository {
         lootAsset   <- queryResult.traverse((repr, item) => reprToLootAsset(repr, item.toList))
       } yield lootAsset
 
-      override def getLootAssets(): F[List[LootAsset]] = for {
+      override def getAllLootAssets(): F[List[LootAsset]] = for {
         queryResult <- ASSET_SELECT_QUERY
           .query[(LootAssetRecordRepr, Option[LootAssetItem])]
           .to[List]
@@ -162,7 +162,7 @@ object LootAssetRepository {
         lootAsset   <- queryResult.traverse((repr, item) => reprToLootAsset(repr, item.toList))
       } yield lootAsset
 
-      override def storeLootAsset(lootAsset: LootAsset): F[Unit] = {
+      override def upsertLootAsset(lootAsset: LootAsset): F[Unit] = {
         val (assetRepr, items) = lootAssetToRepr(lootAsset)
         val program            = for {
           _ <- makeAssetUpsertQuery(assetRepr).update.run
