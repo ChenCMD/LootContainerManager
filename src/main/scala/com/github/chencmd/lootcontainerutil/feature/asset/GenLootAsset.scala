@@ -14,6 +14,8 @@ import cats.effect.SyncIO
 import cats.effect.kernel.Async
 import cats.implicits.*
 
+import scala.jdk.CollectionConverters.*
+
 import org.bukkit.block.Container
 import org.bukkit.block.data.Directional
 import org.bukkit.block.data.Waterlogged
@@ -48,14 +50,16 @@ object GenLootAsset {
             data.downcastOrNone[Directional].map(_.getFacing),
             data.downcastOrNone[Waterlogged].map(_.isWaterlogged),
             data.downcastOrNone[Chest].map(_.getType),
-            block.getInventory().getContents().toList
+            block.getInventory()
           )
         }
       })
-      (location, blockId, name, facing, waterlogged, chestType, items) <-
+      (location, blockId, name, facing, waterlogged, chestType, inv) <-
         blockDataOpt.fold(UserException.raise("No container was found."))(_.pure[F])
 
-      asset <- items
+      _ <- inv.getViewers().asScala.toList.traverse(p => Async[F].delay(p.closeInventory()))
+
+      asset <- inv.getContents().toList
         .traverseWithIndexM { (item, slot) =>
           Converter.toItemIdentifier(item).map(LootAssetItem(slot, _, item.getAmount()))
         }
