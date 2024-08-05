@@ -7,8 +7,8 @@ import com.github.chencmd.lootcontainerutil.generic.extensions.CastOps.downcastO
 import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
 
 import cats.data.OptionT
-import cats.effect.SyncIO
 import cats.effect.kernel.Async
+import cats.effect.kernel.Sync
 import cats.implicits.*
 
 import scala.concurrent.duration.*
@@ -23,23 +23,23 @@ import org.bukkit.loot.LootTable
 import org.bukkit.loot.Lootable
 
 object LootContainerProtection {
-  def onPlayerInteract[F[_]: Async](
+  def onPlayerInteract[F[_]: Async, G[_]: Sync](
     e: PlayerInteractEvent
-  )(using mcThread: OnMinecraftThread[F]): SyncContinuation[F, Boolean] = {
+  )(using mcThread: OnMinecraftThread[F]): SyncContinuation[F, G, Boolean] = {
     val p = e.getPlayer
 
     val lootTable = {
       val program = for {
-        _ <- OptionTExtra.exitWhenF(e.getAction != Action.RIGHT_CLICK_BLOCK)(SyncIO.unit)
+        _ <- OptionTExtra.exitWhenF(e.getAction != Action.RIGHT_CLICK_BLOCK)(Sync[G].unit)
         hasItemInHand = p.getInventory().pipe { inv =>
           !inv.getItemInMainHand.getType.isAir || !inv.getItemInOffHand.getType.isAir
         }
-        _         <- OptionTExtra.exitWhenF(p.isSneaking() && hasItemInHand)(SyncIO.unit)
+        _         <- OptionTExtra.exitWhenF(p.isSneaking() && hasItemInHand)(Sync[G].unit)
         container <- OptionT
-          .fromOption[SyncIO](Option(e.getClickedBlock.getState))
+          .fromOption[G](Option(e.getClickedBlock.getState))
           .flatMap(block => OptionT.fromOption(block.downcastOrNone[Container]))
           .flatMap(container => OptionT.fromOption(container.downcastOrNone[Lootable]))
-        lootTable <- OptionT.fromOption[SyncIO](Option(container.getLootTable))
+        lootTable <- OptionT.fromOption[G](Option(container.getLootTable))
       } yield lootTable
       program.value
     }

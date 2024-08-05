@@ -4,8 +4,10 @@ import com.github.chencmd.lootcontainerutil
 import com.github.chencmd.lootcontainerutil.nbt.definition.NBTTag
 import com.github.chencmd.lootcontainerutil.nbt.definition.NBTTag.NBTTagCompound
 
-import cats.effect.SyncIO
+import cats.effect.kernel.Sync
 import cats.implicits.*
+
+import scala.util.chaining.*
 
 import dev.array21.bukkitreflectionlib.ReflectionUtil
 import java.lang.reflect.Constructor
@@ -13,17 +15,18 @@ import java.lang.reflect.Constructor
 type NMSItemStack
 
 object NMSItemStack {
-  private lazy val _clazz = ReflectionUtil.getMinecraftClass("net.minecraft.nbt.ItemStack")
-  def clazz               = SyncIO(_clazz)
+  lazy val _clazz       = ReflectionUtil.getMinecraftClass("world.item.ItemStack")
+  def clazz[F[_]: Sync] = Sync[F].delay(_clazz)
 
-  private lazy val _constructor = ReflectionUtil
-    .getConstructor(_clazz, NMSNBTTagCompound._clazz)
+  lazy val _constructor       = _clazz
+    .getDeclaredConstructor(NMSNBTTagCompound._clazz)
+    .tap(_.setAccessible(true))
     .asInstanceOf[Constructor[NMSItemStack]]
-  def constructor               = SyncIO(_constructor)
+  def constructor[F[_]: Sync] = Sync[F].delay(_constructor)
 
-  def apply(nbt: NBTTag.NBTTagCompound): SyncIO[NMSItemStack] = for {
+  def apply[F[_]: Sync](nbt: NBTTag.NBTTagCompound): F[NMSItemStack] = for {
     tag         <- NMSNBTTag.convert(nbt)
     constructor <- constructor
-    nmsItem     <- SyncIO(constructor.newInstance(tag))
+    nmsItem     <- Sync[F].delay(constructor.newInstance(tag))
   } yield nmsItem
 }

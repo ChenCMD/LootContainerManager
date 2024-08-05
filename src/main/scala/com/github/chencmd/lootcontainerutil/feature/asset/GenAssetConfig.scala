@@ -18,14 +18,23 @@ enum ItemGenerator(
   val id: String,
   val preCommand: List[String]
 ) {
-  case WithLootTable(override val predicate: Regex, override val id: String, override val preCommand: List[String])
-      extends ItemGenerator(predicate, id, preCommand)
+  case WithLootTable(
+    override val predicate: Regex,
+    override val id: String,
+    override val preCommand: List[String]
+  ) extends ItemGenerator(predicate, id, preCommand)
 
   case WithMCFunction(
     override val predicate: Regex,
     override val id: String,
     override val preCommand: List[String],
     val functionOutput: DataSource
+  ) extends ItemGenerator(predicate, id, preCommand)
+
+  case WithItemId(
+    override val predicate: Regex,
+    override val id: String,
+    override val preCommand: List[String]
   ) extends ItemGenerator(predicate, id, preCommand)
 }
 
