@@ -14,11 +14,15 @@ import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
 import com.github.chencmd.lootcontainerutil.minecraft.bukkit.ManageBukkitItemNBT
 import com.github.chencmd.lootcontainerutil.minecraft.bukkit.OnBukkitServerThread
 
+import cats.arrow.FunctionK
+import cats.data.NonEmptyList
 import cats.effect.IO
+import cats.effect.SyncIO
 import cats.effect.kernel.Async
 import cats.effect.kernel.Ref
 import cats.effect.unsafe.implicits.global
 import cats.implicits.*
+import cats.~>
 
 import doobie.*
 import org.bukkit.Bukkit
@@ -28,6 +32,14 @@ import org.bukkit.plugin.java.JavaPlugin
 
 class LootContainerUtil extends JavaPlugin {
   type F = IO[_]
+  type G = SyncIO[_]
+  val coerceF: G ~> F           = FunctionK.lift([A] => (_: G[A]).to[F])
+  val unsafeRunSyncContinuation = [A] =>
+    (cont: SyncContinuation[F, G, A]) => {
+      val (a, effect) = cont.unsafeRunSync()
+      effect.unsafeRunAndForget()
+      a
+  }
 
   val cmdExecutor: Ref[F, Option[CommandExecutor[F]]] = Ref.unsafe(None)
 
@@ -37,13 +49,14 @@ class LootContainerUtil extends JavaPlugin {
 
     val program = for {
       cfg <- Config.tryRead[F](this)
-      _   <- Async[F].delay(Bukkit.getPluginManager.registerEvents(new ProtectActionListener, this))
       transactor     = SQLite.createTransactor[F](cfg.db)
       lootAssetRepos = LootAssetRepository.createInstr[F](transactor)
       _ <- lootAssetRepos.initialize()
       given LootAssetPersistenceInstr[F] = lootAssetRepos
       given ItemConversionInstr[F]       = TSBAdapter.createInstr[F](this, cfg)
       _ <- cmdExecutor.set(Some(new CommandExecutor))
+      pal                  <- ProtectActionListener[F, G](unsafeRunSyncContinuation)
+      _                    <- Async[F].delay(Bukkit.getPluginManager.registerEvents(pal, this))
       _ <- Async[F].delay(Bukkit.getConsoleSender.sendMessage("LootContainerUtil enabled."))
     } yield ()
 

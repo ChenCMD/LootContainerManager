@@ -3,25 +3,24 @@ package com.github.chencmd.lootcontainerutil.minecraft.bukkit
 import com.github.chencmd.lootcontainerutil.nbt.definition.NBTNel
 import com.github.chencmd.lootcontainerutil.nbt.definition.NBTTag
 
-import cats.effect.SyncIO
+import cats.effect.kernel.Sync
 import cats.implicits.*
 
 import scala.jdk.CollectionConverters.*
+import scala.util.chaining.*
 
 import dev.array21.bukkitreflectionlib.ReflectionUtil
-import java.lang.reflect.Constructor
 
 type NMSNBTTag
 
 object NMSNBTTag {
   lazy val _clazz = ReflectionUtil.getMinecraftClass("nbt.Tag")
-
-  def convert[A](a: A)(using NNT: NMSNBTTagConverter[A]): SyncIO[NNT.NMSTagType] = NNT.valueOf(a)
+  def convert[F[_]: Sync, A](a: A)(using NNT: NMSNBTTagConverter[A]): F[NNT.NMSTagType] = NNT.valueOf(a)
 
   trait NMSNBTTagConverter[A] {
-    type NMSTagType
+    type NMSTagType <: NMSNBTTag
 
-    def valueOf(a: A): SyncIO[NMSTagType]
+    def valueOf[F[_]: Sync](a: A): F[NMSTagType]
   }
 
   object NMSNBTTagConverter {
@@ -33,20 +32,20 @@ object NMSNBTTag {
     given NMSNBTTagConverter[NBTTag] with {
       override type NMSTagType = NMSNBTTag
 
-      override def valueOf(a: NBTTag): SyncIO[NMSNBTTag] = {
+      override def valueOf[F[_]: Sync](a: NBTTag): F[NMSNBTTag] = {
         a match {
-          case b: NBTTagByte      => NMSNBTTagConverter[NBTTagByte].valueOf(b)
-          case b: NBTTagShort     => NMSNBTTagConverter[NBTTagShort].valueOf(b)
-          case b: NBTTagInt       => NMSNBTTagConverter[NBTTagInt].valueOf(b)
-          case b: NBTTagLong      => NMSNBTTagConverter[NBTTagLong].valueOf(b)
-          case b: NBTTagFloat     => NMSNBTTagConverter[NBTTagFloat].valueOf(b)
-          case b: NBTTagDouble    => NMSNBTTagConverter[NBTTagDouble].valueOf(b)
-          case b: NBTTagString    => NMSNBTTagConverter[NBTTagString].valueOf(b)
-          case b: NBTTagByteArray => NMSNBTTagConverter[NBTTagByteArray].valueOf(b)
-          case b: NBTTagIntArray  => NMSNBTTagConverter[NBTTagIntArray].valueOf(b)
-          case b: NBTTagLongArray => NMSNBTTagConverter[NBTTagLongArray].valueOf(b)
-          case b: NBTTagList      => NMSNBTTagConverter[NBTTagList].valueOf(b)
-          case b: NBTTagCompound  => NMSNBTTagConverter[NBTTagCompound].valueOf(b)
+          case b: NBTTagByte      => NMSNBTTagConverter[NBTTagByte].valueOf(b).widen
+          case b: NBTTagShort     => NMSNBTTagConverter[NBTTagShort].valueOf(b).widen
+          case b: NBTTagInt       => NMSNBTTagConverter[NBTTagInt].valueOf(b).widen
+          case b: NBTTagLong      => NMSNBTTagConverter[NBTTagLong].valueOf(b).widen
+          case b: NBTTagFloat     => NMSNBTTagConverter[NBTTagFloat].valueOf(b).widen
+          case b: NBTTagDouble    => NMSNBTTagConverter[NBTTagDouble].valueOf(b).widen
+          case b: NBTTagString    => NMSNBTTagConverter[NBTTagString].valueOf(b).widen
+          case b: NBTTagByteArray => NMSNBTTagConverter[NBTTagByteArray].valueOf(b).widen
+          case b: NBTTagIntArray  => NMSNBTTagConverter[NBTTagIntArray].valueOf(b).widen
+          case b: NBTTagLongArray => NMSNBTTagConverter[NBTTagLongArray].valueOf(b).widen
+          case b: NBTTagList      => NMSNBTTagConverter[NBTTagList].valueOf(b).widen
+          case b: NBTTagCompound  => NMSNBTTagConverter[NBTTagCompound].valueOf(b).widen
         }
       }
     }
@@ -55,7 +54,7 @@ object NMSNBTTag {
       type NMSNBTTagConvertedCompound = NMSNBTTagCompound
       override type NMSTagType        = NMSNBTTagConvertedCompound
 
-      override def valueOf(a: NBTTagCompound): SyncIO[NMSNBTTagConvertedCompound] = for {
+      override def valueOf[F[_]: Sync](a: NBTTagCompound): F[NMSNBTTagConvertedCompound] = for {
         a <- a.value.toList.traverse { case (k, v) => NMSNBTTag.convert(v).map(k -> _) }
         x <- NMSNBTTagCompound(a.toMap)
       } yield x
@@ -65,11 +64,14 @@ object NMSNBTTag {
       type NMSNBTTagConvertedByte <: NMSNBTTag
       override type NMSTagType = NMSNBTTagConvertedByte
 
-      private lazy val clazz         = ReflectionUtil.getMinecraftClass("nbt.ByteTag")
-      private lazy val valueOfMethod = ReflectionUtil.getMethod(clazz, "valueOf")
+      private lazy val clazz   = ReflectionUtil
+        .getMinecraftClass("nbt.NBTTagByte")
+        .asInstanceOf[Class[NMSNBTTagConvertedByte]]
+      private lazy val valueOf = ReflectionUtil
+        .getMethod(clazz, "a", classOf[Byte])
 
-      override def valueOf(a: NBTTagByte): SyncIO[NMSNBTTagConvertedByte] = SyncIO {
-        valueOfMethod.invoke(null, a.value).asInstanceOf[NMSNBTTagConvertedByte]
+      override def valueOf[F[_]: Sync](a: NBTTagByte): F[NMSNBTTagConvertedByte] = Sync[F].delay {
+        valueOf.invoke(null, a.value).asInstanceOf[NMSTagType]
       }
     }
 
@@ -77,11 +79,14 @@ object NMSNBTTag {
       type NMSNBTTagConvertedShort <: NMSNBTTag
       override type NMSTagType = NMSNBTTagConvertedShort
 
-      private lazy val clazz         = ReflectionUtil.getMinecraftClass("nbt.ShortTag")
-      private lazy val valueOfMethod = ReflectionUtil.getMethod(clazz, "valueOf")
+      private lazy val clazz   = ReflectionUtil
+        .getMinecraftClass("nbt.NBTTagShort")
+        .asInstanceOf[Class[NMSTagType]]
+      private lazy val valueOf = ReflectionUtil
+        .getMethod(clazz, "a", classOf[Short])
 
-      override def valueOf(a: NBTTagShort): SyncIO[NMSNBTTagConvertedShort] = SyncIO {
-        valueOfMethod.invoke(null, a.value).asInstanceOf[NMSNBTTagConvertedShort]
+      override def valueOf[F[_]: Sync](a: NBTTagShort): F[NMSTagType] = Sync[F].delay {
+        valueOf.invoke(null, a.value).asInstanceOf[NMSTagType]
       }
     }
 
@@ -89,11 +94,14 @@ object NMSNBTTag {
       type NMSNBTTagConvertedInt <: NMSNBTTag
       override type NMSTagType = NMSNBTTagConvertedInt
 
-      private lazy val clazz         = ReflectionUtil.getMinecraftClass("nbt.IntTag")
-      private lazy val valueOfMethod = ReflectionUtil.getMethod(clazz, "valueOf")
+      private lazy val clazz   = ReflectionUtil
+        .getMinecraftClass("nbt.NBTTagInt")
+        .asInstanceOf[Class[NMSTagType]]
+      private lazy val valueOf = ReflectionUtil
+        .getMethod(clazz, "a", classOf[Int])
 
-      override def valueOf(a: NBTTagInt): SyncIO[NMSNBTTagConvertedInt] = SyncIO {
-        valueOfMethod.invoke(null, a.value).asInstanceOf[NMSNBTTagConvertedInt]
+      override def valueOf[F[_]: Sync](a: NBTTagInt): F[NMSTagType] = Sync[F].delay {
+        valueOf.invoke(null, a.value).asInstanceOf[NMSTagType]
       }
     }
 
@@ -101,11 +109,14 @@ object NMSNBTTag {
       type NMSNBTTagConvertedLong <: NMSNBTTag
       override type NMSTagType = NMSNBTTagConvertedLong
 
-      private lazy val clazz         = ReflectionUtil.getMinecraftClass("nbt.LongTag")
-      private lazy val valueOfMethod = ReflectionUtil.getMethod(clazz, "valueOf")
+      private lazy val clazz   = ReflectionUtil
+        .getMinecraftClass("nbt.NBTTagLong")
+        .asInstanceOf[Class[NMSTagType]]
+      private lazy val valueOf = ReflectionUtil
+        .getMethod(clazz, "a", classOf[Long])
 
-      override def valueOf(a: NBTTagLong): SyncIO[NMSNBTTagConvertedLong] = SyncIO {
-        valueOfMethod.invoke(null, a.value).asInstanceOf[NMSNBTTagConvertedLong]
+      override def valueOf[F[_]: Sync](a: NBTTagLong): F[NMSNBTTagConvertedLong] = Sync[F].delay {
+        valueOf.invoke(null, a.value).asInstanceOf[NMSTagType]
       }
     }
 
@@ -113,11 +124,14 @@ object NMSNBTTag {
       type NMSNBTTagConvertedFloat <: NMSNBTTag
       override type NMSTagType = NMSNBTTagConvertedFloat
 
-      private lazy val clazz         = ReflectionUtil.getMinecraftClass("nbt.FloatTag")
-      private lazy val valueOfMethod = ReflectionUtil.getMethod(clazz, "valueOf")
+      private lazy val clazz   = ReflectionUtil
+        .getMinecraftClass("nbt.NBTTagFloat")
+        .asInstanceOf[Class[NMSTagType]]
+      private lazy val valueOf = ReflectionUtil
+        .getMethod(clazz, "a", classOf[Float])
 
-      override def valueOf(a: NBTTagFloat): SyncIO[NMSNBTTagConvertedFloat] = SyncIO {
-        valueOfMethod.invoke(null, a.value).asInstanceOf[NMSNBTTagConvertedFloat]
+      override def valueOf[F[_]: Sync](a: NBTTagFloat): F[NMSNBTTagConvertedFloat] = Sync[F].delay {
+        valueOf.invoke(null, a.value).asInstanceOf[NMSTagType]
       }
     }
 
@@ -125,11 +139,14 @@ object NMSNBTTag {
       type NMSNBTTagConvertedDouble <: NMSNBTTag
       override type NMSTagType = NMSNBTTagConvertedDouble
 
-      private lazy val clazz         = ReflectionUtil.getMinecraftClass("nbt.DoubleTag")
-      private lazy val valueOfMethod = ReflectionUtil.getMethod(clazz, "valueOf")
+      private lazy val clazz   = ReflectionUtil
+        .getMinecraftClass("nbt.NBTTagDouble")
+        .asInstanceOf[Class[NMSTagType]]
+      private lazy val valueOf = ReflectionUtil
+        .getMethod(clazz, "a", classOf[Double])
 
-      override def valueOf(a: NBTTagDouble): SyncIO[NMSNBTTagConvertedDouble] = SyncIO {
-        valueOfMethod.invoke(null, a.value).asInstanceOf[NMSNBTTagConvertedDouble]
+      override def valueOf[F[_]: Sync](a: NBTTagDouble): F[NMSNBTTagConvertedDouble] = Sync[F].delay {
+        valueOf.invoke(null, a.value).asInstanceOf[NMSTagType]
       }
     }
 
@@ -137,11 +154,14 @@ object NMSNBTTag {
       type NMSNBTTagConvertedString <: NMSNBTTag
       override type NMSTagType = NMSNBTTagConvertedString
 
-      private lazy val clazz         = ReflectionUtil.getMinecraftClass("nbt.StringTag")
-      private lazy val valueOfMethod = ReflectionUtil.getMethod(clazz, "valueOf")
+      private lazy val clazz   = ReflectionUtil
+        .getMinecraftClass("nbt.NBTTagString")
+        .asInstanceOf[Class[NMSTagType]]
+      private lazy val valueOf = ReflectionUtil
+        .getMethod(clazz, "a", classOf[String])
 
-      override def valueOf(a: NBTTagString): SyncIO[NMSNBTTagConvertedString] = SyncIO {
-        valueOfMethod.invoke(null, a.value).asInstanceOf[NMSNBTTagConvertedString]
+      override def valueOf[F[_]: Sync](a: NBTTagString): F[NMSNBTTagConvertedString] = Sync[F].delay {
+        valueOf.invoke(null, a.value).asInstanceOf[NMSTagType]
       }
     }
 
@@ -149,11 +169,14 @@ object NMSNBTTag {
       type NMSNBTTagConvertedByteArray <: NMSNBTTag
       override type NMSTagType = NMSNBTTagConvertedByteArray
 
-      private lazy val clazz         = ReflectionUtil.getMinecraftClass("nbt.ByteArrayTag")
-      private lazy val valueOfMethod = ReflectionUtil.getMethod(clazz, "valueOf")
+      private lazy val clazz   = ReflectionUtil
+        .getMinecraftClass("nbt.NBTTagByteArray")
+        .asInstanceOf[Class[NMSTagType]]
+      private lazy val valueOf = ReflectionUtil
+        .getMethod(clazz, "a", classOf[java.util.List[?]])
 
-      override def valueOf(a: NBTTagByteArray): SyncIO[NMSNBTTagConvertedByteArray] = SyncIO {
-        valueOfMethod.invoke(null, a.value.asJava).asInstanceOf[NMSNBTTagConvertedByteArray]
+      override def valueOf[F[_]: Sync](a: NBTTagByteArray): F[NMSNBTTagConvertedByteArray] = Sync[F].delay {
+        valueOf.invoke(null, a.value).asInstanceOf[NMSTagType]
       }
     }
 
@@ -161,11 +184,14 @@ object NMSNBTTag {
       type NMSNBTTagConvertedIntArray <: NMSNBTTag
       override type NMSTagType = NMSNBTTagConvertedIntArray
 
-      private lazy val clazz         = ReflectionUtil.getMinecraftClass("nbt.IntArrayTag")
-      private lazy val valueOfMethod = ReflectionUtil.getMethod(clazz, "valueOf")
+      private lazy val clazz   = ReflectionUtil
+        .getMinecraftClass("nbt.NBTTagIntArray")
+        .asInstanceOf[Class[NMSTagType]]
+      private lazy val valueOf = ReflectionUtil
+        .getMethod(clazz, "a", classOf[java.util.List[?]])
 
-      override def valueOf(a: NBTTagIntArray): SyncIO[NMSNBTTagConvertedIntArray] = SyncIO {
-        valueOfMethod.invoke(null, a.value.asJava).asInstanceOf[NMSNBTTagConvertedIntArray]
+      override def valueOf[F[_]: Sync](a: NBTTagIntArray): F[NMSNBTTagConvertedIntArray] = Sync[F].delay {
+        valueOf.invoke(null, a.value).asInstanceOf[NMSTagType]
       }
     }
 
@@ -173,11 +199,14 @@ object NMSNBTTag {
       type NMSNBTTagConvertedLongArray <: NMSNBTTag
       override type NMSTagType = NMSNBTTagConvertedLongArray
 
-      private lazy val clazz         = ReflectionUtil.getMinecraftClass("nbt.LongArrayTag")
-      private lazy val valueOfMethod = ReflectionUtil.getMethod(clazz, "valueOf")
+      private lazy val clazz   = ReflectionUtil
+        .getMinecraftClass("nbt.NBTTagLongArray")
+        .asInstanceOf[Class[NMSTagType]]
+      private lazy val valueOf = ReflectionUtil
+        .getMethod(clazz, "a", classOf[java.util.List[?]])
 
-      override def valueOf(a: NBTTagLongArray): SyncIO[NMSNBTTagConvertedLongArray] = SyncIO {
-        valueOfMethod.invoke(null, a.value.asJava).asInstanceOf[NMSNBTTagConvertedLongArray]
+      override def valueOf[F[_]: Sync](a: NBTTagLongArray): F[NMSNBTTagConvertedLongArray] = Sync[F].delay {
+        valueOf.invoke(null, a.value.asJava).asInstanceOf[NMSTagType]
       }
     }
 
@@ -185,12 +214,14 @@ object NMSNBTTag {
       type NMSNBTTagConvertedList <: NMSNBTTag
       override type NMSTagType = NMSNBTTagConvertedList
 
-      private lazy val clazz       = ReflectionUtil.getMinecraftClass("nbt.ListTag")
-      private lazy val constructor = ReflectionUtil
-        .getConstructor(clazz, classOf[java.util.List[?]], classOf[Byte])
-        .asInstanceOf[Constructor[NMSNBTTagConvertedList]]
+      private lazy val clazz       = ReflectionUtil
+        .getMinecraftClass("nbt.NBTTagList")
+        .asInstanceOf[Class[NMSTagType]]
+      private lazy val constructor = clazz
+        .getDeclaredConstructor(classOf[java.util.List[?]], classOf[Byte])
+        .tap(_.setAccessible(true))
 
-      override def valueOf(a: NBTTagList): SyncIO[NMSNBTTagConvertedList] = for {
+      override def valueOf[F[_]: Sync](a: NBTTagList): F[NMSNBTTagConvertedList] = for {
         convertedList <- a.toList.traverse(NMSNBTTag.convert)
         typeId = a.value match {
           case None                      => 0
@@ -208,7 +239,9 @@ object NMSNBTTag {
           case Some(NBTNel.LongArray(_)) => 12
         }
 
-        list <- SyncIO(constructor.newInstance(convertedList.asJava, typeId))
+        list <- Sync[F].delay {
+          constructor.newInstance(convertedList.asJava, typeId).asInstanceOf[NMSTagType]
+        }
       } yield list
     }
   }

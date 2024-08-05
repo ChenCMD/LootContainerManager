@@ -1,5 +1,3 @@
 package com.github.chencmd.lootcontainerutil.generic
 
-import cats.effect.SyncIO
-
-type SyncContinuation[F[_], A] = SyncIO[(A, F[Unit])]
+type SyncContinuation[F[_], G[_], A] = G[(A, F[Unit])]
