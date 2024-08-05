@@ -14,7 +14,7 @@ object ManageBukkitItemNBT {
 
     def createItemFromNBT[F[_]: Sync](compound: NBTTagCompound): F[ItemStack] = for {
       nmsItem   <- NMSItemStack(compound)
-      craftItem <- CraftItemStack.asCraftMirror(nmsItem)
+      craftItem <- CraftItemStack.asBukkitCopy(nmsItem)
     } yield craftItem
   }
 }

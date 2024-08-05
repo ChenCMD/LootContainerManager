@@ -7,6 +7,8 @@ import com.github.chencmd.lootcontainerutil.nbt.definition.NBTTag.NBTTagCompound
 import cats.effect.kernel.Sync
 import cats.implicits.*
 
+import scala.util.chaining.*
+
 import dev.array21.bukkitreflectionlib.ReflectionUtil
 import java.lang.reflect.Constructor
 
@@ -16,8 +18,9 @@ object NMSItemStack {
   lazy val _clazz       = ReflectionUtil.getMinecraftClass("world.item.ItemStack")
   def clazz[F[_]: Sync] = Sync[F].delay(_clazz)
 
-  private lazy val _constructor = ReflectionUtil
-    .getConstructor(_clazz, NMSNBTTagCompound._clazz)
+  lazy val _constructor       = _clazz
+    .getDeclaredConstructor(NMSNBTTagCompound._clazz)
+    .tap(_.setAccessible(true))
     .asInstanceOf[Constructor[NMSItemStack]]
   def constructor[F[_]: Sync] = Sync[F].delay(_constructor)
 
