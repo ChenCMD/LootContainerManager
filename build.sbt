@@ -20,6 +20,7 @@ libraryDependencies ++= Seq(
   "org.tpolecat"           %% "doobie-specs2"            % doobieVersion,
   "org.xerial"              % "sqlite-jdbc"              % "3.45.1.0",
   "org.scala-lang.modules" %% "scala-parser-combinators" % "2.3.0",
+  "com.github.tarao"       %% "record4s"                 % "0.13.0",
   "org.scalatest"          %% "scalatest"                % "3.2.12" % Test
 )
 
