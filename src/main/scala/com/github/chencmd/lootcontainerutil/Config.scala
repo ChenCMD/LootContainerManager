@@ -67,6 +67,7 @@ object Config {
             ).parMapN(DataSource.Block(_, _, _, _, path))
           case "storage" => getValueWithType[String](fnOut, p)("namespace").map(DataSource.Storage(_, path))
           case "entity"  => getValueWithType[String](fnOut, p)("id").map(DataSource.Entity(_, path))
+          case _ => Either.leftNec(s"Invalid target type '$target' in $p expected 'block', 'storage', or 'entity'")
         }
       }
 
@@ -89,8 +90,11 @@ object Config {
           case "function"   => {
             val p = s"genAsset.toItem[$i].functionOutput"
             for {
-              fnOut <- getValueWithType[Map[?, ?]](typedMap, p)("functionOutput")
-              fnOut <- Either.catchNonFatal(fnOut.asInstanceOf[Map[String, Any]]).leftMap(_.getMessage).toEitherNec
+              fnOut          <- getValueWithType[java.util.Map[?, ?]](typedMap, p)("functionOutput")
+              fnOut          <- Either
+                .catchNonFatal(fnOut.asScala.toMap.asInstanceOf[Map[String, Any]])
+                .leftMap(_.getMessage)
+                .toEitherNec
               (target, path) <- (
                 getValueWithType[String](fnOut, p)("target"),
                 getValueWithType[String](fnOut, p)("path").flatMap(s => NBTPathParser.parse(s.trim).toEitherNec)
@@ -99,6 +103,8 @@ object Config {
               dataSource <- getDataSources(fnOut, target, path)
             } yield ItemGenerator.WithMCFunction(predicate.r, id, preCommand, dataSource)
           }
+          case "give"       => ItemGenerator.WithItemId(predicate.r, id, preCommand).pure[EitherNec[String, _]]
+          case _ => Either.leftNec(s"Invalid generateType '$generateType' in $p expected 'loot_table' or 'function'")
         }
       } yield itemGenerator
     }
