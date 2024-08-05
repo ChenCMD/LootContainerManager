@@ -46,6 +46,23 @@ enum NBTTag {
     case NBTTagList(value)      => listToString(value.map(_.values.toList).orEmpty)
   }
 
+  def toRawString: String = this match {
+    case NBTTagCompound(value)  => value
+        .map { case (k, v) => s"${quote(k)}:${v.toSNBT}" }
+        .mkString("{", ",", "}")
+    case NBTTagByte(value)      => value.toString
+    case NBTTagShort(value)     => value.toString
+    case NBTTagInt(value)       => value.toString
+    case NBTTagLong(value)      => value.toString
+    case NBTTagFloat(value)     => value.toString
+    case NBTTagDouble(value)    => value.toString
+    case NBTTagString(value)    => value
+    case NBTTagByteArray(value) => value.map(_.value).mkString("[", ",", "]")
+    case NBTTagIntArray(value)  => value.map(_.value).mkString("[", ",", "]")
+    case NBTTagLongArray(value) => value.map(_.value).mkString("[", ",", "]")
+    case NBTTagList(value)      => value.map(_.values.toList).orEmpty.mkString("[", ",", "]")
+  }
+
   protected def quote(str: String): String = str
     .replace("\\", "\\\\")
     .replace("\"", "\\\"")

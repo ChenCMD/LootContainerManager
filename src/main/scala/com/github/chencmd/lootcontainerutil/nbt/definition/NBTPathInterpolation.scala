@@ -11,7 +11,7 @@ case class NBTPathInterpolation(firstPart: String, pairRest: List[(NBTPath, Stri
           .access(compound)
           .pure[Option]
           .filter(_.nonEmpty)
-          .map(_.map(_.toSNBT).mkString(",") + str)
+          .map(_.map(_.toRawString).mkString(",") + str)
     }
     .map(firstPart + _.mkString)
 }
