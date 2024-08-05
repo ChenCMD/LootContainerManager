@@ -43,5 +43,4 @@ genAsset:
       id: "sacred_shard/lv-4"
 db:
   url: ""
-  user: ""
-  password: ""
+  filePath: "sqlite.db"

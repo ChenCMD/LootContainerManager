@@ -9,8 +9,6 @@ object SQLite {
     Transactor.fromDriverManager[F](
       driver = "org.sqlite.JDBC",
       url = s"jdbc:sqlite:${config.filePath.getAbsolutePath()}",
-      user = config.user,
-      password = config.password,
       logHandler = Some(LogHandler.jdkLogHandler)
     )
   }

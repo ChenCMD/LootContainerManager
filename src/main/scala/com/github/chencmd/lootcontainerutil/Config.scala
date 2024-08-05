@@ -20,6 +20,7 @@ import scala.reflect.ClassTag
 import scala.reflect.TypeTest
 
 import java.io.File
+import java.nio.file.Path
 import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.plugin.java.JavaPlugin
 
@@ -34,7 +35,7 @@ object Config {
     config     <- Async[F].delay(plugin.getConfig)
     dataFolder <- Async[F].delay(plugin.getDataFolder.toPath)
     genAssetConfig = getGenAssetConfig(config)
-    dbConfig       = getDBConfig(config)
+    dbConfig       = getDBConfig(config, dataFolder)
     config <- (genAssetConfig, dbConfig)
       .parMapN(Config.apply)
       .fold(s => ConfigurationException.raise(s.mkString_("\n")), _.pure[F])
@@ -123,18 +124,14 @@ object Config {
     } yield genAssetConfig
   }
 
-  def getDBConfig(config: FileConfiguration): EitherNec[String, DBConfig] = for {
+  def getDBConfig(config: FileConfiguration, dataFolder: Path): EitherNec[String, DBConfig] = for {
     db       <- Option(config.getConfigurationSection("db")).toRightNec("missing key 'db'")
-    dbConfig <- (
-      Option(db.getString("url")).toRightNec("missing key 'db.url'"),
-      Option(db.getString("user")).toRightNec("missing key 'db.user'"),
-      Option(db.getString("password")).toRightNec("missing key 'db.password'"),
-      Option(db.getString("filePath"))
-        .toRight("missing key 'db.filePath'")
-        .filterOrElse(_.endsWith(".db"), "db.filePath must have extension '.db'")
-        .map(new File(_))
-        .toEitherNec
-    ).parMapN(DBConfig.apply)
+    dbConfig <- Option(db.getString("filePath"))
+      .toRight("missing key 'db.filePath'")
+      .filterOrElse(_.endsWith(".db"), "db.filePath must have extension '.db'")
+      .map(dataFolder.resolve(_).toFile)
+      .map(DBConfig.apply)
+      .toEitherNec
   } yield dbConfig
 
   def getValueWithType[A: ClassTag: TypeTest[Any, _]](map: Map[String, Any], location: String)(

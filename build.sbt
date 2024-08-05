@@ -49,8 +49,9 @@ assembly / assemblyExcludedJars  := {
 }
 
 assembly / assemblyMergeStrategy := {
-  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
-  case x                             => MergeStrategy.deduplicate
+  case PathList("META-INF", "services", "java.sql.Driver") => MergeStrategy.concat
+  case PathList("META-INF", xs @ _*)                       => MergeStrategy.discard
+  case x                                                   => (ThisBuild / assemblyMergeStrategy).value(x)
 }
 
 assembly / assemblyOutputPath    := new File(baseDirectory.value, "dist/LootContainerUtil.jar")
