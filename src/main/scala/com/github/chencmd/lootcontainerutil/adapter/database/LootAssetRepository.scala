@@ -4,73 +4,90 @@ import com.github.chencmd.lootcontainerutil.exceptions.SystemException
 import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAsset
 import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetItem
 import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetPersistenceInstr
+import com.github.chencmd.lootcontainerutil.generic.FragmentsExtra
 import com.github.chencmd.lootcontainerutil.minecraft.bukkit.BlockLocation
 
 import cats.data.NonEmptyList
 import cats.effect.kernel.Async
 import cats.implicits.*
 
-import scala.jdk.CollectionConverters.*
-
+import com.github.tarao.record4s.ArrayRecord
 import doobie.*
 import doobie.implicits.*
-import org.bukkit.Bukkit
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.`type`.Chest
 
 object LootAssetRepository {
   def createInstr[F[_]: Async](transactor: Transactor[F]): LootAssetPersistenceInstr[F] = {
-    case class LocationRecordRepr(world: String, x: Int, y: Int, z: Int)
-    case class LootAssetRecordRepr(
-      location: LocationRecordRepr,
-      blockId: String,
-      name: Option[String],
-      facing: Option[String],
-      waterlogged: Option[Boolean],
-      chestType: Option[String]
-    )
-
-    def locationToRepr(location: BlockLocation): LocationRecordRepr = LocationRecordRepr(
-      location.w.getKey.toString,
-      location.x,
-      location.y,
-      location.z
-    )
-
-    def lootAssetToRepr(lootAsset: LootAsset): (LootAssetRecordRepr, List[LootAssetItem]) = {
-      val repr = LootAssetRecordRepr(
-        LocationRecordRepr(
-          lootAsset.location.w.getKey.toString,
-          lootAsset.location.x,
-          lootAsset.location.y,
-          lootAsset.location.z
-        ),
-        lootAsset.blockId,
-        lootAsset.name,
-        lootAsset.facing.map(_.toString.toLowerCase),
-        lootAsset.waterlogged,
-        lootAsset.chestType.map(_.toString.toLowerCase)
+    type LocationRecordRepr      = ArrayRecord[
+      (
+        ("world", String),
+        ("x", Int),
+        ("y", Int),
+        ("z", Int)
       )
-      (repr, lootAsset.items)
+    ]
+    type LootAssetRecordRepr     = ArrayRecord[
+      (
+        ("id", Option[Int]),
+        ("world", String),
+        ("x", Int),
+        ("y", Int),
+        ("z", Int),
+        ("blockId", String),
+        ("name", Option[String]),
+        ("facing", Option[String]),
+        ("waterlogged", Option[Boolean]),
+        ("chestType", Option[String])
+      )
+    ]
+    type LootAssetItemRecordRepr = ArrayRecord[
+      (
+        ("id", Option[Int]),
+        ("slot", Int),
+        ("item", String),
+        ("quantity", Int)
+      )
+    ]
+
+    def lootAssetItemToRepr(location: BlockLocation)(item: LootAssetItem): LootAssetItemRecordRepr = ArrayRecord(
+      id = None: Option[Int],
+      slot = item.slot,
+      item = item.item,
+      quantity = item.quantity
+    )
+
+    def lootAssetToRepr(
+      lootAsset: LootAsset
+    ): (LocationRecordRepr, LootAssetRecordRepr, List[LootAssetItemRecordRepr]) = {
+      val location = ArrayRecord(
+        world = lootAsset.location.w,
+        x = lootAsset.location.x,
+        y = lootAsset.location.y,
+        z = lootAsset.location.z
+      )
+      val repr     = ArrayRecord(id = None: Option[Int])
+        ++ location
+        + (
+          blockId = lootAsset.blockId,
+          name = lootAsset.name,
+          facing = lootAsset.facing.map(_.toString.toLowerCase),
+          waterlogged = lootAsset.waterlogged,
+          chestType = lootAsset.chestType.map(_.toString.toLowerCase)
+        )
+      (location, repr, lootAsset.items.map(lootAssetItemToRepr(lootAsset.location)))
     }
 
     def reprToLootAsset(repr: LootAssetRecordRepr, items: List[LootAssetItem]): F[LootAsset] = for {
-      worldOpt  <- Async[F].delay(Bukkit.getWorlds().asScala.toList.find(_.getKey.toString == repr.location.world))
-      world     <- worldOpt.fold(SystemException.raise(s"Missing world: ${repr.location.world}"))(_.pure[F])
       facing    <- Either
-        .catchNonFatal(repr.facing.map(BlockFace.valueOf))
-        .fold(
-          _ => SystemException.raise(s"Invalid block face: ${repr.facing}"),
-          _.pure[F]
-        )
+        .catchNonFatal(repr.facing.map(_.toUpperCase).map(BlockFace.valueOf))
+        .fold(_ => SystemException.raise(s"Invalid block face: ${repr.facing}"), _.pure[F])
       chestType <- Either
-        .catchNonFatal(repr.chestType.map(Chest.Type.valueOf))
-        .fold(
-          _ => SystemException.raise(s"Invalid chest type: ${repr.chestType}"),
-          _.pure[F]
-        )
+        .catchNonFatal(repr.chestType.map(_.toUpperCase).map(Chest.Type.valueOf))
+        .fold(_ => SystemException.raise(s"Invalid chest type: ${repr.chestType}"), _.pure[F])
       lootAsset = LootAsset(
-        BlockLocation(world, repr.location.x, repr.location.y, repr.location.z),
+        repr.id,
+        BlockLocation(repr.world, repr.x, repr.y, repr.z),
         repr.blockId,
         repr.name,
         facing,
@@ -83,34 +100,40 @@ object LootAssetRepository {
     new LootAssetPersistenceInstr[F] {
       val ASSET_SELECT_QUERY = sql"""|
         |SELECT
-        |   world, x, y, z,
-        |   block_id, name, facing, waterlogged, chest_type,
-        |   slot, item, quantity
+        |   asset.id, asset.world, asset.x, asset.y, asset.z,
+        |   asset.block_id, asset.name, asset.facing, asset.waterlogged, asset.chest_type,
+        |   item.slot, item.item, item.quantity
         |FROM
-        |   loot_assets
+        |   loot_assets AS asset
         |LEFT JOIN
-        |   loot_asset_items
+        |   loot_asset_items AS item
         |ON
-        |   loot_assets.world = loot_asset_items.world
-        |   AND loot_assets.x = loot_asset_items.x
-        |   AND loot_assets.y = loot_asset_items.y
-        |   AND loot_assets.z = loot_asset_items.z
+        |   asset.id = item.asset_id
         |""".stripMargin
-      val ASSET_DELETE_QUERY = "DELETE FROM loot_assets WHERE world = ? AND x = ? AND y = ? AND z = ?"
-      val ITEMS_DELETE_QUERY = "DELETE FROM loot_asset_items WHERE world = ? AND x = ? AND y = ? AND z = ?"
 
       def makeAssetUpsertQuery(assetRepr: LootAssetRecordRepr): Fragment = {
-        sql"INSERT INTO loot_assets VALUES (" ++ Fragments.values(assetRepr) ++ fr") ON CONFLICT REPLACE"
+        sql"INSERT OR REPLACE INTO loot_assets VALUES ${FragmentsExtra.tupled(assetRepr.values)}"
       }
 
-      def makeItemsInsertQuery(items: NonEmptyList[LootAssetItem]): Fragment = {
-        sql"INSERT INTO loot_asset_items" ++ Fragments.values(items)
+      def makeAssetsDeleteQuery(assetIds: NonEmptyList[Int]): Fragment = {
+        sql"DELETE FROM loot_assets WHERE ${Fragments.in(fr"id", assetIds)}"
+      }
+
+      def makeItemsInsertQuery(assetId: Int, items: NonEmptyList[LootAssetItemRecordRepr]): Fragment = {
+        val a = items.map(ArrayRecord(asset_id = assetId) ++ _)
+        sql"INSERT INTO loot_asset_items(asset_id, id, slot, item, quantity) ${Fragments.values(a)}"
+      }
+
+      def makeItemsDeleteQuery(assetIds: NonEmptyList[Int]): Fragment = {
+        sql"DELETE FROM loot_asset_items WHERE ${Fragments.in(fr"asset_id", assetIds)}"
       }
 
       override def initialize(): F[Unit] = {
         val program = for {
+          // TODO ちゃんと Migration を用意する
           _ <- sql"""|
           |CREATE TABLE IF NOT EXISTS loot_assets (
+          |   id          INTEGER  PRIMARY KEY AUTOINCREMENT,
           |   world       TEXT     NOT NULL,
           |   x           INT      NOT NULL,
           |   y           INT      NOT NULL,
@@ -120,38 +143,31 @@ object LootAssetRepository {
           |   facing      TEXT,
           |   waterlogged BOOLEAN,
           |   chest_type  TEXT,
-          |   PRIMARY KEY (world, x, y, z)
+          |   UNIQUE (world, x, y, z)
           |)""".stripMargin.update.run
           _ <- sql"""|
           |CREATE TABLE IF NOT EXISTS loot_asset_items (
-          |   world       TEXT     NOT NULL,
-          |   x           INT      NOT NULL,
-          |   y           INT      NOT NULL,
-          |   z           INT      NOT NULL,
+          |   id          INTEGER  PRIMARY KEY AUTOINCREMENT,
+          |   asset_id    INT      NOT NULL,
           |   slot        INT      NOT NULL,
           |   item        TEXT     NOT NULL,
           |   quantity    INT      NOT NULL,
-          |   PRIMARY KEY (world, x, y, z, slot),
-          |   FOREIGN KEY (world, x, y, z) REFERENCES loot_assets (world, x, y, z) ON DELETE CASCADE
+          |   FOREIGN KEY (asset_id) REFERENCES loot_assets (id)
+          |   UNIQUE (asset_id, slot)
           |)""".stripMargin.update.run
         } yield ()
         program.transact(transactor)
       }
 
       override def findLootAsset(location: BlockLocation): F[Option[LootAsset]] = for {
-        whereFr     <- Async[F].pure {
-          Fragments.whereAnd(
-            fr"loot_assets.world = ${location.w.getKey.toString}",
-            fr"loot_assets.x = ${location.x}",
-            fr"loot_assets.y = ${location.y}",
-            fr"loot_assets.z = ${location.z}"
-          )
+        queryResult <-
+          (ASSET_SELECT_QUERY ++ fr"WHERE (asset.world, asset.x, asset.y, asset.z) = ${FragmentsExtra.tupled(location)}")
+            .query[(LootAssetRecordRepr, Option[LootAssetItem])]
+            .to[List]
+            .transact(transactor)
+        lootAsset   <- queryResult.groupMap(_._1)(_._2).headOption.traverse {
+          case (repr, item) => reprToLootAsset(repr, item.flatten)
         }
-        queryResult <- (ASSET_SELECT_QUERY ++ whereFr)
-          .query[(LootAssetRecordRepr, Option[LootAssetItem])]
-          .option
-          .transact(transactor)
-        lootAsset   <- queryResult.traverse((repr, item) => reprToLootAsset(repr, item.toList))
       } yield lootAsset
 
       override def getAllLootAssets(): F[List[LootAsset]] = for {
@@ -159,24 +175,30 @@ object LootAssetRepository {
           .query[(LootAssetRecordRepr, Option[LootAssetItem])]
           .to[List]
           .transact(transactor)
-        lootAsset   <- queryResult.traverse((repr, item) => reprToLootAsset(repr, item.toList))
+        lootAsset   <- queryResult.groupMap(_._1)(_._2).toList.traverse {
+          case (repr, item) => reprToLootAsset(repr, item.flatten)
+        }
       } yield lootAsset
 
-      override def upsertLootAsset(lootAsset: LootAsset): F[Unit] = {
-        val (assetRepr, items) = lootAssetToRepr(lootAsset)
-        val program            = for {
-          _ <- makeAssetUpsertQuery(assetRepr).update.run
-          _ <- Update[LocationRecordRepr](ITEMS_DELETE_QUERY).run(assetRepr.location)
-          _ <- items.toNel.traverse(nel => makeItemsInsertQuery(nel).update.run)
+      override def upsertLootAssets(lootAssets: List[LootAsset]): F[Unit] = {
+        lootAssets.toNel.traverse_(_.traverse_(createUpsertLootAssetTransaction)).transact(transactor)
+      }
+
+      override def deleteLootAssets(ids: NonEmptyList[Int]): F[Unit] = {
+        val program = for {
+          _ <- makeItemsDeleteQuery(ids).update.run
+          _ <- makeAssetsDeleteQuery(ids).update.run
         } yield ()
         program.transact(transactor)
       }
 
-      override def deleteLootAsset(location: BlockLocation): F[Unit] = {
-        Update[LocationRecordRepr](ITEMS_DELETE_QUERY)
-          .run(locationToRepr(location))
-          .transact(transactor)
-          .void
+      private def createUpsertLootAssetTransaction(lootAsset: LootAsset): ConnectionIO[Unit] = {
+        val (location, assetRepr, items) = lootAssetToRepr(lootAsset)
+        for {
+          _  <- lootAsset.id.traverse(id => makeItemsDeleteQuery(NonEmptyList.one(id)).update.run)
+          id <- makeAssetUpsertQuery(assetRepr).update.withUniqueGeneratedKeys[Int]("id")
+          _  <- items.toNel.traverse(makeItemsInsertQuery(id, _).update.run)
+        } yield ()
       }
     }
   }

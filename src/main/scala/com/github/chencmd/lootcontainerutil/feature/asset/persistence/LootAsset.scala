@@ -12,6 +12,7 @@ case class LootAssetItem(
 )
 
 case class LootAsset(
+  id: Option[Int],
   location: BlockLocation,
   blockId: String,
   name: Option[String],
