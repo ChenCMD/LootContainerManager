@@ -6,14 +6,19 @@ import com.github.chencmd.lootcontainerutil.adapter.database.LootAssetRepository
 import com.github.chencmd.lootcontainerutil.adapter.database.SQLite
 import com.github.chencmd.lootcontainerutil.exceptions.ConfigurationException
 import com.github.chencmd.lootcontainerutil.exceptions.UserException
+import com.github.chencmd.lootcontainerutil.feature.asset.ContainerManageListener
 import com.github.chencmd.lootcontainerutil.feature.asset.ItemConversionInstr
+import com.github.chencmd.lootcontainerutil.feature.asset.LootAssetHighlight
 import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetPersistenceCacheInstr
 import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetPersistenceInstr
 import com.github.chencmd.lootcontainerutil.feature.containerprotection.ProtectActionListener
 import com.github.chencmd.lootcontainerutil.generic.EitherTIOExtra.*
 import com.github.chencmd.lootcontainerutil.generic.MapExtra.*
+import com.github.chencmd.lootcontainerutil.generic.SyncContinuation
 import com.github.chencmd.lootcontainerutil.minecraft.ManageItemNBT
 import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
+import com.github.chencmd.lootcontainerutil.minecraft.bukkit.BlockLocation
+import com.github.chencmd.lootcontainerutil.minecraft.bukkit.InventorySession
 import com.github.chencmd.lootcontainerutil.minecraft.bukkit.ManageBukkitItemNBT
 import com.github.chencmd.lootcontainerutil.minecraft.bukkit.OnBukkitServerThread
 import com.github.chencmd.lootcontainerutil.terms.LootAssetCache
@@ -67,10 +72,13 @@ class LootContainerUtil extends JavaPlugin {
       given LootAssetPersistenceCacheInstr[G] = LootAssetRepositoryCache.createInstr[G](syncLootAssetLocationCacheRef)
       given LootAssetPersistenceCacheInstr[F] = LootAssetRepositoryCache.createInstr[F](asyncLootAssetLocationCacheRef)
 
+      openedInventoriesRef <- Ref.of[F, Map[BlockLocation, InventorySession]](Map.empty)
       pal                  <- ProtectActionListener[F, G](unsafeRunSyncContinuation)
+      cml                  <- ContainerManageListener[F, G](openedInventoriesRef)(unsafeRunSyncContinuation)
       _                    <- Async[F].delay(Bukkit.getPluginManager.registerEvents(pal, this))
+      _                    <- Async[F].delay(Bukkit.getPluginManager.registerEvents(cml, this))
 
-      cmdExecutor <- CommandExecutor[F]
+      cmdExecutor <- CommandExecutor[F](openedInventoriesRef)
       _           <- cmdExecutorRef.set(Some(cmdExecutor))
 
       _          <- lootAssetRepos.initialize()
