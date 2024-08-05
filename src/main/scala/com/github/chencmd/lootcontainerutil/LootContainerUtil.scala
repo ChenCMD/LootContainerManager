@@ -36,6 +36,7 @@ import cats.~>
 import scala.concurrent.duration.*
 
 import doobie.*
+import java.util.logging.Level
 import org.bukkit.Bukkit
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
@@ -95,8 +96,11 @@ class LootContainerUtil extends JavaPlugin {
         (Async[F].sleep(30.seconds) >> program).foreverM.start
       }
 
+      taskFiber2 <- LootAssetHighlight.task[F].start
+
       _ <- finalizerRef.set(Some(for {
         _ <- taskFiber1.cancel
+        _ <- taskFiber2.cancel
         _ <- saveAssetFromCache(asyncLootAssetLocationCacheRef)
       } yield ()))
 
@@ -106,9 +110,8 @@ class LootContainerUtil extends JavaPlugin {
     try {
       program.unsafeRunSync()
     } catch {
-      case err: ConfigurationException => Bukkit.getConsoleSender.sendMessage(err.getMessage)
-      case err                         =>
-        Bukkit.getConsoleSender.sendMessage(err.getMessage)
+      case err =>
+        Bukkit.getLogger().log(Level.SEVERE, err.getMessage, err)
         Bukkit.getPluginManager.disablePlugin(this)
     }
   }
@@ -130,11 +133,11 @@ class LootContainerUtil extends JavaPlugin {
         case err: UserException          => sender.sendMessage(err.getMessage)
         case err: ConfigurationException =>
           sender.sendMessage("An error occurred while loading the configuration file.")
-          Bukkit.getConsoleSender.sendMessage(err.getMessage)
+          Bukkit.getLogger.log(Level.SEVERE, err.getMessage, err)
         case err                         =>
           sender.sendMessage("An error occurred while executing the command.")
-          Bukkit.getConsoleSender.sendMessage(err.getMessage)
-      }
+          Bukkit.getLogger.log(Level.SEVERE, err.getMessage, err)
+      })
       true
     } else {
       false
