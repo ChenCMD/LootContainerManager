@@ -13,8 +13,8 @@ object NMSBlock {
   lazy val _clazz       = ReflectionUtil.getMinecraftClass("world.level.block.Block")
   def clazz[F[_]: Sync] = Sync[F].delay(_clazz)
 
-  lazy val _getIdMethod = ReflectionUtil.getMethod(_clazz, "i", NMSIBlockData._clazz)
-  def getIdMethod[F[_]: Sync]   = Sync[F].delay(_getIdMethod)
+  lazy val _getIdMethod       = ReflectionUtil.getMethod(_clazz, "i", NMSIBlockData._clazz)
+  def getIdMethod[F[_]: Sync] = Sync[F].delay(_getIdMethod)
 
   def getId[F[_]: Sync](block: NMSIBlockData): F[Int] = getIdMethod.map { m =>
     m.invoke(null, block).asInstanceOf[Int]

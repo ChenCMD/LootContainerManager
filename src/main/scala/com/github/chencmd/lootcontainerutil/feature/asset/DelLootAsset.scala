@@ -26,7 +26,7 @@ object DelLootAsset {
     Converter: ItemConversionInstr[F],
     asyncLootAssetCache: LootAssetPersistenceCacheInstr[F]
   ): F[Unit] = for {
-    container     <- mcThread.run(for {
+    container <- mcThread.run(for {
       blockOrNone     <- SyncIO(Option(p.getTargetBlockExact(5)))
       containerOrNone <- SyncIO(blockOrNone.flatMap(_.getState.downcastOrNone[Container]))
     } yield containerOrNone)
