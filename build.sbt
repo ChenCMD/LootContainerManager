@@ -2,7 +2,7 @@ name := "LootContainerUtil"
 
 version := "0.1"
 
-scalaVersion := "3.4.0"
+scalaVersion := "3.4.2"
 
 resolvers ++= Seq(
   "spigot-repo" at "https://hub.spigotmc.org/nexus/content/repositories/snapshots",
