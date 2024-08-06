@@ -1,4 +1,4 @@
-package com.github.chencmd.lootcontainerutil.minecraft.bukkit
+package com.github.chencmd.lootcontainerutil.minecraft.nms
 
 import cats.effect.kernel.Sync
 

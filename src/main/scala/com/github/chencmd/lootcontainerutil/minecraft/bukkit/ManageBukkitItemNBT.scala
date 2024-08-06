@@ -1,6 +1,7 @@
 package com.github.chencmd.lootcontainerutil.minecraft.bukkit
 
 import com.github.chencmd.lootcontainerutil.minecraft.ManageItemNBT
+import com.github.chencmd.lootcontainerutil.minecraft.nms.NMSItemStack
 import com.github.chencmd.lootcontainerutil.nbt.definition.NBTTag.NBTTagCompound
 
 import cats.effect.kernel.Sync

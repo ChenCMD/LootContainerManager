@@ -1,4 +1,4 @@
-package com.github.chencmd.lootcontainerutil.minecraft.bukkit
+package com.github.chencmd.lootcontainerutil.minecraft.nms
 
 import com.github.chencmd.lootcontainerutil.nbt.definition.NBTNel
 import com.github.chencmd.lootcontainerutil.nbt.definition.NBTTag

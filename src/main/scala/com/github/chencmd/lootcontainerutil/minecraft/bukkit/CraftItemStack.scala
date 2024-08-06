@@ -1,6 +1,7 @@
 package com.github.chencmd.lootcontainerutil.minecraft.bukkit
 
 import com.github.chencmd.lootcontainerutil
+import com.github.chencmd.lootcontainerutil.minecraft.nms.NMSItemStack
 
 import cats.effect.kernel.Sync
 import cats.implicits.*

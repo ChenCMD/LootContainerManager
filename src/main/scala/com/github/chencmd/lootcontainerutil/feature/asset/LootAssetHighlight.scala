@@ -7,8 +7,8 @@ import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetP
 import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
 import com.github.chencmd.lootcontainerutil.minecraft.bukkit.BlockLocation
 import com.github.chencmd.lootcontainerutil.minecraft.bukkit.CraftBlock
-import com.github.chencmd.lootcontainerutil.minecraft.bukkit.NMSIBlockData
 import com.github.chencmd.lootcontainerutil.minecraft.bukkit.Position
+import com.github.chencmd.lootcontainerutil.minecraft.nms.NMSIBlockData
 
 import cats.Align
 import cats.data.Ior
