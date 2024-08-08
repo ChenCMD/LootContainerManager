@@ -47,13 +47,13 @@ object Config {
 
       path = s"genAsset.toItemIdentifier[$i]"
 
-      (from, to) <- (
-        getValueWithType[String](typedMap, path)("from")
+      (predicate, to) <- (
+        getValueWithType[String](typedMap, path)("predicate")
           .flatMap(s => NBTPathParser.parse(s.trim).toEitherNec),
         getValueWithType[String](typedMap, path)("to")
           .flatMap(s => NBTPathInterpolationParser.parse(s.trim).toEitherNec)
       ).parTupled
-    } yield (from, to)
+    } yield (predicate, to)
 
     def toItem(sec: Map[Any, Any], i: Int): EitherNec[String, ItemGenerator] = {
       def getDataSources(fnOut: Map[String, Any], target: String, path: NBTPath): EitherNec[String, DataSource] = {

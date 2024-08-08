@@ -70,17 +70,15 @@ object TSBAdapter {
           val id = interpolate(generator.id)
 
           generator match {
-            case g: ItemGenerator.WithItemId => ManageItemNBT
-                .createItemFromNBT[SyncIO](
-                  NBTTag.NBTTagCompound(
-                    Map(
-                      "id"    -> NBTTag.NBTTagString(id),
-                      "Count" -> NBTTag.NBTTagByte(1),
-                      "tag"   -> NBTTag.NBTTagCompound(Map.empty)
-                    )
+            case g: ItemGenerator.WithItemId => ManageItemNBT.createItemFromNBT[F](
+                NBTTag.NBTTagCompound(
+                  Map(
+                    "id"    -> NBTTag.NBTTagString(id),
+                    "Count" -> NBTTag.NBTTagByte(1),
+                    "tag"   -> NBTTag.NBTTagCompound(Map.empty)
                   )
                 )
-                .to[F]
+              )
 
             case g: ItemGenerator.WithLootTable => for {
                 res <- mcThread.run {

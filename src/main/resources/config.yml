@@ -1,14 +1,14 @@
 genAsset:
   toItemIdentifier:
-    - from: "tag.TSB.ID"
+    - predicate: "tag.TSB.ID"
       to: "artifact:%%tag.TSB.ID%%"
-    - from: "tag.TSB{Currency:1b}"
+    - predicate: "tag.TSB{Currency:1b}"
       to: "preset:currency/"
-    - from: "tag.TSB{Currency:2b}"
+    - predicate: "tag.TSB{Currency:2b}"
       to: "preset:currency/high"
-    - from: "tag.TSB.ShardRarity"
+    - predicate: "tag.TSB.ShardRarity"
       to: "preset:artifact_shard/%%tag.TSB.ShardRarity%%"
-    - from: "{}"
+    - predicate: "{}"
       to: "%%id%%"
   toItem:
     - predicate: "^artifact:(?<id>\\d)$"
