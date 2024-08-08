@@ -7,8 +7,6 @@ import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetP
 import com.github.chencmd.lootcontainerutil.generic.extensions.CastOps.*
 import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
 import com.github.chencmd.lootcontainerutil.minecraft.bukkit.BlockLocation
-import com.github.chencmd.lootcontainerutil.minecraft.bukkit.Position
-import com.github.chencmd.lootcontainerutil.minecraft.bukkit.Vector
 
 import cats.effect.SyncIO
 import cats.effect.kernel.Async
@@ -63,12 +61,7 @@ object GenLootAsset {
   } yield ()
 
   def findContainer[F[_]: Async](p: Player): SyncIO[Option[Container]] = SyncIO {
-    val acc = 5
-    val loc = p.getEyeLocation
-    val vec = Vector.of(loc.getDirection).normalize * (1d / acc)
-    val w   = p.getWorld
-    (0 until (5 * acc)).view
-      .map(i => w.getBlockAt((Position.of(loc) + vec * i).toBukkit(loc.getWorld)))
+    Option(p.getTargetBlockExact(5))
       .flatMap(_.getState.downcastOrNone[Container])
       .headOption
   }
