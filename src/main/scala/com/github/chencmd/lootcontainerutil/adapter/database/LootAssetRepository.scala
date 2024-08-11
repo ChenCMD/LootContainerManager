@@ -159,17 +159,6 @@ object LootAssetRepository {
         program.transact(transactor)
       }
 
-      override def findLootAsset(location: BlockLocation): F[Option[LootAsset]] = for {
-        queryResult <-
-          (ASSET_SELECT_QUERY ++ fr"WHERE (asset.world, asset.x, asset.y, asset.z) = ${FragmentsExtra.tupled(location)}")
-            .query[(LootAssetRecordRepr, Option[LootAssetItem])]
-            .to[List]
-            .transact(transactor)
-        lootAsset   <- queryResult.groupMap(_._1)(_._2).headOption.traverse {
-          case (repr, item) => reprToLootAsset(repr, item.flatten)
-        }
-      } yield lootAsset
-
       override def getAllLootAssets(): F[List[LootAsset]] = for {
         queryResult <- ASSET_SELECT_QUERY
           .query[(LootAssetRecordRepr, Option[LootAssetItem])]
