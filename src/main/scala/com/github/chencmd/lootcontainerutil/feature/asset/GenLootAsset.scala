@@ -60,13 +60,13 @@ object GenLootAsset {
     _ <- Async[F].delay(p.sendMessage(s"Generated loot asset at ${asset.location}"))
   } yield ()
 
-  def findContainer[F[_]: Async](p: Player): SyncIO[Option[Container]] = SyncIO {
+  def findContainer(p: Player): SyncIO[Option[Container]] = SyncIO {
     Option(p.getTargetBlockExact(5))
       .flatMap(_.getState.downcastOrNone[Container])
       .headOption
   }
 
-  def getContainerData[F[_]: Async](container: Container): SyncIO[ContainerData] = SyncIO {
+  def getContainerData(container: Container): SyncIO[ContainerData] = SyncIO {
     val data = container.getBlockData()
     %(
       "location"    -> BlockLocation.of(container.getLocation()),
