@@ -98,6 +98,32 @@ object LootAssetRepository {
     } yield lootAsset
 
     new LootAssetPersistenceInstr[F] {
+      val ASSET_CREATE_QUERIES = List(
+        // TODO ちゃんと Migration を用意する
+        sql"""|CREATE TABLE IF NOT EXISTS loot_assets (
+              |   id          INTEGER  PRIMARY KEY AUTOINCREMENT,
+              |   world       TEXT     NOT NULL,
+              |   x           INT      NOT NULL,
+              |   y           INT      NOT NULL,
+              |   z           INT      NOT NULL,
+              |   block_id    TEXT     NOT NULL,
+              |   name        TEXT,
+              |   facing      TEXT,
+              |   waterlogged BOOLEAN,
+              |   chest_type  TEXT,
+              |   UNIQUE (world, x, y, z)
+              |)""".stripMargin,
+        sql"""|CREATE TABLE IF NOT EXISTS loot_asset_items (
+              |   id          INTEGER  PRIMARY KEY AUTOINCREMENT,
+              |   asset_id    INT      NOT NULL,
+              |   slot        INT      NOT NULL,
+              |   item        TEXT     NOT NULL,
+              |   quantity    INT      NOT NULL,
+              |   FOREIGN KEY (asset_id) REFERENCES loot_assets (id)
+              |   UNIQUE (asset_id, slot)
+              |)""".stripMargin
+      )
+
       val ASSET_SELECT_QUERY = sql"""|
         |SELECT
         |   asset.id, asset.world, asset.x, asset.y, asset.z,
@@ -128,36 +154,7 @@ object LootAssetRepository {
         sql"DELETE FROM loot_asset_items WHERE ${Fragments.in(fr"asset_id", assetIds)}"
       }
 
-      override def initialize(): F[Unit] = {
-        val program = for {
-          // TODO ちゃんと Migration を用意する
-          _ <- sql"""|
-          |CREATE TABLE IF NOT EXISTS loot_assets (
-          |   id          INTEGER  PRIMARY KEY AUTOINCREMENT,
-          |   world       TEXT     NOT NULL,
-          |   x           INT      NOT NULL,
-          |   y           INT      NOT NULL,
-          |   z           INT      NOT NULL,
-          |   block_id    TEXT     NOT NULL,
-          |   name        TEXT,
-          |   facing      TEXT,
-          |   waterlogged BOOLEAN,
-          |   chest_type  TEXT,
-          |   UNIQUE (world, x, y, z)
-          |)""".stripMargin.update.run
-          _ <- sql"""|
-          |CREATE TABLE IF NOT EXISTS loot_asset_items (
-          |   id          INTEGER  PRIMARY KEY AUTOINCREMENT,
-          |   asset_id    INT      NOT NULL,
-          |   slot        INT      NOT NULL,
-          |   item        TEXT     NOT NULL,
-          |   quantity    INT      NOT NULL,
-          |   FOREIGN KEY (asset_id) REFERENCES loot_assets (id)
-          |   UNIQUE (asset_id, slot)
-          |)""".stripMargin.update.run
-        } yield ()
-        program.transact(transactor)
-      }
+      override def initialize(): F[Unit] = ASSET_CREATE_QUERIES.traverse_(_.update.run).transact(transactor)
 
       override def getAllLootAssets(): F[List[LootAsset]] = for {
         queryResult <- ASSET_SELECT_QUERY
