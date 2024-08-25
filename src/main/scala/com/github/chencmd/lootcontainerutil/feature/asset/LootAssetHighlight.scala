@@ -2,7 +2,7 @@ package com.github.chencmd.lootcontainerutil.feature.asset
 
 import com.github.chencmd.lootcontainerutil.Prefix
 import com.github.chencmd.lootcontainerutil.exceptions.SystemException
-import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAsset
+import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetContainer
 import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetPersistenceCacheInstr
 import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
 import com.github.chencmd.lootcontainerutil.minecraft.bukkit.BlockLocation
@@ -31,24 +31,29 @@ import java.lang as jl
 import java.util as ju
 import java.util.UUID
 import org.bukkit.Bukkit
-import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
 import org.joml.Vector3f
+import org.bukkit.block.data.`type`.Chest as ChestData
 
 object LootAssetHighlight {
   def task[F[_]: Async](using
     lootAssetCache: LootAssetPersistenceCacheInstr[F],
     mcThread: OnMinecraftThread[F]
   ): F[Unit] = for {
-    entityIds <- Ref.of[F, Map[UUID, Map[BlockLocation, Int]]](Map.empty)
+    entityIds <- Ref.of[F, Map[UUID, Map[Position, Int]]](Map.empty)
     _         <- Async[F].delay(Bukkit.getConsoleSender.sendMessage("Starting highlight task"))
     _         <- (highlight(entityIds) >> Async[F].sleep(3.seconds)).foreverM
   } yield ()
 
-  def highlight[F[_]: Async](entityIds: Ref[F, Map[UUID, Map[BlockLocation, Int]]])(using
+  val CHESTS = Set(
+    "minecraft:chest",
+    "minecraft:trapped_chest"
+  )
+
+  def highlight[F[_]: Async](entityIds: Ref[F, Map[UUID, Map[Position, Int]]])(using
     lootAssetCache: LootAssetPersistenceCacheInstr[F],
     mcThread: OnMinecraftThread[F]
   ): F[Unit] = for {
@@ -63,10 +68,26 @@ object LootAssetHighlight {
         world = player.getWorld
         assets <- lootAssetCache.askLootAssetLocationsNear(loc)
       } yield for {
-        assets <- assets.traverse { asset =>
-          val assetLocation = asset.location.toBukkit(world)
-          SyncIO(world.getBlockAt(assetLocation)).map { block =>
-            BlockLocation.of(assetLocation) -> (asset -> block)
+        assets <- assets.flatTraverse { asset =>
+          def toData(container: LootAssetContainer) = {
+            val location = container.location
+            val block    = world.getBlockAt(location.toBukkit(world))
+            location.toPosition -> (container, block)
+          }
+          SyncIO {
+            if (asset.containers.size == 1) {
+              asset.containers.map(toData)
+            } else {
+              val containers        = asset.containers.map(toData)
+              val midDummyContainer = {
+                val mid  = asset.containers.head.location.midPointAt(asset.containers.last.location)
+                val head = containers.head
+                mid -> head._2.copy(
+                  _1 = head._2._1.copy(chestType = Some(ChestData.Type.SINGLE))
+                )
+              }
+              containers :+ midDummyContainer
+            }
           }
         }
       } yield player -> Map.from(assets)
@@ -74,15 +95,18 @@ object LootAssetHighlight {
     assetsForPlayer <- mcThread.run(assets.sequence)
 
     entityIdsForAllPlayers <- entityIds.get
-    newEntityIds           <- assetsForPlayer.traverse { (p, assets) =>
+    newEntityIds           <- assetsForPlayer.traverse { (p, containers) =>
       val pUuid              = p.getUniqueId
       val entityIdsForPlayer = entityIdsForAllPlayers.get(pUuid).orEmpty
-      val program            = Align[Map[BlockLocation, _]].align(entityIdsForPlayer, assets).toList.traverse {
-        case (loc, Ior.Left((id)))       => sendDeleteImaginaryHighlightPacket(p)(id).as(None)
-        case (loc, Ior.Right((a, b)))    => sendAddImaginaryHighlightPacket(p)(a, b).map(id => Some(loc -> id))
-        case (loc, Ior.Both(id, (_, b))) => checkBlock(p)(b, loc).map(_ => Some(loc -> id))
+      val program            = Align[Map[Position, _]].align(entityIdsForPlayer, containers).toList.flatTraverse {
+        case (pos, Ior.Left((id)))                => sendDeleteImaginaryHighlightPacket(p)(id).as(List.empty)
+        case (pos, Ior.Right((container, block))) => for {
+            _  <- checkBlock(p)(block, container.location)
+            id <- sendAddImaginaryHighlightPacket(p)(pos, container, block)
+          } yield List(pos -> id)
+        case (pos, Ior.Both(id, (_, b)))          => checkBlock(p)(b, pos.toBlockLocation).as(List(pos -> id))
       }
-      program.map(pUuid -> _.flatten.toMap)
+      program.map(pUuid -> _.toMap)
     }
     _                      <- entityIds.set(newEntityIds.toMap)
   } yield ()
@@ -101,7 +125,11 @@ object LootAssetHighlight {
     })
   }
 
-  def sendAddImaginaryHighlightPacket[F[_]: Async](player: Player)(asset: LootAsset, block: Block)(using
+  def sendAddImaginaryHighlightPacket[F[_]: Async](player: Player)(
+    position: Position,
+    container: LootAssetContainer,
+    block: Block
+  )(using
     mcThread: OnMinecraftThread[F]
   ): F[Int] = for {
     entityID <- Async[F].delay(Random.nextInt(Int.MaxValue))
@@ -109,13 +137,8 @@ object LootAssetHighlight {
     craftBlock   <- CraftBlock.cast(block)
     nmsBlockData <- craftBlock.getNMS
 
-    _ <- Async[F].whenA(block.isEmpty())(Async[F].delay {
-      player.sendMessage(s"${Prefix.ERROR}Asset として登録されている座標にブロックが存在しません。")
-      player.sendMessage(s"${Prefix.ERROR}座標: ${asset.location.toXYZString}")
-    })
-
-    facing            = asset.facing.filter(_ => NON_FULL_BLOCK_CONTAINER.contains(asset.blockId))
-    spawnEntityPacket = createSpawnEntityPacket(entityID, asset.location.toPosition, facing)
+    facing            = container.facing.filter(_ => NON_FULL_BLOCK_CONTAINER.contains(container.blockId))
+    spawnEntityPacket = createSpawnEntityPacket(entityID, position, container.blockId, facing, container.chestType)
     setMetadataPacket = createMetadataPacket(entityID, nmsBlockData)
 
     pManager = ProtocolLibrary.getProtocolManager
@@ -128,7 +151,13 @@ object LootAssetHighlight {
     Async[F].delay(pManager.sendServerPacket(player, createDestroyEntityPacket(entityID)))
   }
 
-  def createSpawnEntityPacket(entityID: Int, position: Position, facing: Option[BlockFace]): PacketContainer = {
+  def createSpawnEntityPacket(
+    entityID: Int,
+    position: Position,
+    blockId: String,
+    facing: Option[BlockFace],
+    chestType: Option[ChestData.Type] = None
+  ): PacketContainer = {
     PacketContainer(PacketType.Play.Server.SPAWN_ENTITY).tap { p =>
       // Entity ID   | VarInt
       p.getIntegers().write(0, entityID)
@@ -143,12 +172,22 @@ object LootAssetHighlight {
       // Z           | Double
       p.getDoubles().write(2, position.z + 0.5)
       // Yaw
-      facing match {
-        case Some(BlockFace.SOUTH) => p.getBytes().write(1, (0 * (256d / 360d)).toByte)
-        case Some(BlockFace.WEST)  => p.getBytes().write(1, (90 * (256d / 360d)).toByte)
-        case Some(BlockFace.NORTH) => p.getBytes().write(1, (180 * (256d / 360d)).toByte)
-        case Some(BlockFace.EAST)  => p.getBytes().write(1, (270 * (256d / 360d)).toByte)
-        case _                     => p.getBytes().write(1, 0.toByte)
+      val yaw = facing match {
+        case Some(BlockFace.SOUTH) => 0f
+        case Some(BlockFace.WEST)  => 90f
+        case Some(BlockFace.NORTH) => 180f
+        case Some(BlockFace.EAST)  => 270f
+        case _                     => 0f
+      }
+      if (CHESTS.contains(blockId)) {
+        val offset = chestType match {
+          case Some(ChestData.Type.LEFT)  => 90
+          case Some(ChestData.Type.RIGHT) => -90
+          case _                          => 0
+        }
+        p.getBytes().write(1, ((yaw + offset) * (256d / 360d)).toByte)
+      } else {
+        p.getBytes().write(1, (yaw * (256d / 360d)).toByte)
       }
     }
   }

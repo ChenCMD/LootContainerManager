@@ -146,8 +146,8 @@ class LootContainerUtil extends JavaPlugin {
     cache <- lootAssetLocationCacheRef.get
     _     <- Async[F].delay(Bukkit.getConsoleSender.sendMessage("Updating assets..."))
     updatingAssets = for {
-      loc <- cache.updatedAssetLocations.toList
-      b   <- cache.assets(loc.toChunkLocation).get(loc)
+      uuid <- cache.updatedAssetLocations.toList
+      b    <- cache.mapping.get(uuid).toList
     } yield b
     deletedAssets  = NonEmptyList.fromList(cache.deletedAssetIds.toList)
 
@@ -160,8 +160,13 @@ class LootContainerUtil extends JavaPlugin {
   ): F[Unit] = for {
     _      <- Async[F].delay(Bukkit.getConsoleSender.sendMessage("Retrieving assets..."))
     assets <- lootAssetRepos.getAllLootAssets()
-    assetsMap = assets.groupBy(_.location.toChunkLocation).mapV(v => Map(v.map(a => a.location -> a)*))
-    _ <- lootAssetLocationCacheRef.set(LootAssetCache(assetsMap, Set.empty, Set.empty))
+    assetsMap    = assets
+      .flatMap(a => a.containers.map(_.location -> a.uuid))
+      .groupBy(_._1.toChunkLocation)
+      .mapV(_.toMap)
+    assetMapping = assets.map(a => a.uuid -> a).toMap
+    cache        = LootAssetCache(assetsMap, assetMapping, Set.empty, Set.empty)
+    _ <- lootAssetLocationCacheRef.set(cache)
 
     _ <- Async[F].delay {
       Bukkit.getConsoleSender.sendMessage("Assets retrieved.")

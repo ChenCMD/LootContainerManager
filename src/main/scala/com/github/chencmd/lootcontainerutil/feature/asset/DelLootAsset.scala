@@ -19,6 +19,7 @@ import scala.util.chaining.*
 import org.bukkit.Bukkit
 import org.bukkit.block.Container
 import org.bukkit.entity.Player
+import org.bukkit.event.inventory.InventoryType
 
 object DelLootAsset {
   def deleteLootAsset[F[_]: Async](p: Player, openedInventories: Ref[F, Map[BlockLocation, InventorySession]])(using
@@ -63,12 +64,20 @@ object DelLootAsset {
       items   <- asset.items.traverse(i => itemConverter.toItemStack(i.item).map((i.slot, _, i.quantity)))
       session <- InventorySession[F](ContainerManager.INVENTORY_NAME, location) { holder =>
         val server = Bukkit.getServer()
-        asset.name.fold(server.createInventory(holder, 27))(server.createInventory(holder, 27, _)).tap { inv =>
-          items.foreach { (slot, item, quantity) =>
-            item.setAmount(quantity)
-            inv.setItem(slot, item)
+        val inv    = {
+          if (asset.containers.size > 1) {
+            val size = asset.containers.size * 27
+            asset.name.fold(server.createInventory(holder, size))(server.createInventory(holder, size, _))
+          } else {
+            val invType = InventoryType.valueOf(asset.containers.head.blockId.drop("minecraft:".length).toUpperCase())
+            asset.name.fold(server.createInventory(holder, invType))(server.createInventory(holder, invType, _))
           }
         }
+        items.foreach { (slot, item, quantity) =>
+          item.setAmount(quantity)
+          inv.setItem(slot, item)
+        }
+        inv
       }
       _       <- openedInventories.update(_ + (location -> session))
     } yield session

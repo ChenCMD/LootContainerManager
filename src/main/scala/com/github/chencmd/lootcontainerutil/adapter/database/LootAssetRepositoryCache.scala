@@ -22,14 +22,15 @@ object LootAssetRepositoryCache {
           x <- (-2 to 2).toList
           y <- (-2 to 2).toList
           z <- (-2 to 2).toList
-          chunkLocation = BlockLocation(chunk.w, chunk.x + x, chunk.y + y, chunk.z + z)
-          locations <- cache.assets.get(chunkLocation).map(_.values.toList).orEmpty
-        } yield locations
+          chunkLocation = BlockLocation(chunk.world, chunk.x + x, chunk.y + y, chunk.z + z)
+          location <- cache.assets.get(chunkLocation).map(_.values.toList.distinct).orEmpty
+          asset    <- cache.mapping.get(location).toList
+        } yield asset
       }
     }
 
     override def askLootAssetLocationAt(location: BlockLocation): F[Option[LootAsset]] = {
-      cacheRef.get.map(_.assets.get(location.toChunkLocation).flatMap(_.get(location)))
+      cacheRef.get.map(_.askLootAssetLocationAt(location))
     }
 
     override def askIfLootAssetPresentAt(location: BlockLocation): F[Boolean] = {
@@ -38,10 +39,14 @@ object LootAssetRepositoryCache {
 
     override def updateLootAsset(asset: LootAsset): F[Unit] = for {
       _ <- cacheRef.update { s =>
-        val p = asset.location -> asset
+        val uuid = asset.uuid
+        val p    = asset.containers.map(_.location)
         LootAssetCache(
-          s.assets.updatedWith(asset.location.toChunkLocation)(_.fold(Map(p))(_ + p).some),
-          s.updatedAssetLocations + asset.location,
+          p.foldLeft(s.assets)((assets, loc) =>
+            assets.updatedWith(loc.toChunkLocation)(_.fold(Map(loc -> uuid))(_ + (loc -> uuid)).some)
+          ),
+          s.mapping + (uuid -> asset),
+          s.updatedAssetLocations + uuid,
           s.deletedAssetIds
         )
       }
@@ -52,9 +57,17 @@ object LootAssetRepositoryCache {
       asset <- asset.fold(SystemException.raise("Asset not found"))(_.pure[F])
       _     <- Sync[F].delay { println(s"Deleting asset: $asset") }
       _     <- cacheRef.update { s =>
+        // LootAssetCache(
+        //   s.assets.updatedWith(location.toChunkLocation)(_.map(_ - location)),
+        //   s.updatedAssetLocations - location,
+        //   asset.id.fold(s.deletedAssetIds)(s.deletedAssetIds + _)
+        // )
+        val uuid = asset.uuid
+        val p    = asset.containers.map(_.location)
         LootAssetCache(
-          s.assets.updatedWith(location.toChunkLocation)(_.map(_ - location)),
-          s.updatedAssetLocations - location,
+          p.foldLeft(s.assets)((assets, loc) => assets.updatedWith(loc.toChunkLocation)(_.map(_ - loc))),
+          s.mapping - uuid,
+          s.updatedAssetLocations - uuid,
           asset.id.fold(s.deletedAssetIds)(s.deletedAssetIds + _)
         )
       }

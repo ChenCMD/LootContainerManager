@@ -2,8 +2,17 @@ package com.github.chencmd.lootcontainerutil.feature.asset.persistence
 
 import com.github.chencmd.lootcontainerutil.minecraft.bukkit.BlockLocation
 
+import java.util.UUID
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.`type`.Chest
+
+case class LootAssetContainer(
+  location: BlockLocation,
+  blockId: String,
+  facing: Option[BlockFace],
+  waterlogged: Option[Boolean],
+  chestType: Option[Chest.Type]
+)
 
 case class LootAssetItem(
   slot: Int,
@@ -13,11 +22,8 @@ case class LootAssetItem(
 
 case class LootAsset(
   id: Option[Int],
-  location: BlockLocation,
-  blockId: String,
+  uuid: UUID,
   name: Option[String],
-  facing: Option[BlockFace],
-  waterlogged: Option[Boolean],
-  chestType: Option[Chest.Type],
+  containers: List[LootAssetContainer],
   items: List[LootAssetItem]
 )

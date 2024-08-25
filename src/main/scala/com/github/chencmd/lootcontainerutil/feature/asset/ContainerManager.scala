@@ -27,6 +27,7 @@ import org.bukkit.Sound
 import org.bukkit.SoundCategory
 import org.bukkit.event.block.Action
 import org.bukkit.event.inventory.InventoryCloseEvent
+import org.bukkit.event.inventory.InventoryType
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.Inventory
 
@@ -122,12 +123,21 @@ class ContainerManager[F[_]: Async, G[_]: Sync] private (
       items   <- asset.items.traverse(i => itemConverter.toItemStack(i.item).map((i.slot, _, i.quantity)))
       session <- InventorySession[F](ContainerManager.INVENTORY_NAME, location) { holder =>
         val server = Bukkit.getServer()
-        asset.name.fold(server.createInventory(holder, 27))(server.createInventory(holder, 27, _)).tap { inv =>
-          items.foreach { (slot, item, quantity) =>
-            item.setAmount(quantity)
-            inv.setItem(slot, item)
-          }
+        val inv    = asset.containers.head.blockId match {
+          case "minecraft:chest" | "minecraft:trapped_chest" =>
+            println(s"Creating chest inventory with size: ${asset.containers.size * 27}")
+            val size = asset.containers.size * 27
+            asset.name.fold(server.createInventory(holder, size))(server.createInventory(holder, size, _))
+          case blockId                                       =>
+            println(s"Creating inventory with type: $blockId")
+            val invType = InventoryType.valueOf(blockId.drop("minecraft:".length).toUpperCase())
+            asset.name.fold(server.createInventory(holder, invType))(server.createInventory(holder, invType, _))
         }
+        items.foreach { (slot, item, quantity) =>
+          item.setAmount(quantity)
+          inv.setItem(slot, item)
+        }
+        inv
       }
     } yield session
 
