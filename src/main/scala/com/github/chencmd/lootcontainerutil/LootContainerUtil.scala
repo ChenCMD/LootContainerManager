@@ -86,12 +86,10 @@ class LootContainerUtil extends JavaPlugin {
       _          <- refreshCache(asyncLootAssetLocationCacheRef)
       taskFiber1 <- {
         val program = for {
-          _     <- Async[F].delay(Bukkit.getConsoleSender.sendMessage("Starting cache update task"))
           cache <- asyncLootAssetLocationCacheRef.get
           _     <- Async[F].whenA(cache.updatedAssetLocations.nonEmpty || cache.deletedAssetIds.nonEmpty) {
             saveAssetFromCache(asyncLootAssetLocationCacheRef) >> refreshCache(asyncLootAssetLocationCacheRef)
           }
-          _     <- Async[F].delay(Bukkit.getConsoleSender.sendMessage("Cache update task completed"))
         } yield ()
         (Async[F].sleep(30.seconds) >> program).foreverM.start
       }
