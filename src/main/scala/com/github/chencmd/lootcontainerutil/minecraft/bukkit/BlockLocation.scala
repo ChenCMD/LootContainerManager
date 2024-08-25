@@ -45,7 +45,7 @@ final case class BlockLocation(world: String, x: Int, y: Int, z: Int) {
   def toPosition: Position = Position(world, x.toDouble, y.toDouble, z.toDouble)
   def toVector: Vector     = Vector(x.toDouble, y.toDouble, z.toDouble)
 
-  def toXYZString: String = s"$x, $y, $z"
+  def toXYZString: String = s"$x $y $z"
 }
 
 object BlockLocation {

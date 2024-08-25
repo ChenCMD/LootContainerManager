@@ -69,7 +69,9 @@ object GenLootAsset {
     _ <- LAPCI.updateLootAsset(asset)
 
     // プレイヤーにメッセージを送信する
-    _ <- Async[F].delay(p.sendMessage(s"Generated loot asset at ${asset.containers.map(_.location)}"))
+    _ <- Async[F].delay {
+      p.sendMessage(s"Generated loot asset at ${asset.containers.map(_.location.toXYZString).mkString(", ")}")
+    }
   } yield ()
 
   def findContainer(p: Player): SyncIO[Option[Container]] = SyncIO {
