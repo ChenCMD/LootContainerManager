@@ -111,13 +111,6 @@ object LootAssetHighlight {
     _                      <- entityIds.set(newEntityIds.toMap)
   } yield ()
 
-  val NON_FULL_BLOCK_CONTAINER = Set(
-    "minecraft:brewing_stand",
-    "minecraft:chest",
-    "minecraft:trapped_chest",
-    "minecraft:hopper"
-  )
-
   def checkBlock[F[_]: Async](player: Player)(block: Block, location: BlockLocation): F[Unit] = {
     Async[F].whenA(block.isEmpty())(Async[F].delay {
       player.sendMessage(s"${Prefix.ERROR}Asset として登録されている座標にコンテナ系ブロックが存在しません。")
@@ -137,8 +130,8 @@ object LootAssetHighlight {
     craftBlock   <- CraftBlock.cast(block)
     nmsBlockData <- craftBlock.getNMS
 
-    facing            = container.facing.filter(_ => NON_FULL_BLOCK_CONTAINER.contains(container.blockId))
-    spawnEntityPacket = createSpawnEntityPacket(entityID, position, container.blockId, facing, container.chestType)
+    facing            = container.facing.filter(_ => CHESTS.contains(container.blockId))
+    spawnEntityPacket = createSpawnEntityPacket(entityID, position, facing, container.chestType)
     setMetadataPacket = createMetadataPacket(entityID, nmsBlockData)
 
     pManager = ProtocolLibrary.getProtocolManager
@@ -154,7 +147,6 @@ object LootAssetHighlight {
   def createSpawnEntityPacket(
     entityID: Int,
     position: Position,
-    blockId: String,
     facing: Option[BlockFace],
     chestType: Option[ChestData.Type] = None
   ): PacketContainer = {
@@ -172,22 +164,21 @@ object LootAssetHighlight {
       // Z           | Double
       p.getDoubles().write(2, position.z + 0.5)
       // Yaw
-      val yaw = facing match {
-        case Some(BlockFace.SOUTH) => 0f
-        case Some(BlockFace.WEST)  => 90f
-        case Some(BlockFace.NORTH) => 180f
-        case Some(BlockFace.EAST)  => 270f
-        case _                     => 0f
-      }
-      if (CHESTS.contains(blockId)) {
+      // チェストは block_display のバグで blockState から正常に反映されないので、ここで設定する
+      if (facing.isDefined) {
+        val yaw    = facing match {
+          case Some(BlockFace.SOUTH) => 0f
+          case Some(BlockFace.WEST)  => 90f
+          case Some(BlockFace.NORTH) => 180f
+          case Some(BlockFace.EAST)  => 270f
+          case _                     => 0f
+        }
         val offset = chestType match {
           case Some(ChestData.Type.LEFT)  => 90
           case Some(ChestData.Type.RIGHT) => -90
           case _                          => 0
         }
         p.getBytes().write(1, ((yaw + offset) * (256d / 360d)).toByte)
-      } else {
-        p.getBytes().write(1, (yaw * (256d / 360d)).toByte)
       }
     }
   }
