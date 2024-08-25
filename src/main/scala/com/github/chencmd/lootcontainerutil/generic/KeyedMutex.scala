@@ -1,37 +1,71 @@
 package com.github.chencmd.lootcontainerutil.generic
 
+import com.github.chencmd.lootcontainerutil.generic.OptionExtra.*
+
 import cats.effect.kernel.GenConcurrent
-import cats.effect.kernel.Poll
 import cats.effect.kernel.Ref
-import cats.effect.std.Semaphore
 import cats.implicits.*
 
 trait KeyedMutex[F[_], K, V] {
-  def withCancelableLockAtKey[B](key: K)(update: Poll[F] => Option[V] => F[(Option[V], B)]): F[B]
-
-  final def withLockAtKey[B](key: K)(update: Option[V] => F[(Option[V], B)]): F[B] =
-    withCancelableLockAtKey(key)(_ => ov => update(ov))
+  def withLockAtKey[B](key: K)(
+    update: Option[V] => F[(Option[V], B)]
+  ): F[B]
 }
 
 object KeyedMutex {
-  def empty[F[_], K, V](using gcf: GenConcurrent[F, Throwable]): F[KeyedMutex[F, K, V]] = {
-    for {
-      mapRef    <- Ref[F].of(Map.empty[K, V])
-      semaphore <- Semaphore[F](1)
-    } yield new KeyedMutex[F, K, V] {
-      def withCancelableLockAtKey[B](key: K)(update: Poll[F] => Option[V] => F[(Option[V], B)]): F[B] =
-        semaphore.permit.use { _ =>
-          gcf.uncancelable { pollUpdate =>
-            for {
-              currentMap          <- mapRef.get
-              (nextValue, result) <- update(pollUpdate)(currentMap.get(key))
-              _                   <- mapRef.set(nextValue match {
-                case Some(nv) => currentMap + (key -> nv)
-                case None     => currentMap - key
-              })
-            } yield result
-          }
-        }
-    }
+  private case class MapEntry[F[_], V](
+    // must be protected by the outer mutex
+    waiterCounter: Ref[F, Int],
+    recordMutex: Mutex[F, Option[V]]
+  )
+
+  private object MapEntry {
+    def allocateEmpty[F[_], V](using
+      F: GenConcurrent[F, Throwable]
+    ): F[MapEntry[F, V]] = (Ref[F].of(0), Mutex[F, Option[V]](Option.empty))
+      .mapN(MapEntry.apply[F, V])
   }
+
+  def empty[F[_], K, V](using
+    F: GenConcurrent[F, Throwable]
+  ): F[KeyedMutex[F, K, V]] =
+    for {
+      mapMutex <- Mutex[F, Map[K, MapEntry[F, V]]](Map.empty)
+    } yield new KeyedMutex[F, K, V] {
+      def withLockAtKey[B](
+        key: K
+      )(update: Option[V] => F[(Option[V], B)]): F[B] = F.uncancelable { poll =>
+        for {
+          // prepare locked access to the entry
+          MapEntry(waiterCounter, recordMutex) <- poll {
+            mapMutex.accessWithLock { mapAtFirst =>
+              F.uncancelable { _ =>
+                for {
+                  entryAtKey <- mapAtFirst
+                    .get(key)
+                    .getOrElseEffectfully(MapEntry.allocateEmpty[F, V])
+                  _          <- entryAtKey.waiterCounter.update(_ + 1)
+                } yield (mapAtFirst + (key -> entryAtKey), entryAtKey)
+              }
+            }
+          }
+          b                                    <- F.guarantee(
+            poll(recordMutex.accessWithLock(update)),
+            // cleanup the empty entry if we are the last waiter
+            mapMutex.updateWithLock { map =>
+              for {
+                waiters                <- waiterCounter.updateAndGet(_ - 1)
+                weMustRemoveKeyFromMap <-
+                  // if there are no concurrent access (that have incremented waiterCounter but not yet decremented it),
+                  // i.e. waiters == 0, and the entry is empty (if waiters == 0, recordMutex.readWithLock should return without blocking,
+                  // with a result of None if our access wanted to unset the entry), we must remove the entry.
+                  // Otherwise, we should let another future access try removing the entry.
+                  if (waiters == 0) recordMutex.readWithLock.map(_.isEmpty)
+                  else false.pure[F]
+              } yield if (weMustRemoveKeyFromMap) map - key else map
+            }
+          )
+        } yield b
+      }
+    }
 }
