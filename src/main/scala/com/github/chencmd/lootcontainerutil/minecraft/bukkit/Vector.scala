@@ -23,6 +23,13 @@ case class Vector(x: Double, y: Double, z: Double) {
     Math.sqrt(x * x + y * y + z * z).pipe(mag => Vector(x / mag, y / mag, z / mag))
   }
 
+  def rotate(degree: Double): Vector = {
+    val rad = Math.toRadians(degree)
+    val cos = Math.cos(rad)
+    val sin = Math.sin(rad)
+    Vector(x * cos - z * sin, y, x * sin + z * cos)
+  }
+
   def toBukkit: BukkitVector = new BukkitVector(x, y, z)
   def toJomlVector: Vector3f = Vector3f(x.toFloat, y.toFloat, z.toFloat)
 
