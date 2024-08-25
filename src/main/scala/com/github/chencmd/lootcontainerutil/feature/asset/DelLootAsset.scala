@@ -69,7 +69,10 @@ object DelLootAsset {
             val size = asset.containers.size * 27
             asset.name.fold(server.createInventory(holder, size))(server.createInventory(holder, size, _))
           } else {
-            val invType = InventoryType.valueOf(asset.containers.head.blockId.drop("minecraft:".length).toUpperCase())
+            val invType = asset.containers.head.blockId.drop("minecraft:".length) match {
+              case "brewing_stand" => InventoryType.BREWING
+              case id              => InventoryType.valueOf(id.toUpperCase())
+            }
             asset.name.fold(server.createInventory(holder, invType))(server.createInventory(holder, invType, _))
           }
         }
