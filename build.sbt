@@ -22,6 +22,7 @@ libraryDependencies ++= Seq(
   "org.scala-lang.modules" %% "scala-parser-combinators" % "2.3.0",
   "com.github.tarao"       %% "record4s"                 % "0.13.0",
   "org.joml"                % "joml"                     % "1.10.8",
+  "dev.jorel"               % "commandapi-bukkit-shade"   % "9.5.3",
   "org.scalatest"          %% "scalatest"                % "3.2.12" % Test
 )
 
@@ -34,8 +35,7 @@ excludeDependencies := Seq(
 semanticdbEnabled := true
 semanticdbVersion := scalafixSemanticdb.revision
 
-
-usePipelining := true
+usePipelining                    := true
 scalacOptions ++= Seq(
   "-deprecation",
   "-feature",
