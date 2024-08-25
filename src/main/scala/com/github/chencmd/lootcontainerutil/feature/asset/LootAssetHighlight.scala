@@ -33,10 +33,10 @@ import java.util.UUID
 import org.bukkit.Bukkit
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
+import org.bukkit.block.data.`type`.Chest as ChestData
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
 import org.joml.Vector3f
-import org.bukkit.block.data.`type`.Chest as ChestData
 
 object LootAssetHighlight {
   def task[F[_]: Async](using

@@ -10,6 +10,6 @@ object MetaInstances {
     List.empty,
     (rs, i) => UUID.fromString(rs.getString(i)),
     (ps, i, a) => ps.setString(i, a.toString),
-    (rs, i, a) => rs.updateString(i, a.toString),
+    (rs, i, a) => rs.updateString(i, a.toString)
   )
 }

@@ -13,20 +13,20 @@ import org.bukkit.World
 
 final case class BlockLocation(world: String, x: Int, y: Int, z: Int) {
   infix def +(other: BlockLocation): BlockLocation = BlockLocation(world, x + other.x, y + other.y, z + other.z)
-  infix def +(other: Position): Position = Position(world, x + other.x, y + other.y, z + other.z)
-  infix def +(vec: Vector): Position     = Position(world, x + vec.x, y + vec.y, z + vec.z)
+  infix def +(other: Position): Position           = Position(world, x + other.x, y + other.y, z + other.z)
+  infix def +(vec: Vector): Position               = Position(world, x + vec.x, y + vec.y, z + vec.z)
 
   infix def -(other: BlockLocation): BlockLocation = BlockLocation(world, x - other.x, y - other.y, z - other.z)
-  infix def -(other: Position): Position = Position(world, x - other.x, y - other.y, z - other.z)
-  infix def -(vec: Vector): Position     = Position(world, x - vec.x, y - vec.y, z - vec.z)
+  infix def -(other: Position): Position           = Position(world, x - other.x, y - other.y, z - other.z)
+  infix def -(vec: Vector): Position               = Position(world, x - vec.x, y - vec.y, z - vec.z)
 
   infix def *(other: BlockLocation): BlockLocation = BlockLocation(world, x * other.x, y * other.y, z * other.z)
-  infix def *(other: Position): Position = Position(world, x * other.x, y * other.y, z * other.z)
-  infix def *(vec: Vector): Position     = Position(world, x * vec.x, y * vec.y, z * vec.z)
+  infix def *(other: Position): Position           = Position(world, x * other.x, y * other.y, z * other.z)
+  infix def *(vec: Vector): Position               = Position(world, x * vec.x, y * vec.y, z * vec.z)
 
   infix def /(other: BlockLocation): BlockLocation = BlockLocation(world, x / other.x, y / other.y, z / other.z)
-  infix def /(other: Position): Position = Position(world, x / other.x, y / other.y, z / other.z)
-  infix def /(vec: Vector): Position     = Position(world, x / vec.x, y / vec.y, z / vec.z)
+  infix def /(other: Position): Position           = Position(world, x / other.x, y / other.y, z / other.z)
+  infix def /(vec: Vector): Position               = Position(world, x / vec.x, y / vec.y, z / vec.z)
 
   infix def *(n: Double): Position = Position(world, x * n, y * n, z * n)
 
