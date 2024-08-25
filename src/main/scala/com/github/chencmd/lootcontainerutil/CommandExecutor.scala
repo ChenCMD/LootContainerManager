@@ -19,6 +19,7 @@ import dev.jorel.commandapi.executors.CommandArguments
 import org.bukkit.Bukkit
 import com.github.chencmd.lootcontainerutil.exceptions.ConfigurationException
 import java.util.logging.Level
+import dev.jorel.commandapi.executors.PlayerCommandExecutor
 
 object CommandExecutor {
   def register[F[_]: Async](
@@ -29,7 +30,7 @@ object CommandExecutor {
     Converter: ItemConversionInstr[F],
     LAPCI: LootAssetPersistenceCacheInstr[F]
   ) = {
-    def handler(sender: Player)(e: Throwable) = e match {
+    def handler(sender: Player)(e: Throwable)                    = e match {
       case err: UserException          => sender.sendMessage(err.getMessage)
       case err: ConfigurationException =>
         sender.sendMessage("An error occurred while loading the configuration file.")
@@ -38,16 +39,20 @@ object CommandExecutor {
         sender.sendMessage("An error occurred while executing the command.")
         Bukkit.getLogger.log(Level.SEVERE, err.getMessage, err)
     }
+    def genExecutor(f: Player => F[Unit]): PlayerCommandExecutor = { (sender: Player, _: CommandArguments) =>
+      unsafeRunAsync(handler(sender))(f(sender))
+    }
 
-    val genAsset = CommandAPICommand("gen_asset").executesPlayer { (player: Player, _: CommandArguments) =>
-      unsafeRunAsync(handler(player))(GenLootAsset.generateLootAsset(player))
-    }
-    val delAsset = CommandAPICommand("del_asset").executesPlayer { (player: Player, _: CommandArguments) =>
-      unsafeRunAsync(handler(player))(DelLootAsset.deleteLootAsset(player, openedInventories))
-    }
+    val genAsset = CommandAPICommand("gen_asset")
+      .withAliases("g")
+      .executesPlayer(genExecutor(GenLootAsset.generateLootAsset))
+    val delAsset = CommandAPICommand("del_asset")
+      .withAliases("d")
+      .executesPlayer(genExecutor(DelLootAsset.deleteLootAsset(_, openedInventories)))
 
     Async[F].delay {
-      CommandAPICommand("lcu")
+      CommandAPICommand("lootcontainerutil")
+        .withAliases("lcu")
         .withPermission(CommandPermission.OP)
         .withSubcommands(genAsset, delAsset)
         .register()
