@@ -27,11 +27,15 @@ object DelLootAsset {
     Converter: ItemConversionInstr[F],
     asyncLootAssetCache: LootAssetPersistenceCacheInstr[F]
   ): F[Unit] = for {
-    container <- mcThread.run(for {
+    dataOrNone                 <- mcThread.run(for {
       blockOrNone     <- SyncIO(Option(p.getTargetBlockExact(5)))
       containerOrNone <- SyncIO(blockOrNone.flatMap(_.getState.downcastOrNone[Container]))
-    } yield containerOrNone)
-    container <- container.fold(UserException.raise("No container was found"))(_.pure[F])
+      inventoryOrNone <- SyncIO(containerOrNone.map(_.getInventory()))
+    } yield for {
+      container <- containerOrNone
+      inventory <- inventoryOrNone
+    } yield container -> inventory)
+    (container, containerInv) <- dataOrNone.fold(UserException.raise("No container was found"))(_.pure[F])
 
     assetLocation = BlockLocation.of(container.getLocation())
 
@@ -44,7 +48,6 @@ object DelLootAsset {
     _ <- Async[F].delay { assetInv.getViewers().asScala.foreach(_.closeInventory()) }
 
     _ <- Async[F].delay {
-      val containerInv = container.getInventory()
       containerInv.clear()
       containerInv.setContents(assetInv.getContents())
     }
