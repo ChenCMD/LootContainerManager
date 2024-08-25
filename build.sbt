@@ -2,7 +2,7 @@ name := "LootContainerUtil"
 
 version := "0.1"
 
-scalaVersion := "3.4.2"
+scalaVersion := "3.5.0"
 
 resolvers ++= Seq(
   "spigot-repo" at "https://hub.spigotmc.org/nexus/content/repositories/snapshots",
@@ -34,11 +34,13 @@ excludeDependencies := Seq(
 semanticdbEnabled := true
 semanticdbVersion := scalafixSemanticdb.revision
 
+
+usePipelining := true
 scalacOptions ++= Seq(
   "-deprecation",
   "-feature",
   "-unchecked",
-  "-Ykind-projector:underscores",
+  "-Xkind-projector:underscores",
   "-no-indent",
   "-Wunused:all",
   "-source:future"
