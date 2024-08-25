@@ -11,8 +11,6 @@ import org.bukkit.inventory.ItemStack
 
 object ManageBukkitItemNBT {
   def createInstr: ManageItemNBT = new ManageItemNBT {
-    import CraftItemStack.*
-
     def createItemFromNBT[F[_]: Sync](compound: NBTTagCompound): F[ItemStack] = for {
       nmsItem   <- NMSItemStack(compound)
       craftItem <- CraftItemStack.asBukkitCopy(nmsItem)

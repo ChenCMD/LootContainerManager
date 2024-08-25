@@ -29,7 +29,6 @@ import org.bukkit.event.block.Action
 import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.Inventory
-import org.bukkit.inventory.PlayerInventory
 
 class ContainerManager[F[_]: Async, G[_]: Sync] private (
   private val openedInventories: KeyedMutex[F, BlockLocation, InventorySession]

@@ -12,7 +12,6 @@ import com.github.chencmd.lootcontainerutil.feature.asset.LootAssetHighlight
 import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetPersistenceCacheInstr
 import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetPersistenceInstr
 import com.github.chencmd.lootcontainerutil.feature.containerprotection.ProtectActionListener
-import com.github.chencmd.lootcontainerutil.generic.EitherTIOExtra.*
 import com.github.chencmd.lootcontainerutil.generic.MapExtra.*
 import com.github.chencmd.lootcontainerutil.generic.SyncContinuation
 import com.github.chencmd.lootcontainerutil.minecraft.ManageItemNBT
@@ -35,7 +34,6 @@ import cats.~>
 
 import scala.concurrent.duration.*
 
-import doobie.*
 import java.util.logging.Level
 import org.bukkit.Bukkit
 import org.bukkit.command.Command
