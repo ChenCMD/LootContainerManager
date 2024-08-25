@@ -32,6 +32,8 @@ final case class BlockLocation(world: String, x: Int, y: Int, z: Int) {
 
   infix def /(n: Double): Position = Position(world, x / n, y / n, z / n)
 
+  def midPointAt(other: BlockLocation): Position = (this + other) / 2
+
   def toChunkLocation: BlockLocation = BlockLocation(world, x >> 4, y >> 4, z >> 4)
 
   def toBukkit(world: World): BukkitLocation  = new BukkitLocation(world, x, y, z)
