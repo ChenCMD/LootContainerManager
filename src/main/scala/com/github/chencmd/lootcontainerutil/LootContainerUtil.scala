@@ -4,8 +4,6 @@ import com.github.chencmd.lootcontainerutil.adapter.TSBAdapter
 import com.github.chencmd.lootcontainerutil.adapter.database.LootAssetRepository
 import com.github.chencmd.lootcontainerutil.adapter.database.LootAssetRepositoryCache
 import com.github.chencmd.lootcontainerutil.adapter.database.SQLite
-import com.github.chencmd.lootcontainerutil.exceptions.ConfigurationException
-import com.github.chencmd.lootcontainerutil.exceptions.UserException
 import com.github.chencmd.lootcontainerutil.feature.asset.ContainerManageListener
 import com.github.chencmd.lootcontainerutil.feature.asset.ItemConversionInstr
 import com.github.chencmd.lootcontainerutil.feature.asset.LootAssetHighlight
@@ -36,14 +34,16 @@ import scala.concurrent.duration.*
 
 import java.util.logging.Level
 import org.bukkit.Bukkit
-import org.bukkit.command.Command
-import org.bukkit.command.CommandSender
 import org.bukkit.plugin.java.JavaPlugin
+import dev.jorel.commandapi.CommandAPI
+import dev.jorel.commandapi.CommandAPIBukkitConfig
 
 class LootContainerUtil extends JavaPlugin {
   type F = IO[_]
   type G = SyncIO[_]
   val coerceF: G ~> F           = FunctionK.lift([A] => (_: G[A]).to[F])
+  val unsafeRunAsync            =
+    [U] => (errorHandler: Throwable => U) => [U1] => (fa: F[U1]) => fa.unsafeRunAsync(_.left.foreach(errorHandler))
   val unsafeRunSyncContinuation = [A] =>
     (cont: SyncContinuation[F, G, A]) => {
       val (a, effect) = cont.unsafeRunSync()
@@ -51,8 +51,11 @@ class LootContainerUtil extends JavaPlugin {
       a
   }
 
-  val cmdExecutorRef: Ref[F, Option[CommandExecutor[F]]] = Ref.unsafe(None)
   val finalizerRef: Ref[F, Option[F[Unit]]]              = Ref.unsafe(None)
+
+  override def onLoad() = {
+    CommandAPI.onLoad(CommandAPIBukkitConfig(this))
+  }
 
   override def onEnable() = {
     given OnMinecraftThread[F] = OnBukkitServerThread.createInstr[F](this)
@@ -77,8 +80,8 @@ class LootContainerUtil extends JavaPlugin {
       _                    <- Async[F].delay(Bukkit.getPluginManager.registerEvents(pal, this))
       _                    <- Async[F].delay(Bukkit.getPluginManager.registerEvents(cml, this))
 
-      cmdExecutor <- CommandExecutor[F](openedInventoriesRef)
-      _           <- cmdExecutorRef.set(Some(cmdExecutor))
+      _ <- Async[F].delay(CommandAPI.onEnable())
+      _ <- CommandExecutor.register[F](openedInventoriesRef, unsafeRunAsync)
 
       _          <- lootAssetRepos.initialize()
       _          <- refreshCache(asyncLootAssetLocationCacheRef)
@@ -114,30 +117,8 @@ class LootContainerUtil extends JavaPlugin {
 
   override def onDisable() = {
     finalizerRef.get.flatMap(_.orEmpty).unsafeRunSync()
+    CommandAPI.onDisable()
     Bukkit.getConsoleSender.sendMessage("LootContainerUtil disabled.")
-  }
-
-  override def onCommand(
-    sender: CommandSender,
-    command: Command,
-    label: String,
-    args: Array[String]
-  ): Boolean = {
-    if (command.getName == "lcu") {
-      val program = cmdExecutorRef.get.flatMap(_.traverse_(_.run(sender, args.toList)))
-      program.unsafeRunAsync(_.left.foreach {
-        case err: UserException          => sender.sendMessage(err.getMessage)
-        case err: ConfigurationException =>
-          sender.sendMessage("An error occurred while loading the configuration file.")
-          Bukkit.getLogger.log(Level.SEVERE, err.getMessage, err)
-        case err                         =>
-          sender.sendMessage("An error occurred while executing the command.")
-          Bukkit.getLogger.log(Level.SEVERE, err.getMessage, err)
-      })
-      true
-    } else {
-      false
-    }
   }
 
   def saveAssetFromCache(lootAssetLocationCacheRef: Ref[F, LootAssetCache])(using
