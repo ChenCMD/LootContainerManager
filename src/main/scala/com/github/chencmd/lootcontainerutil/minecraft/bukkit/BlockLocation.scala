@@ -11,32 +11,36 @@ import org.bukkit.Bukkit
 import org.bukkit.Location as BukkitLocation
 import org.bukkit.World
 
-final case class BlockLocation(w: String, x: Int, y: Int, z: Int) {
-  infix def +(other: Position): Position = Position(w, x + other.x, y + other.y, z + other.z)
-  infix def +(vec: Vector): Position     = Position(w, x + vec.x, y + vec.y, z + vec.z)
+final case class BlockLocation(world: String, x: Int, y: Int, z: Int) {
+  infix def +(other: BlockLocation): BlockLocation = BlockLocation(world, x + other.x, y + other.y, z + other.z)
+  infix def +(other: Position): Position = Position(world, x + other.x, y + other.y, z + other.z)
+  infix def +(vec: Vector): Position     = Position(world, x + vec.x, y + vec.y, z + vec.z)
 
-  infix def -(other: Position): Position = Position(w, x - other.x, y - other.y, z - other.z)
-  infix def -(vec: Vector): Position     = Position(w, x - vec.x, y - vec.y, z - vec.z)
+  infix def -(other: BlockLocation): BlockLocation = BlockLocation(world, x - other.x, y - other.y, z - other.z)
+  infix def -(other: Position): Position = Position(world, x - other.x, y - other.y, z - other.z)
+  infix def -(vec: Vector): Position     = Position(world, x - vec.x, y - vec.y, z - vec.z)
 
-  infix def *(other: Position): Position = Position(w, x * other.x, y * other.y, z * other.z)
-  infix def *(vec: Vector): Position     = Position(w, x * vec.x, y * vec.y, z * vec.z)
+  infix def *(other: BlockLocation): BlockLocation = BlockLocation(world, x * other.x, y * other.y, z * other.z)
+  infix def *(other: Position): Position = Position(world, x * other.x, y * other.y, z * other.z)
+  infix def *(vec: Vector): Position     = Position(world, x * vec.x, y * vec.y, z * vec.z)
 
-  infix def /(other: Position): Position = Position(w, x / other.x, y / other.y, z / other.z)
-  infix def /(vec: Vector): Position     = Position(w, x / vec.x, y / vec.y, z / vec.z)
+  infix def /(other: BlockLocation): BlockLocation = BlockLocation(world, x / other.x, y / other.y, z / other.z)
+  infix def /(other: Position): Position = Position(world, x / other.x, y / other.y, z / other.z)
+  infix def /(vec: Vector): Position     = Position(world, x / vec.x, y / vec.y, z / vec.z)
 
-  infix def *(n: Double): Position = Position(w, x * n, y * n, z * n)
+  infix def *(n: Double): Position = Position(world, x * n, y * n, z * n)
 
-  infix def /(n: Double): Position = Position(w, x / n, y / n, z / n)
+  infix def /(n: Double): Position = Position(world, x / n, y / n, z / n)
 
-  def toChunkLocation: BlockLocation = BlockLocation(w, x >> 4, y >> 4, z >> 4)
+  def toChunkLocation: BlockLocation = BlockLocation(world, x >> 4, y >> 4, z >> 4)
 
   def toBukkit(world: World): BukkitLocation  = new BukkitLocation(world, x, y, z)
   def toBukkit[F[_]: Sync]: F[BukkitLocation] = for {
-    worldOpt <- Sync[F].delay(Bukkit.getWorlds().asScala.toList.find(_.getKey.toString == w))
-    world    <- worldOpt.fold(SystemException.raise(s"Missing world: $w"))(_.pure[F])
+    worldOpt <- Sync[F].delay(Bukkit.getWorlds().asScala.toList.find(_.getKey.toString == world))
+    world    <- worldOpt.fold(SystemException.raise(s"Missing world: $world"))(_.pure[F])
   } yield new BukkitLocation(world, x, y, z)
 
-  def toPosition: Position = Position(w, x.toDouble, y.toDouble, z.toDouble)
+  def toPosition: Position = Position(world, x.toDouble, y.toDouble, z.toDouble)
   def toVector: Vector     = Vector(x.toDouble, y.toDouble, z.toDouble)
 
   def toXYZString: String = s"$x, $y, $z"
