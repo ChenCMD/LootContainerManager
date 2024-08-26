@@ -4,6 +4,7 @@ import scala.util.chaining.*
 
 import org.bukkit.World
 import org.bukkit.util.Vector as BukkitVector
+
 import org.joml.Vector3f
 
 case class Vector(x: Double, y: Double, z: Double) {

@@ -5,10 +5,10 @@ import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
 import cats.effect.SyncIO
 import cats.effect.kernel.Async
 import cats.implicits.*
+import org.typelevel.log4cats.Logger
 
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
-import org.typelevel.log4cats.Logger
 
 object OnBukkitServerThread {
   def createInstr[F[_]: Async](taskOwner: JavaPlugin)(using

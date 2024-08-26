@@ -6,8 +6,9 @@ import com.github.chencmd.lootcontainermanager.minecraft.nms.NMSItemStack
 import cats.effect.kernel.Sync
 import cats.implicits.*
 
-import dev.array21.bukkitreflectionlib.ReflectionUtil
 import org.bukkit.inventory.ItemStack
+
+import dev.array21.bukkitreflectionlib.ReflectionUtil
 
 object CraftItemStack {
   lazy val _clazz       = ReflectionUtil.getBukkitClass("inventory.CraftItemStack")

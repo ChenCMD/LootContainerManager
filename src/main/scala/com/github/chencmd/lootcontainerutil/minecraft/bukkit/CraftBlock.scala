@@ -5,8 +5,9 @@ import com.github.chencmd.lootcontainermanager.minecraft.nms.NMSIBlockData
 import cats.effect.kernel.Sync
 import cats.implicits.*
 
-import dev.array21.bukkitreflectionlib.ReflectionUtil
 import org.bukkit.block.Block
+
+import dev.array21.bukkitreflectionlib.ReflectionUtil
 
 type CraftBlock >: Block
 object CraftBlock {

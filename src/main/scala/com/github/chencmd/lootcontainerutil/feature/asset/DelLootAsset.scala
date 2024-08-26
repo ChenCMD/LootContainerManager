@@ -1,5 +1,6 @@
 package com.github.chencmd.lootcontainermanager.feature.asset
 
+import com.github.chencmd.lootcontainermanager.Prefix
 import com.github.chencmd.lootcontainermanager.exceptions.UserException
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetPersistenceCacheInstr
 import com.github.chencmd.lootcontainermanager.generic.extensions.CastOps.*
@@ -7,7 +8,6 @@ import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
 import com.github.chencmd.lootcontainermanager.minecraft.bukkit.BlockLocation
 import com.github.chencmd.lootcontainermanager.terms.InventoriesStore
 import com.github.chencmd.lootcontainermanager.terms.InventoriesStore.*
-import com.github.chencmd.lootcontainermanager.Prefix
 
 import cats.effect.SyncIO
 import cats.effect.kernel.Async

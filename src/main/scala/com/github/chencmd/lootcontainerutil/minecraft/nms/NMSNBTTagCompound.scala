@@ -6,8 +6,9 @@ import cats.implicits.*
 import scala.jdk.CollectionConverters.*
 import scala.util.chaining.*
 
-import dev.array21.bukkitreflectionlib.ReflectionUtil
 import java.lang.reflect.Constructor
+
+import dev.array21.bukkitreflectionlib.ReflectionUtil
 
 type NMSNBTTagCompound <: NMSNBTTag
 

@@ -11,6 +11,7 @@ import cats.effect.kernel.Async
 import cats.implicits.*
 
 import java.util.UUID
+
 import org.bukkit.Bukkit
 import org.bukkit.event.inventory.InventoryType
 import org.bukkit.inventory.Inventory

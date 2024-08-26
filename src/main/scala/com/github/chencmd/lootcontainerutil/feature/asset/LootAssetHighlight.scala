@@ -16,28 +16,30 @@ import cats.effect.SyncIO
 import cats.effect.kernel.Async
 import cats.effect.kernel.Ref
 import cats.implicits.*
+import org.typelevel.log4cats.Logger
 
 import scala.concurrent.duration.*
 import scala.jdk.CollectionConverters.*
 import scala.util.Random
 import scala.util.chaining.*
 
-import com.comphenix.protocol.PacketType
-import com.comphenix.protocol.ProtocolLibrary
-import com.comphenix.protocol.events.PacketContainer
-import com.comphenix.protocol.wrappers.WrappedDataValue
-import com.comphenix.protocol.wrappers.WrappedDataWatcher.Registry
 import java.lang as jl
 import java.util as ju
 import java.util.UUID
+
 import org.bukkit.Bukkit
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.`type`.Chest as ChestData
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
+
+import com.comphenix.protocol.PacketType
+import com.comphenix.protocol.ProtocolLibrary
+import com.comphenix.protocol.events.PacketContainer
+import com.comphenix.protocol.wrappers.WrappedDataValue
+import com.comphenix.protocol.wrappers.WrappedDataWatcher.Registry
 import org.joml.Vector3f
-import org.typelevel.log4cats.Logger
 
 object LootAssetHighlight {
   def task[F[_]: Async](using

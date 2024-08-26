@@ -28,15 +28,16 @@ import cats.effect.kernel.Ref
 import cats.effect.unsafe.implicits.global
 import cats.implicits.*
 import cats.~>
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 import scala.concurrent.duration.*
 
-import dev.jorel.commandapi.CommandAPI
-import dev.jorel.commandapi.CommandAPIBukkitConfig
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
-import org.typelevel.log4cats.Logger
-import org.typelevel.log4cats.slf4j.Slf4jLogger
+
+import dev.jorel.commandapi.CommandAPI
+import dev.jorel.commandapi.CommandAPIBukkitConfig
 
 class LootContainerManager extends JavaPlugin {
   type F = IO[_]

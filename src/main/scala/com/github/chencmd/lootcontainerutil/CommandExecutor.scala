@@ -11,13 +11,14 @@ import com.github.chencmd.lootcontainermanager.terms.InventoriesStore
 
 import cats.effect.kernel.Async
 import cats.implicits.*
+import org.typelevel.log4cats.Logger
+
+import org.bukkit.entity.Player
 
 import dev.jorel.commandapi.CommandAPICommand
 import dev.jorel.commandapi.CommandPermission
 import dev.jorel.commandapi.executors.CommandArguments
 import dev.jorel.commandapi.executors.PlayerCommandExecutor
-import org.bukkit.entity.Player
-import org.typelevel.log4cats.Logger
 
 object CommandExecutor {
   def register[F[_]: Async](

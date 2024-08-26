@@ -13,12 +13,14 @@ import cats.data.NonEmptyList
 import cats.effect.kernel.Async
 import cats.implicits.*
 
+import java.util.UUID
+
+import org.bukkit.block.BlockFace
+import org.bukkit.block.data.`type`.Chest
+
 import com.github.tarao.record4s.ArrayRecord
 import doobie.*
 import doobie.implicits.*
-import java.util.UUID
-import org.bukkit.block.BlockFace
-import org.bukkit.block.data.`type`.Chest
 
 object LootAssetRepository {
   def createInstr[F[_]: Async](transactor: Transactor[F]): LootAssetPersistenceInstr[F] = {

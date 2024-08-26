@@ -1,5 +1,6 @@
 package com.github.chencmd.lootcontainermanager.feature.asset
 
+import com.github.chencmd.lootcontainermanager.Prefix
 import com.github.chencmd.lootcontainermanager.exceptions.UserException
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAsset
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetContainer
@@ -9,7 +10,6 @@ import com.github.chencmd.lootcontainermanager.generic.extensions.CastOps.*
 import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
 import com.github.chencmd.lootcontainermanager.minecraft.bukkit.BlockLocation
 import com.github.chencmd.lootcontainermanager.minecraft.bukkit.Vector
-import com.github.chencmd.lootcontainermanager.Prefix
 
 import cats.data.OptionT
 import cats.effect.SyncIO
@@ -19,8 +19,6 @@ import cats.implicits.*
 
 import scala.jdk.CollectionConverters.*
 
-import com.github.tarao.record4s.%
-import com.github.tarao.record4s.unselect
 import org.bukkit.World
 import org.bukkit.block.Chest
 import org.bukkit.block.Container
@@ -29,6 +27,9 @@ import org.bukkit.block.data.Waterlogged
 import org.bukkit.block.data.`type`.Chest as ChestData
 import org.bukkit.entity.Player
 import org.bukkit.inventory.Inventory
+
+import com.github.tarao.record4s.%
+import com.github.tarao.record4s.unselect
 
 object GenLootAsset {
   type ContainerData = % {

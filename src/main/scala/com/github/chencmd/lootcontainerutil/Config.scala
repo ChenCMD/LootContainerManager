@@ -21,6 +21,7 @@ import scala.reflect.TypeTest
 
 import java.io.File
 import java.nio.file.Path
+
 import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.plugin.java.JavaPlugin
 

@@ -1,8 +1,9 @@
 package com.github.chencmd.lootcontainermanager.generic.instances
 
+import java.util.UUID
+
 import doobie.Meta
 import doobie.enumerated.JdbcType
-import java.util.UUID
 
 object MetaInstances {
   given Meta[UUID] = Meta.Basic.one[UUID](

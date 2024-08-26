@@ -16,6 +16,7 @@ import cats.effect.Async
 import cats.effect.SyncIO
 import cats.effect.kernel.Sync
 import cats.implicits.*
+import org.typelevel.log4cats.Logger
 
 import scala.concurrent.duration.*
 import scala.jdk.CollectionConverters.*
@@ -27,7 +28,6 @@ import org.bukkit.event.block.Action
 import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.Inventory
-import org.typelevel.log4cats.Logger
 
 class ContainerManager[F[_]: Async, G[_]: Sync] private (private val openedInventories: InventoriesStore[F])(using
   logger: Logger[F],

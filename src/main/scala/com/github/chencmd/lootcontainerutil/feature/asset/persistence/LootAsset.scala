@@ -3,6 +3,7 @@ package com.github.chencmd.lootcontainermanager.feature.asset.persistence
 import com.github.chencmd.lootcontainermanager.minecraft.bukkit.BlockLocation
 
 import java.util.UUID
+
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.`type`.Chest
 

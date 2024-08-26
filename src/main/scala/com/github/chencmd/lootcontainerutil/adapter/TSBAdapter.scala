@@ -22,7 +22,6 @@ import cats.implicits.*
 
 import scala.jdk.CollectionConverters.*
 
-import de.tr7zw.nbtapi.NBT
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.NamespacedKey
@@ -30,6 +29,8 @@ import org.bukkit.block.Container
 import org.bukkit.inventory.ItemStack
 import org.bukkit.loot.LootContext
 import org.bukkit.plugin.java.JavaPlugin
+
+import de.tr7zw.nbtapi.NBT
 
 object TSBAdapter {
   def createInstr[F[_]: Async](plugin: JavaPlugin, config: Config)(using
