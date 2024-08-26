@@ -2,19 +2,18 @@ package com.github.chencmd.lootcontainerutil.feature.asset
 
 import com.github.chencmd.lootcontainerutil.Prefix
 import com.github.chencmd.lootcontainerutil.exceptions.SystemException
-import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAsset
 import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetPersistenceCacheInstr
-import com.github.chencmd.lootcontainerutil.generic.KeyedMutex
 import com.github.chencmd.lootcontainerutil.generic.SyncContinuation
 import com.github.chencmd.lootcontainerutil.generic.extensions.CastOps.*
 import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
 import com.github.chencmd.lootcontainerutil.minecraft.bukkit.BlockLocation
 import com.github.chencmd.lootcontainerutil.minecraft.bukkit.InventorySession
+import com.github.chencmd.lootcontainerutil.terms.InventoriesStore
+import com.github.chencmd.lootcontainerutil.terms.InventoriesStore.*
 
 import cats.data.OptionT
 import cats.effect.Async
 import cats.effect.SyncIO
-import cats.effect.kernel.Ref
 import cats.effect.kernel.Sync
 import cats.implicits.*
 
@@ -22,18 +21,14 @@ import scala.concurrent.duration.*
 import scala.jdk.CollectionConverters.*
 import scala.util.chaining.*
 
-import org.bukkit.Bukkit
 import org.bukkit.Sound
 import org.bukkit.SoundCategory
 import org.bukkit.event.block.Action
 import org.bukkit.event.inventory.InventoryCloseEvent
-import org.bukkit.event.inventory.InventoryType
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.Inventory
 
-class ContainerManager[F[_]: Async, G[_]: Sync] private (
-  private val openedInventories: KeyedMutex[F, BlockLocation, InventorySession]
-)(using
+class ContainerManager[F[_]: Async, G[_]: Sync] private (private val openedInventories: InventoriesStore[F])(using
   mcThread: OnMinecraftThread[F],
   asyncLootAssetCache: LootAssetPersistenceCacheInstr[F],
   syncLootAssetCache: LootAssetPersistenceCacheInstr[G],
@@ -86,7 +81,7 @@ class ContainerManager[F[_]: Async, G[_]: Sync] private (
     def effect(assetLocation: BlockLocation): F[Unit] = for {
       asset <- asyncLootAssetCache.askLootAssetLocationAt(assetLocation)
       asset <- asset.fold(SystemException.raise[F]("Asset not found"))(_.pure[F])
-      inv   <- getOrCreateInventory(assetLocation, asset)
+      inv   <- openedInventories.getOrCreateInventory(assetLocation, asset)
       _     <- mcThread.run(SyncIO(p.openInventory(inv.getInventory())))
     } yield ()
 
@@ -117,46 +112,17 @@ class ContainerManager[F[_]: Async, G[_]: Sync] private (
 
     program.value.map(v => (v.nonEmpty, v.traverse_(effect.tupled)))
   }
-
-  def getOrCreateInventory(location: BlockLocation, asset: LootAsset): F[InventorySession] = {
-    def createInventorySession = for {
-      items   <- asset.items.traverse(i => itemConverter.toItemStack(i.item).map((i.slot, _, i.quantity)))
-      session <- InventorySession[F](ContainerManager.INVENTORY_NAME, location) { holder =>
-        val server = Bukkit.getServer()
-        val inv    = asset.containers.head.blockId match {
-          case "minecraft:chest" | "minecraft:trapped_chest" =>
-            println(s"Creating chest inventory with size: ${asset.containers.size * 27}")
-            val size = asset.containers.size * 27
-            asset.name.fold(server.createInventory(holder, size))(server.createInventory(holder, size, _))
-          case blockId                                       =>
-            println(s"Creating inventory with type: $blockId")
-            val invType = InventoryType.valueOf(blockId.drop("minecraft:".length).toUpperCase())
-            asset.name.fold(server.createInventory(holder, invType))(server.createInventory(holder, invType, _))
-        }
-        items.foreach { (slot, item, quantity) =>
-          item.setAmount(quantity)
-          inv.setItem(slot, item)
-        }
-        inv
-      }
-    } yield session
-
-    openedInventories.withLockAtKey(location) { invOrNone =>
-      invOrNone.fold(createInventorySession)(_.pure[F]).map(inv => (Some(inv), inv))
-    }
-  }
 }
 
 object ContainerManager {
   val INVENTORY_NAME = "LOOT_ASSET_CONTAINER"
 
-  def apply[F[_]: Async, G[_]: Sync](openedInventoriesRef: Ref[F, Map[BlockLocation, InventorySession]])(using
+  def apply[F[_]: Async, G[_]: Sync](openedInventories: InventoriesStore[F])(using
     mcThread: OnMinecraftThread[F],
     syncLootAssetCache: LootAssetPersistenceCacheInstr[G],
     asyncLootAssetCache: LootAssetPersistenceCacheInstr[F],
     itemConverter: ItemConversionInstr[F]
-  ): F[ContainerManager[F, G]] = for {
-    keyedMutex <- KeyedMutex.empty[F, BlockLocation, InventorySession]
-    cm         <- Async[F].delay(new ContainerManager[F, G](keyedMutex))
-  } yield cm
+  ): F[ContainerManager[F, G]] = Async[F].delay {
+    new ContainerManager[F, G](openedInventories)
+  }
 }

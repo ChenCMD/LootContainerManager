@@ -4,11 +4,9 @@ import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetP
 import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetPersistenceInstr
 import com.github.chencmd.lootcontainerutil.generic.SyncContinuation
 import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
-import com.github.chencmd.lootcontainerutil.minecraft.bukkit.BlockLocation
-import com.github.chencmd.lootcontainerutil.minecraft.bukkit.InventorySession
+import com.github.chencmd.lootcontainerutil.terms.InventoriesStore
 
 import cats.effect.kernel.Async
-import cats.effect.kernel.Ref
 import cats.effect.kernel.Sync
 import cats.implicits.*
 
@@ -34,7 +32,7 @@ class ContainerManageListener[F[_]: Async, G[_]: Sync] private (
 }
 
 object ContainerManageListener {
-  def apply[F[_]: Async, G[_]: Sync](openedInventoriesRef: Ref[F, Map[BlockLocation, InventorySession]])(
+  def apply[F[_]: Async, G[_]: Sync](openedInventories: InventoriesStore[F])(
     unsafeRunSyncContinuation: [A] => SyncContinuation[F, G, A] => A
   )(using
     mcThread: OnMinecraftThread[F],
@@ -43,7 +41,7 @@ object ContainerManageListener {
     Converter: ItemConversionInstr[F],
     LAP: LootAssetPersistenceInstr[F]
   ): F[ContainerManageListener[F, G]] = for {
-    cm  <- ContainerManager[F, G](openedInventoriesRef)
+    cm  <- ContainerManager[F, G](openedInventories)
     cml <- Async[F].delay(new ContainerManageListener[F, G](cm, unsafeRunSyncContinuation))
   } yield cml
 }

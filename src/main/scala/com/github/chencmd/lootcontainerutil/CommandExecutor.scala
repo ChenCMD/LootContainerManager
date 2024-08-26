@@ -1,29 +1,27 @@
 package com.github.chencmd.lootcontainerutil
 
+import com.github.chencmd.lootcontainerutil.exceptions.ConfigurationException
 import com.github.chencmd.lootcontainerutil.exceptions.UserException
 import com.github.chencmd.lootcontainerutil.feature.asset.DelLootAsset
 import com.github.chencmd.lootcontainerutil.feature.asset.GenLootAsset
 import com.github.chencmd.lootcontainerutil.feature.asset.ItemConversionInstr
 import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetPersistenceCacheInstr
 import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
-import com.github.chencmd.lootcontainerutil.minecraft.bukkit.BlockLocation
-import com.github.chencmd.lootcontainerutil.minecraft.bukkit.InventorySession
+import com.github.chencmd.lootcontainerutil.terms.InventoriesStore
 
 import cats.effect.kernel.Async
-import cats.effect.kernel.Ref
 
-import org.bukkit.entity.Player
 import dev.jorel.commandapi.CommandAPICommand
 import dev.jorel.commandapi.CommandPermission
 import dev.jorel.commandapi.executors.CommandArguments
-import org.bukkit.Bukkit
-import com.github.chencmd.lootcontainerutil.exceptions.ConfigurationException
-import java.util.logging.Level
 import dev.jorel.commandapi.executors.PlayerCommandExecutor
+import java.util.logging.Level
+import org.bukkit.Bukkit
+import org.bukkit.entity.Player
 
 object CommandExecutor {
   def register[F[_]: Async](
-    openedInventories: Ref[F, Map[BlockLocation, InventorySession]],
+    openedInventories: InventoriesStore[F],
     unsafeRunAsync: [U] => (errorHandler: Throwable => U) => [U1] => (fa: F[U1]) => Unit
   )(using
     mcThread: OnMinecraftThread[F],

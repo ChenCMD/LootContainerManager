@@ -14,10 +14,9 @@ import com.github.chencmd.lootcontainerutil.generic.MapExtra.*
 import com.github.chencmd.lootcontainerutil.generic.SyncContinuation
 import com.github.chencmd.lootcontainerutil.minecraft.ManageItemNBT
 import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
-import com.github.chencmd.lootcontainerutil.minecraft.bukkit.BlockLocation
-import com.github.chencmd.lootcontainerutil.minecraft.bukkit.InventorySession
 import com.github.chencmd.lootcontainerutil.minecraft.bukkit.ManageBukkitItemNBT
 import com.github.chencmd.lootcontainerutil.minecraft.bukkit.OnBukkitServerThread
+import com.github.chencmd.lootcontainerutil.terms.InventoriesStore
 import com.github.chencmd.lootcontainerutil.terms.LootAssetCache
 
 import cats.arrow.FunctionK
@@ -32,11 +31,11 @@ import cats.~>
 
 import scala.concurrent.duration.*
 
+import dev.jorel.commandapi.CommandAPI
+import dev.jorel.commandapi.CommandAPIBukkitConfig
 import java.util.logging.Level
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
-import dev.jorel.commandapi.CommandAPI
-import dev.jorel.commandapi.CommandAPIBukkitConfig
 
 class LootContainerUtil extends JavaPlugin {
   type F = IO[_]
@@ -51,7 +50,7 @@ class LootContainerUtil extends JavaPlugin {
       a
   }
 
-  val finalizerRef: Ref[F, Option[F[Unit]]]              = Ref.unsafe(None)
+  val finalizerRef: Ref[F, Option[F[Unit]]] = Ref.unsafe(None)
 
   override def onLoad() = {
     CommandAPI.onLoad(CommandAPIBukkitConfig(this))
@@ -74,14 +73,14 @@ class LootContainerUtil extends JavaPlugin {
       given LootAssetPersistenceCacheInstr[G] = LootAssetRepositoryCache.createInstr[G](syncLootAssetLocationCacheRef)
       given LootAssetPersistenceCacheInstr[F] = LootAssetRepositoryCache.createInstr[F](asyncLootAssetLocationCacheRef)
 
-      openedInventoriesRef <- Ref.of[F, Map[BlockLocation, InventorySession]](Map.empty)
-      pal                  <- ProtectActionListener[F, G](unsafeRunSyncContinuation)
-      cml                  <- ContainerManageListener[F, G](openedInventoriesRef)(unsafeRunSyncContinuation)
-      _                    <- Async[F].delay(Bukkit.getPluginManager.registerEvents(pal, this))
-      _                    <- Async[F].delay(Bukkit.getPluginManager.registerEvents(cml, this))
+      openedInventories <- InventoriesStore.empty[F]
+      pal               <- ProtectActionListener[F, G](unsafeRunSyncContinuation)
+      cml               <- ContainerManageListener[F, G](openedInventories)(unsafeRunSyncContinuation)
+      _                 <- Async[F].delay(Bukkit.getPluginManager.registerEvents(pal, this))
+      _                 <- Async[F].delay(Bukkit.getPluginManager.registerEvents(cml, this))
 
       _ <- Async[F].delay(CommandAPI.onEnable())
-      _ <- CommandExecutor.register[F](openedInventoriesRef, unsafeRunAsync)
+      _ <- CommandExecutor.register[F](openedInventories, unsafeRunAsync)
 
       _          <- lootAssetRepos.initialize()
       _          <- refreshCache(asyncLootAssetLocationCacheRef)
