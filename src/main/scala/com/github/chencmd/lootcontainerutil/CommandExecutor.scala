@@ -10,33 +10,37 @@ import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
 import com.github.chencmd.lootcontainerutil.terms.InventoriesStore
 
 import cats.effect.kernel.Async
+import cats.implicits.*
 
 import dev.jorel.commandapi.CommandAPICommand
 import dev.jorel.commandapi.CommandPermission
 import dev.jorel.commandapi.executors.CommandArguments
 import dev.jorel.commandapi.executors.PlayerCommandExecutor
-import java.util.logging.Level
-import org.bukkit.Bukkit
 import org.bukkit.entity.Player
+import org.typelevel.log4cats.Logger
 
 object CommandExecutor {
   def register[F[_]: Async](
     openedInventories: InventoriesStore[F],
-    unsafeRunAsync: [U] => (errorHandler: Throwable => U) => [U1] => (fa: F[U1]) => Unit
+    unsafeRunAsync: (errorHandler: Throwable => F[Unit]) => [U1] => (fa: F[U1]) => Unit
   )(using
+    logger: Logger[F],
     mcThread: OnMinecraftThread[F],
     Converter: ItemConversionInstr[F],
     LAPCI: LootAssetPersistenceCacheInstr[F]
   ) = {
-    def handler(sender: Player)(e: Throwable)                    = e match {
-      case err: UserException          => sender.sendMessage(err.getMessage)
-      case err: ConfigurationException =>
-        sender.sendMessage("An error occurred while loading the configuration file.")
-        Bukkit.getLogger.log(Level.SEVERE, err.getMessage, err)
-      case err                         =>
-        sender.sendMessage("An error occurred while executing the command.")
-        Bukkit.getLogger.log(Level.SEVERE, err.getMessage, err)
+    def handler(sender: Player)(e: Throwable): F[Unit] = {
+      val (toSender, toLogger) = e match {
+        case err: UserException          => (err.getMessage, None)
+        case err: ConfigurationException => ("An error occurred while loading the configuration file.", Some(err))
+        case err                         => ("An error occurred while executing the command.", Some(err))
+      }
+      for {
+        _ <- Async[F].delay(sender.sendMessage(toSender))
+        _ <- toLogger.traverse_(e => logger.error(e)(e.getMessage))
+      } yield ()
     }
+
     def genExecutor(f: Player => F[Unit]): PlayerCommandExecutor = { (sender: Player, _: CommandArguments) =>
       unsafeRunAsync(handler(sender))(f(sender))
     }

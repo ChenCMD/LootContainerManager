@@ -27,8 +27,10 @@ import org.bukkit.event.block.Action
 import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.Inventory
+import org.typelevel.log4cats.Logger
 
 class ContainerManager[F[_]: Async, G[_]: Sync] private (private val openedInventories: InventoriesStore[F])(using
+  logger: Logger[F],
   mcThread: OnMinecraftThread[F],
   asyncLootAssetCache: LootAssetPersistenceCacheInstr[F],
   syncLootAssetCache: LootAssetPersistenceCacheInstr[G],
@@ -105,7 +107,10 @@ class ContainerManager[F[_]: Async, G[_]: Sync] private (private val openedInven
           items <- GenLootAsset.convertToLootAssetItem(inv)
           hasChanged = asset.items.zip(items).exists((a, b) => a != b)
 
-          _ <- Async[F].whenA(hasChanged)(asyncLootAssetCache.updateLootAsset(asset.copy(items = items)))
+          _ <- Async[F].whenA(hasChanged)(for {
+            _ <- asyncLootAssetCache.updateLootAsset(asset.copy(items = items))
+            _ <- logger.info(s"Asset modified at ${holder.location.toXYZString}")
+          } yield ())
         } yield (None, ())
       }
     }
@@ -118,6 +123,7 @@ object ContainerManager {
   val INVENTORY_NAME = "LOOT_ASSET_CONTAINER"
 
   def apply[F[_]: Async, G[_]: Sync](openedInventories: InventoriesStore[F])(using
+    logger: Logger[F],
     mcThread: OnMinecraftThread[F],
     syncLootAssetCache: LootAssetPersistenceCacheInstr[G],
     asyncLootAssetCache: LootAssetPersistenceCacheInstr[F],

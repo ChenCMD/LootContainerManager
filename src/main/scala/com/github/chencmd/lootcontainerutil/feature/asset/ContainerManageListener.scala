@@ -14,6 +14,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.player.PlayerInteractEvent
+import org.typelevel.log4cats.Logger
 
 class ContainerManageListener[F[_]: Async, G[_]: Sync] private (
   private val cm: ContainerManager[F, G],
@@ -35,6 +36,7 @@ object ContainerManageListener {
   def apply[F[_]: Async, G[_]: Sync](openedInventories: InventoriesStore[F])(
     unsafeRunSyncContinuation: [A] => SyncContinuation[F, G, A] => A
   )(using
+    logger: Logger[F],
     mcThread: OnMinecraftThread[F],
     AsyncLAPCI: LootAssetPersistenceCacheInstr[F],
     SyncLAPCI: LootAssetPersistenceCacheInstr[G],

@@ -33,16 +33,17 @@ import scala.concurrent.duration.*
 
 import dev.jorel.commandapi.CommandAPI
 import dev.jorel.commandapi.CommandAPIBukkitConfig
-import java.util.logging.Level
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 class LootContainerUtil extends JavaPlugin {
   type F = IO[_]
   type G = SyncIO[_]
   val coerceF: G ~> F           = FunctionK.lift([A] => (_: G[A]).to[F])
   val unsafeRunAsync            =
-    [U] => (errorHandler: Throwable => U) => [U1] => (fa: F[U1]) => fa.unsafeRunAsync(_.left.foreach(errorHandler))
+    (errorHandler: Throwable => F[Unit]) => [U1] => (fa: F[U1]) => fa.onError(errorHandler).unsafeRunAndForget()
   val unsafeRunSyncContinuation = [A] =>
     (cont: SyncContinuation[F, G, A]) => {
       val (a, effect) = cont.unsafeRunSync()
@@ -57,10 +58,13 @@ class LootContainerUtil extends JavaPlugin {
   }
 
   override def onEnable() = {
-    given OnMinecraftThread[F] = OnBukkitServerThread.createInstr[F](this)
-    given ManageItemNBT        = ManageBukkitItemNBT.createInstr
-
     val program = for {
+      logger <- Slf4jLogger.create[F]
+      given Logger[F] = logger
+
+      given OnMinecraftThread[F] = OnBukkitServerThread.createInstr[F](this)
+      given ManageItemNBT        = ManageBukkitItemNBT.createInstr
+
       cfg <- Config.tryRead[F](this)
       transactor     = SQLite.createTransactor[F](cfg.db)
       lootAssetRepos = LootAssetRepository.createInstr[F](transactor)
@@ -100,31 +104,35 @@ class LootContainerUtil extends JavaPlugin {
         _ <- taskFiber1.cancel
         _ <- taskFiber2.cancel
         _ <- saveAssetFromCache(asyncLootAssetLocationCacheRef)
+
+        _ <- Async[F].delay(CommandAPI.onDisable())
+        _ <- logger.info("LootContainerUtil disabled.")
       } yield ()))
 
-      _ <- Async[F].delay(Bukkit.getConsoleSender.sendMessage("LootContainerUtil enabled."))
+      _ <- logger.info("LootContainerUtil enabled.")
     } yield ()
 
-    try {
-      program.unsafeRunSync()
-    } catch {
-      case err =>
-        Bukkit.getLogger().log(Level.SEVERE, err.getMessage, err)
-        Bukkit.getPluginManager.disablePlugin(this)
-    }
+    val loggerAppliedProgram = for {
+      logger <- Slf4jLogger.create[F]
+      _      <- program.onError { err =>
+        logger.error(err)(err.getMessage)
+          >> Async[F].delay(Bukkit.getPluginManager.disablePlugin(this))
+      }
+    } yield ()
+
+    loggerAppliedProgram.unsafeRunSync()
   }
 
   override def onDisable() = {
     finalizerRef.get.flatMap(_.orEmpty).unsafeRunSync()
-    CommandAPI.onDisable()
-    Bukkit.getConsoleSender.sendMessage("LootContainerUtil disabled.")
   }
 
   def saveAssetFromCache(lootAssetLocationCacheRef: Ref[F, LootAssetCache])(using
+    logger: Logger[F],
     lootAssetRepos: LootAssetPersistenceInstr[F]
   ): F[Unit] = for {
     cache <- lootAssetLocationCacheRef.get
-    _     <- Async[F].delay(Bukkit.getConsoleSender.sendMessage("Updating assets..."))
+    _     <- logger.info("Updating assets...")
     updatingAssets = for {
       uuid <- cache.updatedAssetLocations.toList
       b    <- cache.mapping.get(uuid).toList
@@ -136,9 +144,10 @@ class LootContainerUtil extends JavaPlugin {
   } yield ()
 
   def refreshCache[F[_]: Async](lootAssetLocationCacheRef: Ref[F, LootAssetCache])(using
+    logger: Logger[F],
     lootAssetRepos: LootAssetPersistenceInstr[F]
   ): F[Unit] = for {
-    _      <- Async[F].delay(Bukkit.getConsoleSender.sendMessage("Retrieving assets..."))
+    _      <- logger.info("Retrieving assets...")
     assets <- lootAssetRepos.getAllLootAssets()
     assetsMap    = assets
       .flatMap(a => a.containers.map(_.location -> a.uuid))
@@ -148,10 +157,8 @@ class LootContainerUtil extends JavaPlugin {
     cache        = LootAssetCache(assetsMap, assetMapping, Set.empty, Set.empty)
     _ <- lootAssetLocationCacheRef.set(cache)
 
-    _ <- Async[F].delay {
-      Bukkit.getConsoleSender.sendMessage("Assets retrieved.")
-      Bukkit.getConsoleSender.sendMessage("Assets:")
-      assets.foreach(asset => Bukkit.getConsoleSender.sendMessage(asset.toString))
-    }
+    _ <- logger.info("Assets retrieved.")
+    _ <- logger.info("Assets:")
+    _ <- assets.traverse_(asset => logger.info(asset.toString))
   } yield ()
 }

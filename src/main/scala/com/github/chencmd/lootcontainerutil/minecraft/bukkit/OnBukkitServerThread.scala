@@ -8,11 +8,14 @@ import cats.implicits.*
 
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
+import org.typelevel.log4cats.Logger
 
 object OnBukkitServerThread {
-  def createInstr[F[_]: Async](taskOwner: JavaPlugin): OnMinecraftThread[F] = new OnMinecraftThread[F] {
+  def createInstr[F[_]: Async](taskOwner: JavaPlugin)(using
+    logger: Logger[F]
+  ): OnMinecraftThread[F] = new OnMinecraftThread[F] {
     private val errorHandler: PartialFunction[Throwable, F[Unit]] = {
-      case e: Throwable => SyncIO(Bukkit.getLogger.finest(e.getStackTrace.mkString("\n"))).to[F]
+      case e: Throwable => logger.error(e)(e.getMessage())
     }
 
     def run[A](syncAction: SyncIO[A]): F[A] = {

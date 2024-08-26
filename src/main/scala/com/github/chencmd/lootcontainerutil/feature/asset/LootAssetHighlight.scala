@@ -37,14 +37,16 @@ import org.bukkit.block.data.`type`.Chest as ChestData
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
 import org.joml.Vector3f
+import org.typelevel.log4cats.Logger
 
 object LootAssetHighlight {
   def task[F[_]: Async](using
+    logger: Logger[F],
     lootAssetCache: LootAssetPersistenceCacheInstr[F],
     mcThread: OnMinecraftThread[F]
   ): F[Unit] = for {
     entityIds <- Ref.of[F, Map[UUID, Map[Position, Int]]](Map.empty)
-    _         <- Async[F].delay(Bukkit.getConsoleSender.sendMessage("Starting highlight task"))
+    _         <- Async[F].delay(logger.info("Starting highlight task"))
     _         <- (highlight(entityIds) >> Async[F].sleep(3.seconds)).foreverM
   } yield ()
 
