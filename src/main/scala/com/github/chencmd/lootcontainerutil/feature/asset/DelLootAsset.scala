@@ -7,6 +7,7 @@ import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
 import com.github.chencmd.lootcontainerutil.minecraft.bukkit.BlockLocation
 import com.github.chencmd.lootcontainerutil.terms.InventoriesStore
 import com.github.chencmd.lootcontainerutil.terms.InventoriesStore.*
+import com.github.chencmd.lootcontainerutil.Prefix
 
 import cats.effect.SyncIO
 import cats.effect.kernel.Async
@@ -52,6 +53,6 @@ object DelLootAsset {
     _ <- openedInventories.withLockAtKey(assetLocation)(_ => (None, ()).pure[F])
     _ <- asyncLootAssetCache.deleteLootAssetLocationAt(assetLocation)
 
-    _ <- Async[F].delay { p.sendMessage("Asset removed") }
+    _ <- Async[F].delay { p.sendMessage(s"${Prefix.SUCCESS}アセットを削除しました。") }
   } yield ()
 }

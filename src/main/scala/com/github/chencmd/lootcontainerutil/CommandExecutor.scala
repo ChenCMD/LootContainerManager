@@ -32,8 +32,8 @@ object CommandExecutor {
     def handler(sender: Player)(e: Throwable): F[Unit] = {
       val (toSender, toLogger) = e match {
         case err: UserException          => (err.getMessage, None)
-        case err: ConfigurationException => ("An error occurred while loading the configuration file.", Some(err))
-        case err                         => ("An error occurred while executing the command.", Some(err))
+        case err: ConfigurationException => (s"${Prefix.ERROR}設定ファイルの読み込み中にエラーが発生しました。", Some(err))
+        case err                         => (s"${Prefix.ERROR}コマンドの実行中にエラーが発生しました。", Some(err))
       }
       for {
         _ <- Async[F].delay(sender.sendMessage(toSender))

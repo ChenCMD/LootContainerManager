@@ -9,6 +9,7 @@ import com.github.chencmd.lootcontainerutil.generic.extensions.CastOps.*
 import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
 import com.github.chencmd.lootcontainerutil.minecraft.bukkit.BlockLocation
 import com.github.chencmd.lootcontainerutil.minecraft.bukkit.Vector
+import com.github.chencmd.lootcontainerutil.Prefix
 
 import cats.data.OptionT
 import cats.effect.SyncIO
@@ -70,7 +71,7 @@ object GenLootAsset {
 
     // プレイヤーにメッセージを送信する
     _ <- Async[F].delay {
-      p.sendMessage(s"Generated loot asset at ${asset.containers.map(_.location.toXYZString).mkString(", ")}")
+      p.sendMessage(s"${Prefix.SUCCESS}アセットを生成しました。")
     }
   } yield ()
 
