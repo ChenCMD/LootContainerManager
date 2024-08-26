@@ -1,12 +1,12 @@
 package nbt
 
-import com.github.chencmd.lootcontainerutil.nbt.NBTPathParser
-import com.github.chencmd.lootcontainerutil.nbt.definition.{NBTPath, NBTPathRootNode, NBTTag}
+import com.github.chencmd.lootcontainermanager.nbt.NBTPathParser
+import com.github.chencmd.lootcontainermanager.nbt.definition.{NBTPath, NBTPathRootNode, NBTTag}
 import org.scalatest.funspec.AnyFunSpec
 
 import scala.language.adhocExtensions
 import cats.data.NonEmptyList
-import com.github.chencmd.lootcontainerutil.nbt.definition.NBTNel
+import com.github.chencmd.lootcontainermanager.nbt.definition.NBTNel
 
 class NBTPathParserTest extends AnyFunSpec {
   describe("NBTPathParser") {

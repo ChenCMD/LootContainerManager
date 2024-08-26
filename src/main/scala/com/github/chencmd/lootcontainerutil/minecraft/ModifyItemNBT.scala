@@ -1,6 +1,6 @@
-package com.github.chencmd.lootcontainerutil.minecraft
+package com.github.chencmd.lootcontainermanager.minecraft
 
-import com.github.chencmd.lootcontainerutil.nbt.definition.NBTTag.NBTTagCompound
+import com.github.chencmd.lootcontainermanager.nbt.definition.NBTTag.NBTTagCompound
 
 import cats.effect.kernel.Sync
 

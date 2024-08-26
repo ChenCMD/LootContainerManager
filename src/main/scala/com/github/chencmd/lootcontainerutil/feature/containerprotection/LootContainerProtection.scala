@@ -1,10 +1,10 @@
-package com.github.chencmd.lootcontainerutil.feature.containerprotection
+package com.github.chencmd.lootcontainermanager.feature.containerprotection
 
-import com.github.chencmd.lootcontainerutil.Prefix
-import com.github.chencmd.lootcontainerutil.generic.OptionTExtra
-import com.github.chencmd.lootcontainerutil.generic.SyncContinuation
-import com.github.chencmd.lootcontainerutil.generic.extensions.CastOps.downcastOrNone
-import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
+import com.github.chencmd.lootcontainermanager.Prefix
+import com.github.chencmd.lootcontainermanager.generic.OptionTExtra
+import com.github.chencmd.lootcontainermanager.generic.SyncContinuation
+import com.github.chencmd.lootcontainermanager.generic.extensions.CastOps.downcastOrNone
+import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
 
 import cats.data.OptionT
 import cats.effect.kernel.Async

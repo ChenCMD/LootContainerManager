@@ -1,7 +1,7 @@
-package com.github.chencmd.lootcontainerutil.feature.containerprotection
+package com.github.chencmd.lootcontainermanager.feature.containerprotection
 
-import com.github.chencmd.lootcontainerutil.generic.SyncContinuation
-import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
+import com.github.chencmd.lootcontainermanager.generic.SyncContinuation
+import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
 
 import cats.effect.kernel.Async
 import cats.effect.kernel.Sync

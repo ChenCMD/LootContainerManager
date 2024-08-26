@@ -1,4 +1,4 @@
-package com.github.chencmd.lootcontainerutil.nbt
+package com.github.chencmd.lootcontainermanager.nbt
 
 import scala.util.parsing.combinator.RegexParsers
 

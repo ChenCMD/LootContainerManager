@@ -1,14 +1,14 @@
-package com.github.chencmd.lootcontainerutil.feature.asset
+package com.github.chencmd.lootcontainermanager.feature.asset
 
-import com.github.chencmd.lootcontainerutil.Prefix
-import com.github.chencmd.lootcontainerutil.exceptions.SystemException
-import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetContainer
-import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetPersistenceCacheInstr
-import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
-import com.github.chencmd.lootcontainerutil.minecraft.bukkit.BlockLocation
-import com.github.chencmd.lootcontainerutil.minecraft.bukkit.CraftBlock
-import com.github.chencmd.lootcontainerutil.minecraft.bukkit.Position
-import com.github.chencmd.lootcontainerutil.minecraft.nms.NMSIBlockData
+import com.github.chencmd.lootcontainermanager.Prefix
+import com.github.chencmd.lootcontainermanager.exceptions.SystemException
+import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetContainer
+import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetPersistenceCacheInstr
+import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
+import com.github.chencmd.lootcontainermanager.minecraft.bukkit.BlockLocation
+import com.github.chencmd.lootcontainermanager.minecraft.bukkit.CraftBlock
+import com.github.chencmd.lootcontainermanager.minecraft.bukkit.Position
+import com.github.chencmd.lootcontainermanager.minecraft.nms.NMSIBlockData
 
 import cats.Align
 import cats.data.Ior

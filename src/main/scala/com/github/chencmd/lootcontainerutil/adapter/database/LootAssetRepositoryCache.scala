@@ -1,10 +1,10 @@
-package com.github.chencmd.lootcontainerutil.adapter.database
+package com.github.chencmd.lootcontainermanager.adapter.database
 
-import com.github.chencmd.lootcontainerutil.exceptions.SystemException
-import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAsset
-import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetPersistenceCacheInstr
-import com.github.chencmd.lootcontainerutil.minecraft.bukkit.BlockLocation
-import com.github.chencmd.lootcontainerutil.terms.LootAssetCache
+import com.github.chencmd.lootcontainermanager.exceptions.SystemException
+import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAsset
+import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetPersistenceCacheInstr
+import com.github.chencmd.lootcontainermanager.minecraft.bukkit.BlockLocation
+import com.github.chencmd.lootcontainermanager.terms.LootAssetCache
 
 import cats.effect.kernel.Ref
 import cats.effect.kernel.Sync

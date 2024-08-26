@@ -1,4 +1,4 @@
-package com.github.chencmd.lootcontainerutil.generic.extensions
+package com.github.chencmd.lootcontainermanager.generic.extensions
 
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime

@@ -1,15 +1,15 @@
-package com.github.chencmd.lootcontainerutil
+package com.github.chencmd.lootcontainermanager
 
-import com.github.chencmd.lootcontainerutil.adapter.database.DBConfig
-import com.github.chencmd.lootcontainerutil.exceptions.ConfigurationException
-import com.github.chencmd.lootcontainerutil.feature.asset.DataSource
-import com.github.chencmd.lootcontainerutil.feature.asset.GenAssetConfig
-import com.github.chencmd.lootcontainerutil.feature.asset.ItemGenerator
-import com.github.chencmd.lootcontainerutil.feature.asset.ItemMapper
-import com.github.chencmd.lootcontainerutil.generic.extensions.CastOps.*
-import com.github.chencmd.lootcontainerutil.nbt.NBTPathInterpolationParser
-import com.github.chencmd.lootcontainerutil.nbt.NBTPathParser
-import com.github.chencmd.lootcontainerutil.nbt.definition.NBTPath
+import com.github.chencmd.lootcontainermanager.adapter.database.DBConfig
+import com.github.chencmd.lootcontainermanager.exceptions.ConfigurationException
+import com.github.chencmd.lootcontainermanager.feature.asset.DataSource
+import com.github.chencmd.lootcontainermanager.feature.asset.GenAssetConfig
+import com.github.chencmd.lootcontainermanager.feature.asset.ItemGenerator
+import com.github.chencmd.lootcontainermanager.feature.asset.ItemMapper
+import com.github.chencmd.lootcontainermanager.generic.extensions.CastOps.*
+import com.github.chencmd.lootcontainermanager.nbt.NBTPathInterpolationParser
+import com.github.chencmd.lootcontainermanager.nbt.NBTPathParser
+import com.github.chencmd.lootcontainermanager.nbt.definition.NBTPath
 
 import cats.data.EitherNec
 import cats.effect.kernel.Async

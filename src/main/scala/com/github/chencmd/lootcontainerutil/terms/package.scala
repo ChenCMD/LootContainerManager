@@ -1,11 +1,11 @@
-package com.github.chencmd.lootcontainerutil
+package com.github.chencmd.lootcontainermanager
 
-import com.github.chencmd.lootcontainerutil.feature.asset.ContainerManager
-import com.github.chencmd.lootcontainerutil.feature.asset.ItemConversionInstr
-import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAsset
-import com.github.chencmd.lootcontainerutil.generic.KeyedMutex
-import com.github.chencmd.lootcontainerutil.minecraft.bukkit.BlockLocation
-import com.github.chencmd.lootcontainerutil.minecraft.bukkit.InventorySession
+import com.github.chencmd.lootcontainermanager.feature.asset.ContainerManager
+import com.github.chencmd.lootcontainermanager.feature.asset.ItemConversionInstr
+import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAsset
+import com.github.chencmd.lootcontainermanager.generic.KeyedMutex
+import com.github.chencmd.lootcontainermanager.minecraft.bukkit.BlockLocation
+import com.github.chencmd.lootcontainermanager.minecraft.bukkit.InventorySession
 
 import cats.effect.kernel.Async
 import cats.implicits.*

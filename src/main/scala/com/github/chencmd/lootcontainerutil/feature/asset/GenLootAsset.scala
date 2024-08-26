@@ -1,15 +1,15 @@
-package com.github.chencmd.lootcontainerutil.feature.asset
+package com.github.chencmd.lootcontainermanager.feature.asset
 
-import com.github.chencmd.lootcontainerutil.exceptions.UserException
-import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAsset
-import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetContainer
-import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetItem
-import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetPersistenceCacheInstr
-import com.github.chencmd.lootcontainerutil.generic.extensions.CastOps.*
-import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
-import com.github.chencmd.lootcontainerutil.minecraft.bukkit.BlockLocation
-import com.github.chencmd.lootcontainerutil.minecraft.bukkit.Vector
-import com.github.chencmd.lootcontainerutil.Prefix
+import com.github.chencmd.lootcontainermanager.exceptions.UserException
+import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAsset
+import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetContainer
+import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetItem
+import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetPersistenceCacheInstr
+import com.github.chencmd.lootcontainermanager.generic.extensions.CastOps.*
+import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
+import com.github.chencmd.lootcontainermanager.minecraft.bukkit.BlockLocation
+import com.github.chencmd.lootcontainermanager.minecraft.bukkit.Vector
+import com.github.chencmd.lootcontainermanager.Prefix
 
 import cats.data.OptionT
 import cats.effect.SyncIO

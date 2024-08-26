@@ -1,6 +1,6 @@
-package com.github.chencmd.lootcontainerutil.minecraft.bukkit
+package com.github.chencmd.lootcontainermanager.minecraft.bukkit
 
-import com.github.chencmd.lootcontainerutil.exceptions.SystemException
+import com.github.chencmd.lootcontainermanager.exceptions.SystemException
 
 import cats.effect.kernel.Sync
 import cats.implicits.*

@@ -1,6 +1,6 @@
-package com.github.chencmd.lootcontainerutil.feature.asset.persistence
+package com.github.chencmd.lootcontainermanager.feature.asset.persistence
 
-import com.github.chencmd.lootcontainerutil.minecraft.bukkit.BlockLocation
+import com.github.chencmd.lootcontainermanager.minecraft.bukkit.BlockLocation
 
 import java.util.UUID
 import org.bukkit.block.BlockFace

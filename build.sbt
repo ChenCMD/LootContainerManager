@@ -1,4 +1,4 @@
-name := "LootContainerUtil"
+name := "LootContainerManager"
 
 version := "0.1"
 
@@ -59,4 +59,4 @@ assembly / assemblyMergeStrategy := {
   case x                                                   => (ThisBuild / assemblyMergeStrategy).value(x)
 }
 
-assembly / assemblyOutputPath    := new File(baseDirectory.value, "dist/LootContainerUtil.jar")
+assembly / assemblyOutputPath    := new File(baseDirectory.value, "dist/LootContainerManager.jar")

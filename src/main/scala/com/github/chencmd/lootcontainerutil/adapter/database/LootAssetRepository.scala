@@ -1,13 +1,13 @@
-package com.github.chencmd.lootcontainerutil.adapter.database
+package com.github.chencmd.lootcontainermanager.adapter.database
 
-import com.github.chencmd.lootcontainerutil.exceptions.SystemException
-import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAsset
-import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetContainer
-import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetItem
-import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetPersistenceInstr
-import com.github.chencmd.lootcontainerutil.generic.FragmentsExtra
-import com.github.chencmd.lootcontainerutil.generic.instances.MetaInstances.given
-import com.github.chencmd.lootcontainerutil.minecraft.bukkit.BlockLocation
+import com.github.chencmd.lootcontainermanager.exceptions.SystemException
+import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAsset
+import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetContainer
+import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetItem
+import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetPersistenceInstr
+import com.github.chencmd.lootcontainermanager.generic.FragmentsExtra
+import com.github.chencmd.lootcontainermanager.generic.instances.MetaInstances.given
+import com.github.chencmd.lootcontainermanager.minecraft.bukkit.BlockLocation
 
 import cats.data.NonEmptyList
 import cats.effect.kernel.Async

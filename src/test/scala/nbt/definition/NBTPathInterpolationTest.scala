@@ -1,7 +1,7 @@
 package nbt.definition
 
 import org.scalatest.funspec.AnyFunSpec
-import com.github.chencmd.lootcontainerutil.nbt.definition.*
+import com.github.chencmd.lootcontainermanager.nbt.definition.*
 import cats.data.NonEmptyList
 
 import scala.language.adhocExtensions

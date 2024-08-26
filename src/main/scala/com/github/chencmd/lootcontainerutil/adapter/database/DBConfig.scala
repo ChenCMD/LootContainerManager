@@ -1,4 +1,4 @@
-package com.github.chencmd.lootcontainerutil.adapter.database
+package com.github.chencmd.lootcontainermanager.adapter.database
 
 import java.io.File
 

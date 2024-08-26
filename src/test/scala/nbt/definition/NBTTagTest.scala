@@ -2,13 +2,13 @@ package nbt.definition
 
 import org.scalatest.funspec.AnyFunSpec
 
-import com.github.chencmd.lootcontainerutil.nbt.definition.NBTTag
+import com.github.chencmd.lootcontainermanager.nbt.definition.NBTTag
 
 import cats.implicits.toTraverseOps
 
 import scala.language.adhocExtensions
-import com.github.chencmd.lootcontainerutil.nbt.definition.NBTNel
-import com.github.chencmd.lootcontainerutil.generic.extensions.MapExt.*
+import com.github.chencmd.lootcontainermanager.nbt.definition.NBTNel
+import com.github.chencmd.lootcontainermanager.generic.extensions.MapExt.*
 import cats.data.NonEmptyList
 
 class NBTTagTest extends AnyFunSpec {

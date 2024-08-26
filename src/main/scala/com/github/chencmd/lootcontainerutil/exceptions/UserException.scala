@@ -1,4 +1,4 @@
-package com.github.chencmd.lootcontainerutil.exceptions
+package com.github.chencmd.lootcontainermanager.exceptions
 
 import cats.ApplicativeError
 

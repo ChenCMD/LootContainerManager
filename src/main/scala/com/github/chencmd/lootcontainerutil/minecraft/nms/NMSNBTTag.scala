@@ -1,7 +1,7 @@
-package com.github.chencmd.lootcontainerutil.minecraft.nms
+package com.github.chencmd.lootcontainermanager.minecraft.nms
 
-import com.github.chencmd.lootcontainerutil.nbt.definition.NBTNel
-import com.github.chencmd.lootcontainerutil.nbt.definition.NBTTag
+import com.github.chencmd.lootcontainermanager.nbt.definition.NBTNel
+import com.github.chencmd.lootcontainermanager.nbt.definition.NBTTag
 
 import cats.effect.kernel.Sync
 import cats.implicits.*

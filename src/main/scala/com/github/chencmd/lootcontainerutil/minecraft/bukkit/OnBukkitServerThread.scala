@@ -1,6 +1,6 @@
-package com.github.chencmd.lootcontainerutil.minecraft.bukkit
+package com.github.chencmd.lootcontainermanager.minecraft.bukkit
 
-import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
+import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
 
 import cats.effect.SyncIO
 import cats.effect.kernel.Async

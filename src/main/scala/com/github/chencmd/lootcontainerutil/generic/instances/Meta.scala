@@ -1,4 +1,4 @@
-package com.github.chencmd.lootcontainerutil.generic.instances
+package com.github.chencmd.lootcontainermanager.generic.instances
 
 import doobie.Meta
 import doobie.enumerated.JdbcType

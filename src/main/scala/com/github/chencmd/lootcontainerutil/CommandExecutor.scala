@@ -1,13 +1,13 @@
-package com.github.chencmd.lootcontainerutil
+package com.github.chencmd.lootcontainermanager
 
-import com.github.chencmd.lootcontainerutil.exceptions.ConfigurationException
-import com.github.chencmd.lootcontainerutil.exceptions.UserException
-import com.github.chencmd.lootcontainerutil.feature.asset.DelLootAsset
-import com.github.chencmd.lootcontainerutil.feature.asset.GenLootAsset
-import com.github.chencmd.lootcontainerutil.feature.asset.ItemConversionInstr
-import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetPersistenceCacheInstr
-import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
-import com.github.chencmd.lootcontainerutil.terms.InventoriesStore
+import com.github.chencmd.lootcontainermanager.exceptions.ConfigurationException
+import com.github.chencmd.lootcontainermanager.exceptions.UserException
+import com.github.chencmd.lootcontainermanager.feature.asset.DelLootAsset
+import com.github.chencmd.lootcontainermanager.feature.asset.GenLootAsset
+import com.github.chencmd.lootcontainermanager.feature.asset.ItemConversionInstr
+import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetPersistenceCacheInstr
+import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
+import com.github.chencmd.lootcontainermanager.terms.InventoriesStore
 
 import cats.effect.kernel.Async
 import cats.implicits.*
@@ -53,8 +53,8 @@ object CommandExecutor {
       .executesPlayer(genExecutor(DelLootAsset.deleteLootAsset(_, openedInventories)))
 
     Async[F].delay {
-      CommandAPICommand("lootcontainerutil")
-        .withAliases("lcu")
+      CommandAPICommand("lootcontainermanager")
+        .withAliases("lcm")
         .withPermission(CommandPermission.OP)
         .withSubcommands(genAsset, delAsset)
         .register()

@@ -1,18 +1,18 @@
-package com.github.chencmd.lootcontainerutil.adapter
+package com.github.chencmd.lootcontainermanager.adapter
 
-import com.github.chencmd.lootcontainerutil.Config
-import com.github.chencmd.lootcontainerutil.exceptions.ConfigurationException
-import com.github.chencmd.lootcontainerutil.exceptions.SystemException
-import com.github.chencmd.lootcontainerutil.feature.asset.DataSource
-import com.github.chencmd.lootcontainerutil.feature.asset.ItemConversionInstr
-import com.github.chencmd.lootcontainerutil.feature.asset.ItemGenerator
-import com.github.chencmd.lootcontainerutil.feature.asset.ItemIdentifier
-import com.github.chencmd.lootcontainerutil.generic.EitherTExtra
-import com.github.chencmd.lootcontainerutil.generic.extensions.CastOps.*
-import com.github.chencmd.lootcontainerutil.minecraft.ManageItemNBT
-import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
-import com.github.chencmd.lootcontainerutil.nbt.NBTTagParser
-import com.github.chencmd.lootcontainerutil.nbt.definition.NBTTag
+import com.github.chencmd.lootcontainermanager.Config
+import com.github.chencmd.lootcontainermanager.exceptions.ConfigurationException
+import com.github.chencmd.lootcontainermanager.exceptions.SystemException
+import com.github.chencmd.lootcontainermanager.feature.asset.DataSource
+import com.github.chencmd.lootcontainermanager.feature.asset.ItemConversionInstr
+import com.github.chencmd.lootcontainermanager.feature.asset.ItemGenerator
+import com.github.chencmd.lootcontainermanager.feature.asset.ItemIdentifier
+import com.github.chencmd.lootcontainermanager.generic.EitherTExtra
+import com.github.chencmd.lootcontainermanager.generic.extensions.CastOps.*
+import com.github.chencmd.lootcontainermanager.minecraft.ManageItemNBT
+import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
+import com.github.chencmd.lootcontainermanager.nbt.NBTTagParser
+import com.github.chencmd.lootcontainermanager.nbt.definition.NBTTag
 
 import cats.data.EitherT
 import cats.data.OptionT

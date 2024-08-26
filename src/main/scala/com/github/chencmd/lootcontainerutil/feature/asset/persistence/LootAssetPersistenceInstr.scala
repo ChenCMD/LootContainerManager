@@ -1,4 +1,4 @@
-package com.github.chencmd.lootcontainerutil.feature.asset.persistence
+package com.github.chencmd.lootcontainermanager.feature.asset.persistence
 
 import cats.data.NonEmptyList
 

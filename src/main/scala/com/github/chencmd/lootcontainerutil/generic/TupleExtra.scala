@@ -1,4 +1,4 @@
-package com.github.chencmd.lootcontainerutil.generic
+package com.github.chencmd.lootcontainermanager.generic
 
 import scala.compiletime.constValue
 import scala.compiletime.ops.int.*

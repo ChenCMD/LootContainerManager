@@ -1,23 +1,23 @@
-package com.github.chencmd.lootcontainerutil
+package com.github.chencmd.lootcontainermanager
 
-import com.github.chencmd.lootcontainerutil.adapter.TSBAdapter
-import com.github.chencmd.lootcontainerutil.adapter.database.LootAssetRepository
-import com.github.chencmd.lootcontainerutil.adapter.database.LootAssetRepositoryCache
-import com.github.chencmd.lootcontainerutil.adapter.database.SQLite
-import com.github.chencmd.lootcontainerutil.feature.asset.ContainerManageListener
-import com.github.chencmd.lootcontainerutil.feature.asset.ItemConversionInstr
-import com.github.chencmd.lootcontainerutil.feature.asset.LootAssetHighlight
-import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetPersistenceCacheInstr
-import com.github.chencmd.lootcontainerutil.feature.asset.persistence.LootAssetPersistenceInstr
-import com.github.chencmd.lootcontainerutil.feature.containerprotection.ProtectActionListener
-import com.github.chencmd.lootcontainerutil.generic.MapExtra.*
-import com.github.chencmd.lootcontainerutil.generic.SyncContinuation
-import com.github.chencmd.lootcontainerutil.minecraft.ManageItemNBT
-import com.github.chencmd.lootcontainerutil.minecraft.OnMinecraftThread
-import com.github.chencmd.lootcontainerutil.minecraft.bukkit.ManageBukkitItemNBT
-import com.github.chencmd.lootcontainerutil.minecraft.bukkit.OnBukkitServerThread
-import com.github.chencmd.lootcontainerutil.terms.InventoriesStore
-import com.github.chencmd.lootcontainerutil.terms.LootAssetCache
+import com.github.chencmd.lootcontainermanager.adapter.TSBAdapter
+import com.github.chencmd.lootcontainermanager.adapter.database.LootAssetRepository
+import com.github.chencmd.lootcontainermanager.adapter.database.LootAssetRepositoryCache
+import com.github.chencmd.lootcontainermanager.adapter.database.SQLite
+import com.github.chencmd.lootcontainermanager.feature.asset.ContainerManageListener
+import com.github.chencmd.lootcontainermanager.feature.asset.ItemConversionInstr
+import com.github.chencmd.lootcontainermanager.feature.asset.LootAssetHighlight
+import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetPersistenceCacheInstr
+import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetPersistenceInstr
+import com.github.chencmd.lootcontainermanager.feature.containerprotection.ProtectActionListener
+import com.github.chencmd.lootcontainermanager.generic.MapExtra.*
+import com.github.chencmd.lootcontainermanager.generic.SyncContinuation
+import com.github.chencmd.lootcontainermanager.minecraft.ManageItemNBT
+import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
+import com.github.chencmd.lootcontainermanager.minecraft.bukkit.ManageBukkitItemNBT
+import com.github.chencmd.lootcontainermanager.minecraft.bukkit.OnBukkitServerThread
+import com.github.chencmd.lootcontainermanager.terms.InventoriesStore
+import com.github.chencmd.lootcontainermanager.terms.LootAssetCache
 
 import cats.arrow.FunctionK
 import cats.data.NonEmptyList
@@ -38,7 +38,7 @@ import org.bukkit.plugin.java.JavaPlugin
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
-class LootContainerUtil extends JavaPlugin {
+class LootContainerManager extends JavaPlugin {
   type F = IO[_]
   type G = SyncIO[_]
   val coerceF: G ~> F           = FunctionK.lift([A] => (_: G[A]).to[F])
@@ -106,10 +106,10 @@ class LootContainerUtil extends JavaPlugin {
         _ <- saveAssetFromCache(asyncLootAssetLocationCacheRef)
 
         _ <- Async[F].delay(CommandAPI.onDisable())
-        _ <- logger.info("LootContainerUtil disabled.")
+        _ <- logger.info("LootContainerManager disabled.")
       } yield ()))
 
-      _ <- logger.info("LootContainerUtil enabled.")
+      _ <- logger.info("LootContainerManager enabled.")
     } yield ()
 
     val loggerAppliedProgram = for {

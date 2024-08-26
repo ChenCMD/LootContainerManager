@@ -1,6 +1,6 @@
-package com.github.chencmd.lootcontainerutil.feature.asset.persistence
+package com.github.chencmd.lootcontainermanager.feature.asset.persistence
 
-import com.github.chencmd.lootcontainerutil.minecraft.bukkit.BlockLocation
+import com.github.chencmd.lootcontainermanager.minecraft.bukkit.BlockLocation
 
 trait LootAssetPersistenceCacheInstr[F[_]] {
   def askLootAssetLocationsNear(location: BlockLocation): F[List[LootAsset]]

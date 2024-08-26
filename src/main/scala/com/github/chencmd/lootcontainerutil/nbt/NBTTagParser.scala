@@ -1,7 +1,7 @@
-package com.github.chencmd.lootcontainerutil.nbt
-import com.github.chencmd.lootcontainerutil.nbt.definition.NBTNel
-import com.github.chencmd.lootcontainerutil.nbt.definition.NBTTag
-import com.github.chencmd.lootcontainerutil.nbt.definition.NBTTag.*
+package com.github.chencmd.lootcontainermanager.nbt
+import com.github.chencmd.lootcontainermanager.nbt.definition.NBTNel
+import com.github.chencmd.lootcontainermanager.nbt.definition.NBTTag
+import com.github.chencmd.lootcontainermanager.nbt.definition.NBTTag.*
 
 import cats.data.NonEmptyList
 

@@ -1,4 +1,4 @@
-package com.github.chencmd.lootcontainerutil.minecraft.nms
+package com.github.chencmd.lootcontainermanager.minecraft.nms
 
 import cats.effect.kernel.Sync
 import cats.implicits.*

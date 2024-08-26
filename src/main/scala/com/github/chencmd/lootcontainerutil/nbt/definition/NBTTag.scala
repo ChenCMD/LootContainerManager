@@ -1,4 +1,4 @@
-package com.github.chencmd.lootcontainerutil.nbt.definition
+package com.github.chencmd.lootcontainermanager.nbt.definition
 
 import cats.data.NonEmptyList
 import cats.implicits.*

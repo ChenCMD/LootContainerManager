@@ -1,7 +1,7 @@
-package com.github.chencmd.lootcontainerutil.feature.asset
+package com.github.chencmd.lootcontainermanager.feature.asset
 
-import com.github.chencmd.lootcontainerutil.nbt.definition.NBTPath
-import com.github.chencmd.lootcontainerutil.nbt.definition.NBTPathInterpolation
+import com.github.chencmd.lootcontainermanager.nbt.definition.NBTPath
+import com.github.chencmd.lootcontainermanager.nbt.definition.NBTPathInterpolation
 
 import scala.util.matching.Regex
 

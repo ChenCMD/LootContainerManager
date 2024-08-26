@@ -1,6 +1,6 @@
-package com.github.chencmd.lootcontainerutil.minecraft.bukkit
+package com.github.chencmd.lootcontainermanager.minecraft.bukkit
 
-import com.github.chencmd.lootcontainerutil.minecraft.nms.NMSIBlockData
+import com.github.chencmd.lootcontainermanager.minecraft.nms.NMSIBlockData
 
 import cats.effect.kernel.Sync
 import cats.implicits.*

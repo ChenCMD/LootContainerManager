@@ -1,4 +1,4 @@
-package com.github.chencmd.lootcontainerutil.generic
+package com.github.chencmd.lootcontainermanager.generic
 
 import cats.data.EitherT
 import cats.effect.IO
