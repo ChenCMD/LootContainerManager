@@ -45,7 +45,7 @@ object GenLootAsset {
   def generateLootAsset[F[_]: Async](p: Player)(using
     mcThread: OnMinecraftThread[F],
     Converter: ItemConversionInstr[F],
-    LAPCI: LootAssetPersistenceCacheInstr[F]
+    asyncLootAssetCache: LootAssetPersistenceCacheInstr[F]
   ): F[Unit] = for {
     // プレイヤーが見ているコンテナの情報を取得する
     containerDataOrNone <- mcThread.run {
@@ -68,7 +68,7 @@ object GenLootAsset {
     asset <- convertToLootAsset(List(data) ++ connected.toList, items)
 
     // LootAsset を保存する
-    _ <- LAPCI.updateLootAsset(asset)
+    _ <- asyncLootAssetCache.updateLootAsset(asset)
 
     // プレイヤーにメッセージを送信する
     _ <- Async[F].delay {
