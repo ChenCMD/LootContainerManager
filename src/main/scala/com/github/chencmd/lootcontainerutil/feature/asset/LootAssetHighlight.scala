@@ -4,6 +4,7 @@ import com.github.chencmd.lootcontainermanager.Prefix
 import com.github.chencmd.lootcontainermanager.exceptions.SystemException
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetContainer
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetPersistenceCacheInstr
+import com.github.chencmd.lootcontainermanager.generic.TupleExtra.*
 import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
 import com.github.chencmd.lootcontainermanager.minecraft.bukkit.BlockLocation
 import com.github.chencmd.lootcontainermanager.minecraft.bukkit.CraftBlock
@@ -86,9 +87,8 @@ object LootAssetHighlight {
               val midDummyContainer = {
                 val mid  = asset.containers.head.location.midPointAt(asset.containers.last.location)
                 val head = containers.head
-                mid -> head._2.copy(
-                  _1 = head._2._1.copy(chestType = Some(ChestData.Type.SINGLE))
-                )
+                mid -> head._2.copy(_1 = head._2._1.copy(chestType = Some(ChestData.Type.SINGLE)))
+                mid -> head._2.modify(0)(_.copy(chestType = Some(ChestData.Type.LEFT)))
               }
               containers :+ midDummyContainer
             }
