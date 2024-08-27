@@ -43,8 +43,7 @@ class LootContainerManager extends JavaPlugin {
   type F = IO[_]
   type G = SyncIO[_]
   val coerceF: G ~> F           = FunctionK.lift([A] => (_: G[A]).to[F])
-  val unsafeRunAsync            =
-    (errorHandler: Throwable => F[Unit]) => [U1] => (fa: F[U1]) => fa.onError(errorHandler).unsafeRunAndForget()
+  val unsafeRunAsync            = [U1] => (fa: F[U1]) => fa.unsafeRunAndForget()
   val unsafeRunSyncContinuation = [A] =>
     (cont: SyncContinuation[F, G, A]) => {
       val (a, effect) = cont.unsafeRunSync()
@@ -115,7 +114,7 @@ class LootContainerManager extends JavaPlugin {
 
     val loggerAppliedProgram = for {
       logger <- Slf4jLogger.create[F]
-      _      <- program.onError { err =>
+      _      <- program.handleErrorWith { err =>
         logger.error(err)(err.getMessage)
           >> Async[F].delay(Bukkit.getPluginManager.disablePlugin(this))
       }

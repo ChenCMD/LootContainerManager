@@ -23,14 +23,14 @@ import dev.jorel.commandapi.executors.PlayerCommandExecutor
 object CommandExecutor {
   def register[F[_]: Async](
     openedInventories: InventoriesStore[F],
-    unsafeRunAsync: (errorHandler: Throwable => F[Unit]) => [U1] => (fa: F[U1]) => Unit
+    unsafeRunAsync: [U1] => (fa: F[U1]) => Unit
   )(using
     logger: Logger[F],
     mcThread: OnMinecraftThread[F],
     Converter: ItemConversionInstr[F],
     LAPCI: LootAssetPersistenceCacheInstr[F]
   ) = {
-    def handler(sender: Player)(e: Throwable): F[Unit] = {
+    def handler(sender: Player): PartialFunction[Throwable, F[Unit]] = { (e: Throwable) =>
       val (toSender, toLogger) = e match {
         case err: UserException          => (err.getMessage, None)
         case err: ConfigurationException => (s"${Prefix.ERROR}設定ファイルの読み込み中にエラーが発生しました。", Some(err))
@@ -43,7 +43,7 @@ object CommandExecutor {
     }
 
     def genExecutor(f: Player => F[Unit]): PlayerCommandExecutor = { (sender: Player, _: CommandArguments) =>
-      unsafeRunAsync(handler(sender))(f(sender))
+      unsafeRunAsync(f(sender).handleErrorWith(handler(sender)))
     }
 
     val genAsset = CommandAPICommand("gen_asset")
