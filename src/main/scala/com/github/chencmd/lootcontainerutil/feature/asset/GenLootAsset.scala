@@ -60,8 +60,14 @@ object GenLootAsset {
     }
     (data, connected)   <- containerDataOrNone.fold(UserException.raise("No container was found."))(_.pure[F])
 
+    // アセットが既に存在しているか確認する
+    existsAsset <- asyncLootAssetCache.askIfLootAssetPresentAt(data.location)
+    _           <- Async[F].whenA(existsAsset) {
+      UserException.raise(s"${Prefix.ERROR}既にアセットとして登録されているコンテナです。")
+    }
+
     // コンテナを見ているプレイヤーが居たら閉じる
-    _ <- closeContainer(data.inventory)
+    _           <- closeContainer(data.inventory)
 
     // コンテナの情報を取得する
     items <- convertToLootAssetItem(data.inventory)
