@@ -110,7 +110,7 @@ class ContainerManager[F[_]: Async, G[_]: Sync] private (private val openedInven
           asset <- asyncLootAssetCache.askLootAssetLocationAt(holder.location)
           asset <- asset.fold(SystemException.raise[F]("Asset not found"))(_.pure[F])
           items <- GenLootAsset.convertToLootAssetItem(inv)
-          hasChanged = asset.items.zip(items).exists((a, b) => a != b)
+          hasChanged = !asset.items.sameElements(items)
 
           _ <- Async[F].whenA(hasChanged)(for {
             _ <- asyncLootAssetCache.updateLootAsset(asset.copy(items = items))
