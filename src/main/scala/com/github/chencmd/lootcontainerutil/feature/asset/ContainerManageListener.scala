@@ -13,6 +13,7 @@ import org.typelevel.log4cats.Logger
 
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
+import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.player.PlayerInteractEvent
 
@@ -29,6 +30,13 @@ class ContainerManageListener[F[_]: Async, G[_]: Sync] private (
 
   @EventHandler def onInventoryClose(e: InventoryCloseEvent): Unit = {
     unsafeRunSyncContinuation(cm.onInventoryClose(e))
+  }
+
+  @EventHandler def onBlockPlaceEvent(e: BlockPlaceEvent): Unit = {
+    val isCancelEvent = unsafeRunSyncContinuation(cm.onBlockPlaceEvent(e))
+    if (isCancelEvent) {
+      e.setCancelled(true)
+    }
   }
 }
 

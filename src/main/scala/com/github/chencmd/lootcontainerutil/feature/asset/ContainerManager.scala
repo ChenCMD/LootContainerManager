@@ -8,6 +8,7 @@ import com.github.chencmd.lootcontainermanager.generic.extensions.CastOps.*
 import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
 import com.github.chencmd.lootcontainermanager.minecraft.bukkit.BlockLocation
 import com.github.chencmd.lootcontainermanager.minecraft.bukkit.InventorySession
+import com.github.chencmd.lootcontainermanager.minecraft.bukkit.Vector
 import com.github.chencmd.lootcontainermanager.terms.InventoriesStore
 import com.github.chencmd.lootcontainermanager.terms.InventoriesStore.*
 
@@ -24,7 +25,11 @@ import scala.util.chaining.*
 
 import org.bukkit.Sound
 import org.bukkit.SoundCategory
+import org.bukkit.block.Chest
+import org.bukkit.block.data.`type`.Chest as ChestData
+import org.bukkit.entity.Player
 import org.bukkit.event.block.Action
+import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.Inventory
@@ -116,6 +121,34 @@ class ContainerManager[F[_]: Async, G[_]: Sync] private (private val openedInven
     }
 
     program.value.map(v => (v.nonEmpty, v.traverse_(effect.tupled)))
+  }
+
+  def onBlockPlaceEvent(e: BlockPlaceEvent): SyncContinuation[F, G, Boolean] = {
+    val program = for {
+      chest <- OptionT.fromOption[G](e.getBlockPlaced.getState.downcastOrNone[Chest])
+      data  <- OptionT.fromOption[G](chest.getBlockData.downcastOrNone[ChestData])
+      location  = BlockLocation.of(chest.getLocation())
+      chestType = data.getType
+      if chestType != ChestData.Type.SINGLE
+      facing    = data.getFacing
+
+      rotation <- OptionT.fromOption[G](chestType match {
+        case ChestData.Type.SINGLE => None
+        case ChestData.Type.LEFT   => Some(+90)
+        case ChestData.Type.RIGHT  => Some(-90)
+      })
+      vector = Vector.of(facing.getDirection).rotate(rotation)
+
+      existsAsset <- OptionT.liftF(syncLootAssetCache.askIfLootAssetPresentAt((location + vector).toBlockLocation))
+      if existsAsset
+    } yield ()
+
+    def effect(p: Player): F[Unit] = for {
+      _ <- Async[F].delay(p.sendMessage(s"${Prefix.WARNING} Asset の設定されているコンテナをラージチェストに変更することはできません。"))
+      _ <- Async[F].delay(p.sendMessage(s"${Prefix.WARNING} Asset を拡張する場合は /lcm del_asset で削除してから再度設定してください。"))
+    } yield ()
+
+    program.value.map(v => (v.nonEmpty, v.traverse_(_ => effect(e.getPlayer))))
   }
 }
 
