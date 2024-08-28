@@ -61,7 +61,7 @@ class ContainerManager[F[_]: Async, G[_]: Sync] private (private val openedInven
 
     def effect(): F[Unit] = for {
       _ <- Async[F].delay(p.sendMessage(s"${Prefix.WARNING} Asset の設定されているコンテナです。"))
-      _ <- Async[F].delay(p.sendMessage(s"${Prefix.WARNING} Asset を削除する場合は /lcu del_asset を実行してください。"))
+      _ <- Async[F].delay(p.sendMessage(s"${Prefix.WARNING} Asset を削除する場合は /lcm del_asset を実行してください。"))
       loc = p.getLocation
       _ <- Async[F].delay(p.playSound(loc, Sound.BLOCK_NOTE_BLOCK_PLING, SoundCategory.MASTER, 0.6f, 2))
       _ <- Async[F].sleep(0.08.seconds)
