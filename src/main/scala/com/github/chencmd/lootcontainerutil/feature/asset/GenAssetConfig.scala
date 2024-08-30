@@ -34,6 +34,7 @@ enum ItemGenerator(
   case WithItemId(
     override val predicate: Regex,
     override val id: String,
+    val tag: Option[String],
     override val preCommand: List[String]
   ) extends ItemGenerator(predicate, id, preCommand)
 }

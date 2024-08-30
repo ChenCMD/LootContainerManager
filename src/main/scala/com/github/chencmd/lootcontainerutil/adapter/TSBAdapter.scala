@@ -31,6 +31,7 @@ import org.bukkit.loot.LootContext
 import org.bukkit.plugin.java.JavaPlugin
 
 import de.tr7zw.nbtapi.NBT
+import scala.util.matching.Regex
 
 object TSBAdapter {
   def createInstr[F[_]: Async](plugin: JavaPlugin, config: Config)(using
@@ -63,23 +64,29 @@ object TSBAdapter {
         .flatMap { generator =>
           val matched                  = generator.predicate.findFirstMatchIn(item).get
           def interpolate(str: String) = {
-            val str2 = raw"%%(\d+)%%".r.replaceAllIn(str, m => Option(matched.group(m.group(1).toInt)).orEmpty)
-            val str3 = raw"%%(\w+)%%".r.replaceAllIn(str2, m => Option(matched.group(m.group(1))).orEmpty)
+            val str2 = raw"%%(\d+)%%".r
+              .replaceAllIn(str, m => Regex.quoteReplacement(Option(matched.group(m.group(1).toInt)).orEmpty))
+            val str3 = raw"%%(\w+)%%".r
+              .replaceAllIn(str2, m => Regex.quoteReplacement(Option(matched.group(m.group(1))).orEmpty))
             str3
           }
 
           val id = interpolate(generator.id)
-
           generator match {
-            case g: ItemGenerator.WithItemId => ManageItemNBT.createItemFromNBT[F](
-                NBTTag.NBTTagCompound(
-                  Map(
-                    "id"    -> NBTTag.NBTTagString(id),
-                    "Count" -> NBTTag.NBTTagByte(1),
-                    "tag"   -> NBTTag.NBTTagCompound(Map.empty)
+            case g: ItemGenerator.WithItemId => for {
+                tag  <- g.tag.traverse { t =>
+                  NBTTagParser.parse(interpolate(t)).fold(ConfigurationException.raise, _.pure[F])
+                }
+                item <- ManageItemNBT.createItemFromNBT[F](
+                  NBTTag.NBTTagCompound(
+                    Map(
+                      "id"    -> NBTTag.NBTTagString(id),
+                      "Count" -> NBTTag.NBTTagByte(1),
+                      "tag"   -> tag.getOrElse(NBTTag.NBTTagCompound(Map.empty))
+                    )
                   )
                 )
-              )
+              } yield item
 
             case g: ItemGenerator.WithLootTable => for {
                 res <- mcThread.run {

@@ -104,7 +104,10 @@ object Config {
               dataSource <- getDataSources(fnOut, target, path)
             } yield ItemGenerator.WithMCFunction(predicate.r, id, preCommand, dataSource)
           }
-          case "give"       => ItemGenerator.WithItemId(predicate.r, id, preCommand).pure[EitherNec[String, _]]
+          case "give"       => {
+            val tag = getValueWithType[String](typedMap, p)("tag").toOption
+            ItemGenerator.WithItemId(predicate.r, id, tag, preCommand).pure[EitherNec[String, _]]
+          }
           case _ => Either.leftNec(s"Invalid generateType '$generateType' in $p expected 'loot_table' or 'function'")
         }
       } yield itemGenerator
