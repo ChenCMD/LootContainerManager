@@ -65,9 +65,15 @@ class NBTTagParserTest extends AnyFunSpec {
       val actual   = NBTTagParser.parse(input)
       assert(actual == Right(expected))
     }
-    it("should parse NBTTagString") {
-      val input    = "{key:\"1\"}"
-      val expected = NBTTagCompound(Map("key" -> NBTTagString("1")))
+    it("should parse NBTTagString with single quote") {
+      val input    = """{key:' " \' " \\\' 1 \\\' " \' " '}"""
+      val expected = NBTTagCompound(Map("key" -> NBTTagString(""" " ' " \' 1 \' " ' " """)))
+      val actual   = NBTTagParser.parse(input)
+      assert(actual == Right(expected))
+    }
+    it("should parse NBTTagString with double quote") {
+      val input    = """{key:" ' \" ' \\\" 1 \\\" ' \" ' "}"""
+      val expected = NBTTagCompound(Map("key" -> NBTTagString(""" ' " ' \" 1 \" ' " ' """)))
       val actual   = NBTTagParser.parse(input)
       assert(actual == Right(expected))
     }
