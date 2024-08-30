@@ -1,6 +1,7 @@
 package com.github.chencmd.lootcontainermanager.nbt
 
 import scala.util.parsing.combinator.RegexParsers
+import scala.util.matching.Regex
 
 trait CommonParsers extends RegexParsers {
   protected def integer: Parser[Int] = "-?[0-9]".r ^^ (_.toInt)
@@ -13,6 +14,6 @@ trait CommonParsers extends RegexParsers {
       quote <- "'" | "\""
       str   <- f(s"[^$quote\\\\]".r | s"\\$quote" | "\\\\")
       _     <- quote
-    } yield str.mkString
+    } yield s"\\\\(\\\\|$quote)".r.replaceAllIn(str.mkString, s => Regex.quoteReplacement(s.group(1)))
   }
 }
