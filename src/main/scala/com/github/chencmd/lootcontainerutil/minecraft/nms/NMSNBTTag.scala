@@ -9,6 +9,8 @@ import cats.implicits.*
 import scala.jdk.CollectionConverters.*
 import scala.util.chaining.*
 
+import java.lang as jl
+
 import dev.array21.bukkitreflectionlib.ReflectionUtil
 
 type NMSNBTTag
@@ -172,11 +174,12 @@ object NMSNBTTag {
       private lazy val clazz   = ReflectionUtil
         .getMinecraftClass("nbt.NBTTagByteArray")
         .asInstanceOf[Class[NMSTagType]]
-      private lazy val valueOf = ReflectionUtil
-        .getMethod(clazz, "a", classOf[java.util.List[?]])
+      private lazy val constructor = clazz
+        .getDeclaredConstructor(classOf[Array[Byte]])
+        .tap(_.setAccessible(true))
 
       override def valueOf[F[_]: Sync](a: NBTTagByteArray): F[NMSNBTTagConvertedByteArray] = Sync[F].delay {
-        valueOf.invoke(null, a.value).asInstanceOf[NMSTagType]
+        constructor.newInstance(a.value.map(_.value).toArray).asInstanceOf[NMSTagType]
       }
     }
 
@@ -187,11 +190,12 @@ object NMSNBTTag {
       private lazy val clazz   = ReflectionUtil
         .getMinecraftClass("nbt.NBTTagIntArray")
         .asInstanceOf[Class[NMSTagType]]
-      private lazy val valueOf = ReflectionUtil
-        .getMethod(clazz, "a", classOf[java.util.List[?]])
+      private lazy val constructor = clazz
+        .getDeclaredConstructor(classOf[Array[Int]])
+        .tap(_.setAccessible(true))
 
       override def valueOf[F[_]: Sync](a: NBTTagIntArray): F[NMSNBTTagConvertedIntArray] = Sync[F].delay {
-        valueOf.invoke(null, a.value).asInstanceOf[NMSTagType]
+        constructor.newInstance(a.value.map(_.value).toArray).asInstanceOf[NMSTagType]
       }
     }
 
@@ -202,11 +206,12 @@ object NMSNBTTag {
       private lazy val clazz   = ReflectionUtil
         .getMinecraftClass("nbt.NBTTagLongArray")
         .asInstanceOf[Class[NMSTagType]]
-      private lazy val valueOf = ReflectionUtil
-        .getMethod(clazz, "a", classOf[java.util.List[?]])
+      private lazy val constructor = clazz
+        .getDeclaredConstructor(classOf[Array[Long]])
+        .tap(_.setAccessible(true))
 
       override def valueOf[F[_]: Sync](a: NBTTagLongArray): F[NMSNBTTagConvertedLongArray] = Sync[F].delay {
-        valueOf.invoke(null, a.value.asJava).asInstanceOf[NMSTagType]
+        constructor.newInstance(a.value.map(_.value).toArray).asInstanceOf[NMSTagType]
       }
     }
 
@@ -240,7 +245,7 @@ object NMSNBTTag {
         }
 
         list <- Sync[F].delay {
-          constructor.newInstance(convertedList.asJava, typeId).asInstanceOf[NMSTagType]
+          constructor.newInstance(convertedList.asJava, typeId.toByte).asInstanceOf[NMSTagType]
         }
       } yield list
     }
