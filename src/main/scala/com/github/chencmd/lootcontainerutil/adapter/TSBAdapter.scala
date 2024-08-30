@@ -41,18 +41,20 @@ object TSBAdapter {
     def toItemIdentifier(item: ItemStack): F[ItemIdentifier] = for {
       nbtItem <- Async[F].delay(NBT.readNbt(item))
       tag     <- NBTTagParser.parse(nbtItem.toString).fold(SystemException.raise(_), _.pure[F])
+      itemTag: NBTTag.NBTTagCompound = NBTTag.NBTTagCompound(
+        Map(
+          "id"    -> NBTTag.NBTTagString(item.getType().getKey().toString()),
+          "Count" -> NBTTag.NBTTagByte(item.getAmount().toByte),
+          "tag"   -> tag
+        )
+      )
 
       (_, usingInterpolation) <- config.genAsset.toItemIdentifier
-        .find(_._1.isAccessible(tag))
+        .find(_._1.isAccessible(itemTag))
         .fold(ConfigurationException.raise(s"A matched itemMapper was not found. data: ${tag.toSNBT}"))(_.pure[F])
 
-      itemTag = Map(
-        "id"    -> NBTTag.NBTTagString(item.getType().getKey().toString()),
-        "Count" -> NBTTag.NBTTagByte(item.getAmount().toByte),
-        "tag"   -> tag
-      )
       interpolatedTag <- usingInterpolation
-        .interpolate(NBTTag.NBTTagCompound(itemTag))
+        .interpolate(itemTag)
         .fold(ConfigurationException.raise("itemMapper did not return a result."))(_.pure[F])
     } yield interpolatedTag
 
