@@ -8,6 +8,8 @@ trait CommonParsers extends RegexParsers {
 
   protected def unquotedString: Parser[String] = """[a-zA-Z0-9_\-.+]+""".r
 
+  protected def looseUnquotedString: Parser[String] = """[^'". \[\]\{\}]+""".r
+
   protected def quotedString(allowEmpty: Boolean = false): Parser[String] = {
     val f: ((=> Parser[String]) => Parser[List[String]]) = if (allowEmpty) rep else rep1
     for {

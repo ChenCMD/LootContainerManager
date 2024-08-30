@@ -31,12 +31,12 @@ class NBTPathParser extends NBTTagParser {
     compound ^^ NBTPathRootNode.MatchRootObject.apply
 
   private def matchObjectNode: Parser[NBTPathRootNode.MatchObject] = for {
-    name    <- quotedString() | unquotedString
+    name    <- quotedString() | looseUnquotedString
     pattern <- compound
   } yield NBTPathRootNode.MatchObject(name, pattern)
 
   private def compoundChildNode: Parser[NBTPathRootNode.CompoundChild] =
-    (quotedString() | unquotedString) ^^ NBTPathRootNode.CompoundChild.apply
+    (quotedString() | looseUnquotedString) ^^ NBTPathRootNode.CompoundChild.apply
 
   private def node: Parser[NBTPathNode] =
     nonRootMatchObjectNode | allElementsNode | matchElementNode | indexedElementNode | nonRootCompoundChildNode
