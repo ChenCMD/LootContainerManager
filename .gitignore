@@ -15,3 +15,6 @@ project/.bloop/
 target/
 dist/
 *.worksheet.sc
+
+localDependencies/fastutil-core-*.jar
+localDependencies/spigot-*.jar
