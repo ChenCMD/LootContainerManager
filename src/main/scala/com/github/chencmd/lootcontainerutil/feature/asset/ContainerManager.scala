@@ -14,7 +14,6 @@ import com.github.chencmd.lootcontainermanager.terms.InventoriesStore.*
 
 import cats.data.OptionT
 import cats.effect.Async
-import cats.effect.SyncIO
 import cats.effect.kernel.Sync
 import cats.implicits.*
 import org.typelevel.log4cats.Logger
@@ -36,10 +35,10 @@ import org.bukkit.inventory.Inventory
 
 class ContainerManager[F[_]: Async, G[_]: Sync] private (private val openedInventories: InventoriesStore[F])(using
   logger: Logger[F],
-  mcThread: OnMinecraftThread[F],
+  mcThread: OnMinecraftThread[F, G],
   asyncLootAssetCache: LootAssetPersistenceCacheInstr[F],
   syncLootAssetCache: LootAssetPersistenceCacheInstr[G],
-  itemConverter: ItemConversionInstr[F]
+  itemConverter: ItemConversionInstr[F, G]
 ) {
   def onPlayerInteract(e: PlayerInteractEvent): SyncContinuation[F, G, Boolean] = e.getAction match {
     case Action.LEFT_CLICK_BLOCK  => onLeftClickBlock(e)
@@ -88,8 +87,8 @@ class ContainerManager[F[_]: Async, G[_]: Sync] private (private val openedInven
     def effect(assetLocation: BlockLocation): F[Unit] = for {
       asset <- asyncLootAssetCache.askLootAssetLocationAt(assetLocation)
       asset <- asset.fold(SystemException.raise[F]("Asset not found"))(_.pure[F])
-      inv   <- openedInventories.getOrCreateInventory(assetLocation, asset)
-      _     <- mcThread.run(SyncIO(p.openInventory(inv.getInventory())))
+      inv   <- openedInventories.getOrCreateInventory[G](assetLocation, asset)
+      _     <- mcThread.run(Sync[G].delay(p.openInventory(inv.getInventory())))
     } yield ()
 
     assetLocation.value.map(loc => (loc.nonEmpty, loc.traverse_(effect)))
@@ -109,7 +108,7 @@ class ContainerManager[F[_]: Async, G[_]: Sync] private (private val openedInven
         for {
           asset <- asyncLootAssetCache.askLootAssetLocationAt(holder.location)
           asset <- asset.fold(SystemException.raise[F]("Asset not found"))(_.pure[F])
-          items <- GenLootAsset.convertToLootAssetItem(inv)
+          items <- GenLootAsset.convertToLootAssetItem[F, G](inv)
           hasChanged = !asset.items.sameElements(items)
 
           _ <- Async[F].whenA(hasChanged)(for {
@@ -157,10 +156,10 @@ object ContainerManager {
 
   def apply[F[_]: Async, G[_]: Sync](openedInventories: InventoriesStore[F])(using
     logger: Logger[F],
-    mcThread: OnMinecraftThread[F],
+    mcThread: OnMinecraftThread[F, G],
     syncLootAssetCache: LootAssetPersistenceCacheInstr[G],
     asyncLootAssetCache: LootAssetPersistenceCacheInstr[F],
-    itemConverter: ItemConversionInstr[F]
+    itemConverter: ItemConversionInstr[F, G]
   ): F[ContainerManager[F, G]] = Async[F].delay {
     new ContainerManager[F, G](openedInventories)
   }

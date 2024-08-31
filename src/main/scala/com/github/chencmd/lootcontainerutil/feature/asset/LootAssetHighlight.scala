@@ -13,7 +13,6 @@ import com.github.chencmd.lootcontainermanager.minecraft.nms.NMSIBlockData
 
 import cats.Align
 import cats.data.Ior
-import cats.effect.SyncIO
 import cats.effect.kernel.Async
 import cats.effect.kernel.Ref
 import cats.implicits.*
@@ -41,16 +40,17 @@ import com.comphenix.protocol.events.PacketContainer
 import com.comphenix.protocol.wrappers.WrappedDataValue
 import com.comphenix.protocol.wrappers.WrappedDataWatcher.Registry
 import org.joml.Vector3f
+import cats.effect.kernel.Sync
 
 object LootAssetHighlight {
-  def task[F[_]: Async](using
+  def task[F[_]: Async, G[_]: Sync](using
     logger: Logger[F],
     lootAssetCache: LootAssetPersistenceCacheInstr[F],
-    mcThread: OnMinecraftThread[F]
+    mcThread: OnMinecraftThread[F, G]
   ): F[Unit] = for {
     entityIds <- Ref.of[F, Map[UUID, Map[Position, Int]]](Map.empty)
     _         <- Async[F].delay(logger.info("Starting highlight task"))
-    _         <- (highlight(entityIds) >> Async[F].sleep(3.seconds)).foreverM
+    _         <- (highlight[F, G](entityIds) >> Async[F].sleep(3.seconds)).foreverM
   } yield ()
 
   val CHESTS = Set(
@@ -58,14 +58,14 @@ object LootAssetHighlight {
     "minecraft:trapped_chest"
   )
 
-  def highlight[F[_]: Async](entityIds: Ref[F, Map[UUID, Map[Position, Int]]])(using
+  def highlight[F[_]: Async, G[_]: Sync](entityIds: Ref[F, Map[UUID, Map[Position, Int]]])(using
     lootAssetCache: LootAssetPersistenceCacheInstr[F],
-    mcThread: OnMinecraftThread[F]
+    mcThread: OnMinecraftThread[F, G]
   ): F[Unit] = for {
     players <- Async[F].delay(Bukkit.getOnlinePlayers.asScala.toList)
     players <- Either
       .catchNonFatal(players.asInstanceOf[List[Player]])
-      .fold(_ => SystemException.raise("Failed to get online players"), _.pure[F])
+      .fold(_ => SystemException.raise[F]("Failed to get online players"), _.pure[F])
 
     assets          <- players.traverse { player =>
       for {
@@ -79,7 +79,7 @@ object LootAssetHighlight {
             val block    = world.getBlockAt(location.toBukkit(world))
             location.toPosition -> (container, block)
           }
-          SyncIO {
+          Sync[G].delay {
             if (asset.containers.size == 1) {
               asset.containers.map(toData)
             } else {
@@ -106,7 +106,7 @@ object LootAssetHighlight {
         case (pos, Ior.Left((id)))                => sendDeleteImaginaryHighlightPacket(p)(id).as(List.empty)
         case (pos, Ior.Right((container, block))) => for {
             _  <- checkBlock(p)(block, container.location)
-            id <- sendAddImaginaryHighlightPacket(p)(pos, container, block)
+            id <- sendAddImaginaryHighlightPacket[F, G](p)(pos, container, block)
           } yield List(pos -> id)
         case (pos, Ior.Both(id, (_, b)))          => checkBlock(p)(b, pos.toBlockLocation).as(List(pos -> id))
       }
@@ -122,17 +122,17 @@ object LootAssetHighlight {
     })
   }
 
-  def sendAddImaginaryHighlightPacket[F[_]: Async](player: Player)(
+  def sendAddImaginaryHighlightPacket[F[_]: Async, G[_]: Sync](player: Player)(
     position: Position,
     container: LootAssetContainer,
     block: Block
   )(using
-    mcThread: OnMinecraftThread[F]
+    mcThread: OnMinecraftThread[F, G]
   ): F[Int] = for {
     entityID <- Async[F].delay(Random.nextInt(Int.MaxValue))
 
-    craftBlock   <- CraftBlock.cast(block)
-    nmsBlockData <- craftBlock.getNMS
+    craftBlock   <- CraftBlock.cast[F](block)
+    nmsBlockData <- craftBlock.getNMS[F]
 
     facing            = container.facing.filter(_ => CHESTS.contains(container.blockId))
     spawnEntityPacket = createSpawnEntityPacket(entityID, position, facing, container.chestType)

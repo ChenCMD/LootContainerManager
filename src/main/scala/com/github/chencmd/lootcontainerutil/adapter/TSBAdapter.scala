@@ -10,12 +10,10 @@ import com.github.chencmd.lootcontainermanager.feature.asset.ItemIdentifier
 import com.github.chencmd.lootcontainermanager.generic.EitherTExtra
 import com.github.chencmd.lootcontainermanager.generic.extensions.CastOps.*
 import com.github.chencmd.lootcontainermanager.minecraft.ManageItemNBT
-import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
 import com.github.chencmd.lootcontainermanager.nbt.NBTTagParser
 import com.github.chencmd.lootcontainermanager.nbt.definition.NBTTag
 
 import cats.data.EitherT
-import cats.effect.SyncIO
 import cats.effect.kernel.Async
 import cats.implicits.*
 
@@ -33,16 +31,16 @@ import de.tr7zw.nbtapi.NBT
 import org.typelevel.log4cats.Logger
 import scala.util.matching.Regex
 import scala.util.matching.Regex.Match
+import cats.effect.kernel.Sync
 
 object TSBAdapter {
-  def createInstr[F[_]: Async](plugin: JavaPlugin, config: Config)(using
+  def createInstr[F[_]: Async, G[_]: Sync](plugin: JavaPlugin, config: Config)(using
     logger: Logger[F],
-    mcThread: OnMinecraftThread[F],
     ManageItemNBT: ManageItemNBT
-  ): ItemConversionInstr[F] = new ItemConversionInstr[F] {
+  ): ItemConversionInstr[F, G] = new ItemConversionInstr[F, G] {
     def toItemIdentifier(item: ItemStack): F[ItemIdentifier] = for {
       nbtItem <- Async[F].delay(NBT.readNbt(item))
-      tag     <- NBTTagParser.parse(nbtItem.toString).fold(SystemException.raise(_), _.pure[F])
+      tag     <- NBTTagParser.parse(nbtItem.toString).fold(SystemException.raise[F](_), _.pure[F])
       itemTag: NBTTag.NBTTagCompound = NBTTag.NBTTagCompound(
         Map(
           "id"    -> NBTTag.NBTTagString(item.getType().getKey().toString()),
@@ -53,17 +51,17 @@ object TSBAdapter {
 
       (_, usingInterpolation) <- config.genAsset.toItemIdentifier
         .find(_._1.isAccessible(itemTag))
-        .fold(ConfigurationException.raise(s"A matched itemMapper was not found. data: ${tag.toSNBT}"))(_.pure[F])
+        .fold(ConfigurationException.raise[F](s"A matched itemMapper was not found. data: ${tag.toSNBT}"))(_.pure[F])
 
       interpolatedTag <- usingInterpolation
         .interpolate(itemTag)
-        .fold(ConfigurationException.raise("itemMapper did not return a result."))(_.pure[F])
+        .fold(ConfigurationException.raise[F]("itemMapper did not return a result."))(_.pure[F])
     } yield interpolatedTag
 
-    def toItemStack(item: ItemIdentifier): F[ItemStack] = for {
+    def toItemStack(item: ItemIdentifier): G[ItemStack] = for {
       generator <- config.genAsset.toItem
         .find(_.predicate.matches(item))
-        .fold(ConfigurationException.raise(s"ItemIdentifier did not match any itemMapper. item: $item"))(_.pure[F])
+        .fold(ConfigurationException.raise[G](s"ItemIdentifier did not match any itemMapper. item: $item"))(_.pure[G])
 
       matched     = generator.predicate.findFirstMatchIn(item).get
       interp      = interpolate(matched)
@@ -72,16 +70,15 @@ object TSBAdapter {
 
       item <- generator match {
         case g: ItemGenerator.WithItemId => for {
-            res <- mcThread.run(runPreCommands(preCommands).value)
-            _   <- res.fold(Async[F].raiseError, _ => Async[F].unit)
+            res <- runPreCommands(preCommands).value
+            _   <- res.fold(Sync[G].raiseError, _ => Sync[G].unit)
 
             tag <- g.tag.map(interp).filter(_.nonEmpty).traverse { t =>
               val res = NBTTagParser.parse(t)
-              logger.info(t) >>
-              res.fold(ConfigurationException.raise, _.pure[F])
+              res.fold(ConfigurationException.raise[G](_), _.pure[G])
             }
 
-            item <- ManageItemNBT.createItemFromNBT[F](
+            item <- ManageItemNBT.createItemFromNBT[G](
               NBTTag.NBTTagCompound(
                 Map(
                   "id"    -> NBTTag.NBTTagString(id),
@@ -93,22 +90,21 @@ object TSBAdapter {
           } yield item
 
         case g: ItemGenerator.WithLootTable => for {
-            res <- mcThread.run(runPreCommands(preCommands).value)
-            _   <- res.fold(Async[F].raiseError, _ => Async[F].unit)
+            res <- runPreCommands(preCommands).value
+            _   <- res.fold(Sync[G].raiseError, _ => Sync[G].unit)
 
-            lt <- Async[F].delay(Bukkit.getServer.getLootTable(NamespacedKey.fromString(id)))
-            _ <- logger.info(s"Using loot table: $lt, id: $id")
+            lt <- Sync[G].delay(Bukkit.getServer.getLootTable(NamespacedKey.fromString(id)))
 
             lc = LootContext.Builder(new Location(Bukkit.getWorlds.asScala.head, 0, 0, 0)).build()
 
-            rng   <- Async[F].delay(java.util.Random())
-            items <- Async[F].delay(lt.populateLoot(rng, lc).asScala.toList)
+            rng   <- Sync[G].delay(java.util.Random())
+            items <- Sync[G].delay(lt.populateLoot(rng, lc).asScala.toList)
             res = items.headOption
-            item <- res.fold(ConfigurationException.raise("LootTable did not return any items."))(_.pure[F])
+            item <- res.fold(ConfigurationException.raise[G]("LootTable did not return any items."))(_.pure[G])
           } yield item
 
         case g: ItemGenerator.WithMCFunction => for {
-            item <- mcThread.run {
+            item <- {
               val program = for {
                 _ <- runPreCommands(g.preCommands.map(interp))
                 _ <- runCommand(s"execute as @p run function $id")(
@@ -119,44 +115,44 @@ object TSBAdapter {
 
                 nbtData <- generateItemCompoundFromDataSource(fnOut)
 
-                itemData <- EitherT.fromEither[SyncIO](g.functionOutput.path.access(nbtData).headOption match {
+                itemData <- EitherT.fromEither[G](g.functionOutput.path.access(nbtData).headOption match {
                   case Some(n: NBTTag.NBTTagCompound) => Right(n)
                   case Some(_) => Left(ConfigurationException(s"Path ${fnOut.path} did not return a compound."))
                   case None    => Left(ConfigurationException(s"Path ${fnOut.path} did not return any items."))
                 })
 
-                item <- ManageItemNBT.createItemFromNBT[SyncIO](itemData).attemptT
+                item <- ManageItemNBT.createItemFromNBT[G](itemData).attemptT
               } yield item
               program.value
             }
-            item <- item.fold(Async[F].raiseError, _.pure[F])
+            item <- item.fold(Sync[G].raiseError, _.pure[G])
           } yield item
       }
     } yield item
 
     def generateItemCompoundFromDataSource(
       dataSource: DataSource
-    ): EitherT[SyncIO, ConfigurationException, NBTTag.NBTTagCompound] = dataSource match {
+    ): EitherT[G, ConfigurationException, NBTTag.NBTTagCompound] = dataSource match {
       case DataSource.Block(world, x, y, z, path) => for {
-          w         <- EitherT.fromOption[SyncIO](
+          w         <- EitherT.fromOption[G](
             Bukkit.getWorlds.asScala.toList.find(_.getKey().toString() == world),
             ConfigurationException(s"World ${world} was not found.")
           )
-          container <- EitherT(SyncIO {
+          container <- EitherT(Sync[G].delay {
             w.getBlockAt(x, y, z)
               .getState()
               .downcastOrLeft[Container](
                 ConfigurationException(s"Block at $x, $y, $z was not a container.")
               )
           })
-          blockData <- EitherT(SyncIO {
+          blockData <- EitherT(Sync[G].delay {
             val s = NBT.get[String](container, _.toString())
             NBTTagParser.parse(s).leftMap(ConfigurationException.apply)
           })
         } yield blockData
 
       case x => EitherT.liftF {
-          ConfigurationException.raise[SyncIO, NBTTag.NBTTagCompound](s"DataSource ${x} is not implemented.")
+          ConfigurationException.raise[G](s"DataSource ${x} is not implemented.")
         }
     }
 
@@ -168,14 +164,14 @@ object TSBAdapter {
       str3
     }
 
-    def runPreCommands(commands: List[String]): EitherT[SyncIO, ConfigurationException, Unit] = {
+    def runPreCommands(commands: List[String]): EitherT[G, ConfigurationException, Unit] = {
       commands.traverse_ { cmd =>
         runCommand(cmd)(ConfigurationException(s"Failed to run preCommand: $cmd."))
       }
     }
 
-    def runCommand[E](cmd: String)(handleError: => E): EitherT[SyncIO, E, Unit] = {
-      val res = SyncIO(Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), cmd))
+    def runCommand[E](cmd: String)(handleError: => E): EitherT[G, E, Unit] = {
+      val res = Sync[G].delay(Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), cmd))
       EitherTExtra.exitWhenMA(res)(handleError)
     }
   }

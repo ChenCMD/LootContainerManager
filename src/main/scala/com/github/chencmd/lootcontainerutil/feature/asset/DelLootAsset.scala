@@ -9,7 +9,7 @@ import com.github.chencmd.lootcontainermanager.minecraft.bukkit.BlockLocation
 import com.github.chencmd.lootcontainermanager.terms.InventoriesStore
 import com.github.chencmd.lootcontainermanager.terms.InventoriesStore.*
 
-import cats.effect.SyncIO
+import cats.effect.kernel.Sync
 import cats.effect.kernel.Async
 import cats.implicits.*
 
@@ -20,27 +20,27 @@ import org.bukkit.block.Container
 import org.bukkit.entity.Player
 
 object DelLootAsset {
-  def deleteLootAsset[F[_]: Async](p: Player, openedInventories: InventoriesStore[F])(using
-    mcThread: OnMinecraftThread[F],
-    Converter: ItemConversionInstr[F],
+  def deleteLootAsset[F[_]: Async, G[_]: Sync](p: Player, openedInventories: InventoriesStore[F])(using
+    mcThread: OnMinecraftThread[F, G],
+    Converter: ItemConversionInstr[F, G],
     asyncLootAssetCache: LootAssetPersistenceCacheInstr[F]
   ): F[Unit] = for {
     dataOrNone                <- mcThread.run(for {
-      blockOrNone     <- SyncIO(Option(p.getTargetBlockExact(5)))
-      containerOrNone <- SyncIO(blockOrNone.flatMap(_.getState.downcastOrNone[Container]))
-      inventoryOrNone <- SyncIO(containerOrNone.map(_.getInventory()))
+      blockOrNone     <- Sync[G].delay(Option(p.getTargetBlockExact(5)))
+      containerOrNone <- Sync[G].delay(blockOrNone.flatMap(_.getState.downcastOrNone[Container]))
+      inventoryOrNone <- Sync[G].delay(containerOrNone.map(_.getInventory()))
     } yield for {
       container <- containerOrNone
       inventory <- inventoryOrNone
     } yield container -> inventory)
-    (container, containerInv) <- dataOrNone.fold(UserException.raise("No container was found"))(_.pure[F])
+    (container, containerInv) <- dataOrNone.fold(UserException.raise[F]("No container was found"))(_.pure[F])
 
     assetLocation = BlockLocation.of(container.getLocation())
 
     asset <- asyncLootAssetCache.askLootAssetLocationAt(assetLocation)
-    asset <- asset.fold(UserException.raise("Asset not found"))(_.pure[F])
+    asset <- asset.fold(UserException.raise[F]("Asset not found"))(_.pure[F])
 
-    assetSession <- openedInventories.getOrCreateInventory(assetLocation, asset)
+    assetSession <- openedInventories.getOrCreateInventory[G](assetLocation, asset)
     assetInv = assetSession.getInventory()
 
     _ <- Async[F].delay { assetInv.getViewers().asScala.foreach(_.closeInventory()) }

@@ -1,13 +1,11 @@
 package com.github.chencmd.lootcontainermanager.minecraft
 
-import cats.effect.SyncIO
+trait OnMinecraftThread[F[_], G[_]] {
+  def run[A](action: G[A]): F[A]
 
-trait OnMinecraftThread[F[_]] {
-  def run[A](action: SyncIO[A]): F[A]
+  def runAndForget[A](action: G[A]): F[Unit]
 
-  def runAndForget[A](action: SyncIO[A]): F[Unit]
+  def runLater[A](delay: Long)(action: G[A]): F[A]
 
-  def runLater[A](delay: Long)(action: SyncIO[A]): F[A]
-
-  def runLaterAndForget[A](delay: Long)(action: SyncIO[A]): F[Unit]
+  def runLaterAndForget[A](delay: Long)(action: G[A]): F[Unit]
 }

@@ -13,7 +13,7 @@ import org.bukkit.event.player.PlayerInteractEvent
 class ProtectActionListener[F[_]: Async, G[_]: Sync] private (
   private val unsafeRunSyncContinuation: [A] => SyncContinuation[F, G, A] => A
 )(using
-  mcThread: OnMinecraftThread[F]
+  mcThread: OnMinecraftThread[F, G]
 ) extends Listener {
   @EventHandler def onPlayerInteract(e: PlayerInteractEvent): Unit = {
     val isCancelEvent = unsafeRunSyncContinuation(LootContainerProtection.onPlayerInteract[F, G](e))
@@ -25,7 +25,7 @@ class ProtectActionListener[F[_]: Async, G[_]: Sync] private (
 
 object ProtectActionListener {
   def apply[F[_]: Async, G[_]: Sync](unsafeRunSyncContinuation: [A] => SyncContinuation[F, G, A] => A)(using
-    mcThread: OnMinecraftThread[F]
+    mcThread: OnMinecraftThread[F, G]
   ): F[ProtectActionListener[F, G]] = Async[F].delay {
     new ProtectActionListener[F, G](unsafeRunSyncContinuation)
   }

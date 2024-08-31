@@ -17,6 +17,8 @@ import org.bukkit.event.inventory.InventoryType
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
+import cats.effect.kernel.Sync
+import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
 
 package object terms {
   case class LootAssetCache(
@@ -42,8 +44,9 @@ package object terms {
     def empty[F[_]: Async]: F[InventoriesStore[F]] = KeyedMutex.empty[F, BlockLocation, InventorySession]
 
     extension [F[_]: Async](openedInventories: InventoriesStore[F]) {
-      def getOrCreateInventory(location: BlockLocation, asset: LootAsset)(using
-        itemConverter: ItemConversionInstr[F]
+      def getOrCreateInventory[G[_]: Sync](location: BlockLocation, asset: LootAsset)(using
+        mcThread: OnMinecraftThread[F, G],
+        itemConverter: ItemConversionInstr[F, G]
       ): F[InventorySession] = {
         def createInventory(items: List[(Int, ItemStack, Int)])(holder: InventoryHolder): Inventory = {
           val server = Bukkit.getServer()
@@ -67,7 +70,7 @@ package object terms {
         }
 
         def createInventorySession: F[InventorySession] = for {
-          items   <- asset.items.traverse(i => itemConverter.toItemStack(i.item).map((i.slot, _, i.quantity)))
+          items   <- mcThread.run(asset.items.traverse(i => itemConverter.toItemStack(i.item).map((i.slot, _, i.quantity))))
           session <- InventorySession[F](ContainerManager.INVENTORY_NAME, location)(createInventory(items))
         } yield session
 

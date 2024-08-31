@@ -12,7 +12,6 @@ import com.github.chencmd.lootcontainermanager.minecraft.bukkit.BlockLocation
 import com.github.chencmd.lootcontainermanager.minecraft.bukkit.Vector
 
 import cats.data.OptionT
-import cats.effect.SyncIO
 import cats.effect.kernel.Async
 import cats.effect.std.UUIDGen
 import cats.implicits.*
@@ -30,6 +29,7 @@ import org.bukkit.inventory.Inventory
 
 import com.github.tarao.record4s.%
 import com.github.tarao.record4s.unselect
+import cats.effect.kernel.Sync
 
 object GenLootAsset {
   type ContainerData = % {
@@ -42,23 +42,23 @@ object GenLootAsset {
     val inventory: Inventory
   }
 
-  def generateLootAsset[F[_]: Async](p: Player)(using
-    mcThread: OnMinecraftThread[F],
-    Converter: ItemConversionInstr[F],
+  def generateLootAsset[F[_]: Async, G[_]: Sync](p: Player)(using
+    mcThread: OnMinecraftThread[F, G],
+    Converter: ItemConversionInstr[F, G],
     asyncLootAssetCache: LootAssetPersistenceCacheInstr[F]
   ): F[Unit] = for {
     // プレイヤーが見ているコンテナの情報を取得する
     containerDataOrNone <- mcThread.run {
       val program = for {
-        container     <- OptionT(findContainer(p))
-        containerData <- OptionT.liftF(getContainerData(container))
+        container     <- OptionT(findContainer[G](p))
+        containerData <- OptionT.liftF(getContainerData[G](container))
 
-        connectedContainer     <- OptionT.liftF(getConnectedContainer(p.getWorld(), containerData))
-        connectedContainerData <- OptionT.liftF(connectedContainer.traverse(getContainerData))
+        connectedContainer     <- OptionT.liftF(getConnectedContainer[G](p.getWorld(), containerData))
+        connectedContainerData <- OptionT.liftF(connectedContainer.traverse(getContainerData[G]))
       } yield (containerData, connectedContainerData)
       program.value
     }
-    (data, connected)   <- containerDataOrNone.fold(UserException.raise("No container was found."))(_.pure[F])
+    (data, connected)   <- containerDataOrNone.fold(UserException.raise[F]("No container was found."))(_.pure[F])
 
     // アセットが既に存在しているか確認する
     existsAsset <- asyncLootAssetCache.askIfLootAssetPresentAt(data.location)
@@ -70,7 +70,7 @@ object GenLootAsset {
     _           <- closeContainer(data.inventory)
 
     // コンテナの情報を取得する
-    items <- convertToLootAssetItem(data.inventory)
+    items <- convertToLootAssetItem[F, G](data.inventory)
     asset <- convertToLootAsset(List(data) ++ connected.toList, items)
 
     // LootAsset を保存する
@@ -82,17 +82,17 @@ object GenLootAsset {
     }
   } yield ()
 
-  def findContainer(p: Player): SyncIO[Option[Container]] = SyncIO {
+  def findContainer[G[_]: Sync](p: Player): G[Option[Container]] = Sync[G].delay {
     Option(p.getTargetBlockExact(5))
       .flatMap(_.getState.downcastOrNone[Container])
       .headOption
   }
 
-  def getConnectedContainer(world: World, data: ContainerData): SyncIO[Option[Container]] = {
+  def getConnectedContainer[G[_]: Sync](world: World, data: ContainerData): G[Option[Container]] = {
     val program = for {
-      facing    <- OptionT.fromOption[SyncIO](data.facing)
-      chestType <- OptionT.fromOption[SyncIO](data.chestType)
-      rotation  <- OptionT.fromOption[SyncIO](chestType match {
+      facing    <- OptionT.fromOption[G](data.facing)
+      chestType <- OptionT.fromOption[G](data.chestType)
+      rotation  <- OptionT.fromOption[G](chestType match {
         case ChestData.Type.SINGLE => None
         case ChestData.Type.LEFT   => Some(+90)
         case ChestData.Type.RIGHT  => Some(-90)
@@ -102,17 +102,17 @@ object GenLootAsset {
       vector                     = Vector.of(facing.getDirection).rotate(rotation)
       connectedContainerLocation = (location + vector).toBukkit(world)
 
-      container <- OptionT(SyncIO {
+      container <- OptionT(Sync[G].delay {
         world.getBlockAt(connectedContainerLocation).getState.downcastOrNone[Container & Chest]
       })
 
-      ccFacing <- OptionT(SyncIO {
+      ccFacing <- OptionT(Sync[G].delay {
         val data = container.getBlockData()
         data.downcastOrNone[Directional].map(_.getFacing)
       })
       if ccFacing == facing
 
-      ccChestType <- OptionT(SyncIO {
+      ccChestType <- OptionT(Sync[G].delay {
         val data = container.getBlockData()
         data.downcastOrNone[ChestData].map(_.getType)
       })
@@ -122,10 +122,10 @@ object GenLootAsset {
         case ChestData.Type.RIGHT  => ccChestType == ChestData.Type.LEFT
       }
     } yield container
-    program.value
+    program.value.widen
   }
 
-  def getContainerData(container: Container): SyncIO[ContainerData] = SyncIO {
+  def getContainerData[G[_]: Sync](container: Container): G[ContainerData] = Sync[G].delay {
     val data = container.getBlockData()
     %(
       "location"    -> BlockLocation.of(container.getLocation()),
@@ -142,9 +142,9 @@ object GenLootAsset {
     inv.getViewers().asScala.toList.traverse_(p => Async[F].delay(p.closeInventory()))
   }
 
-  def convertToLootAssetItem[F[_]: Async](
+  def convertToLootAssetItem[F[_]: Async, G[_]: Sync](
     inv: Inventory
-  )(using Converter: ItemConversionInstr[F]): F[List[LootAssetItem]] = {
+  )(using Converter: ItemConversionInstr[F, G]): F[List[LootAssetItem]] = {
     inv
       .getContents()
       .toList

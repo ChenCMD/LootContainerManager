@@ -25,7 +25,7 @@ import org.bukkit.loot.Lootable
 object LootContainerProtection {
   def onPlayerInteract[F[_]: Async, G[_]: Sync](
     e: PlayerInteractEvent
-  )(using mcThread: OnMinecraftThread[F]): SyncContinuation[F, G, Boolean] = {
+  )(using mcThread: OnMinecraftThread[F, G]): SyncContinuation[F, G, Boolean] = {
     val p = e.getPlayer
 
     val lootTable = {

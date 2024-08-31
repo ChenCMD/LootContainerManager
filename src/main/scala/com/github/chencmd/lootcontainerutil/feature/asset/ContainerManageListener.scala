@@ -45,10 +45,10 @@ object ContainerManageListener {
     unsafeRunSyncContinuation: [A] => SyncContinuation[F, G, A] => A
   )(using
     logger: Logger[F],
-    mcThread: OnMinecraftThread[F],
+    mcThread: OnMinecraftThread[F, G],
     AsyncLAPCI: LootAssetPersistenceCacheInstr[F],
     SyncLAPCI: LootAssetPersistenceCacheInstr[G],
-    Converter: ItemConversionInstr[F],
+    Converter: ItemConversionInstr[F, G],
     LAP: LootAssetPersistenceInstr[F]
   ): F[ContainerManageListener[F, G]] = for {
     cm  <- ContainerManager[F, G](openedInventories)

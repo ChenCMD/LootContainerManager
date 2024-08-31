@@ -44,6 +44,7 @@ class LootContainerManager extends JavaPlugin {
   type G = SyncIO[_]
   val coerceF: G ~> F           = FunctionK.lift([A] => (_: G[A]).to[F])
   val unsafeRunAsync            = [U1] => (fa: F[U1]) => fa.unsafeRunAndForget()
+  val unsafeRunSyncG            = [A] => (fa: G[A]) => fa.unsafeRunSync()
   val unsafeRunSyncContinuation = [A] =>
     (cont: SyncContinuation[F, G, A]) => {
       val (a, effect) = cont.unsafeRunSync()
@@ -62,15 +63,15 @@ class LootContainerManager extends JavaPlugin {
       logger <- Slf4jLogger.create[F]
       given Logger[F] = logger
 
-      given OnMinecraftThread[F] = OnBukkitServerThread.createInstr[F](this)
-      given ManageItemNBT        = ManageBukkitItemNBT.createInstr
+      given OnMinecraftThread[F, G] = OnBukkitServerThread.createInstr[F, G](this)(unsafeRunSyncG, coerceF)
+      given ManageItemNBT           = ManageBukkitItemNBT.createInstr
 
       cfg <- Config.tryRead[F](this)
       transactor     = SQLite.createTransactor[F](cfg.db)
       lootAssetRepos = LootAssetRepository.createInstr[F](transactor)
 
       given LootAssetPersistenceInstr[F] = lootAssetRepos
-      given ItemConversionInstr[F]       = TSBAdapter.createInstr[F](this, cfg)
+      given ItemConversionInstr[F, G]    = TSBAdapter.createInstr[F, G](this, cfg)
 
       syncLootAssetLocationCacheRef <- Ref.in[F, G, LootAssetCache](LootAssetCache.empty)
       asyncLootAssetLocationCacheRef          = syncLootAssetLocationCacheRef.mapK(coerceF)
@@ -84,7 +85,7 @@ class LootContainerManager extends JavaPlugin {
       _                 <- Async[F].delay(Bukkit.getPluginManager.registerEvents(cml, this))
 
       _ <- Async[F].delay(CommandAPI.onEnable())
-      _ <- CommandExecutor.register[F](openedInventories, unsafeRunAsync)
+      _ <- CommandExecutor.register[F, G](openedInventories, unsafeRunAsync)
 
       _          <- lootAssetRepos.initialize()
       _          <- refreshCache(asyncLootAssetLocationCacheRef)
@@ -98,7 +99,7 @@ class LootContainerManager extends JavaPlugin {
         (Async[F].sleep(30.seconds) >> program).foreverM.start
       }
 
-      taskFiber2 <- LootAssetHighlight.task[F].start
+      taskFiber2 <- LootAssetHighlight.task[F, G].start
 
       _ <- finalizerRef.set(Some(for {
         _ <- taskFiber1.cancel

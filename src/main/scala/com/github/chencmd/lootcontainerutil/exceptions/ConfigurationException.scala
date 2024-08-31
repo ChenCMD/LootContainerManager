@@ -5,6 +5,9 @@ import cats.ApplicativeError
 class ConfigurationException(message: String) extends Exception(message)
 
 object ConfigurationException {
-  def raise[F[_], A](message: String)(using AE: ApplicativeError[F, Throwable]): F[A] =
-    AE.raiseError(new ConfigurationException(message))
+  class RaiseOps[F[_]](val dummy: Boolean = true) extends AnyVal {
+    def apply[A](message: String)(using AE: ApplicativeError[F, Throwable]): F[A] =
+      AE.raiseError(new ConfigurationException(message))
+  }
+  def raise[F[_]] = new RaiseOps[F]
 }

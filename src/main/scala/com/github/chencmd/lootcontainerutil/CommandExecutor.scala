@@ -9,6 +9,7 @@ import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAss
 import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
 import com.github.chencmd.lootcontainermanager.terms.InventoriesStore
 
+import cats.effect.kernel.Sync
 import cats.effect.kernel.Async
 import cats.implicits.*
 import org.typelevel.log4cats.Logger
@@ -21,15 +22,15 @@ import dev.jorel.commandapi.executors.CommandArguments
 import dev.jorel.commandapi.executors.PlayerCommandExecutor
 
 object CommandExecutor {
-  def register[F[_]: Async](
+  def register[F[_]: Async, G[_]: Sync](
     openedInventories: InventoriesStore[F],
     unsafeRunAsync: [U1] => (fa: F[U1]) => Unit
   )(using
     logger: Logger[F],
-    mcThread: OnMinecraftThread[F],
-    Converter: ItemConversionInstr[F],
+    mcThread: OnMinecraftThread[F, G],
+    Converter: ItemConversionInstr[F, G],
     LAPCI: LootAssetPersistenceCacheInstr[F]
-  ) = {
+  ): F[Unit] = {
     def handler(sender: Player): PartialFunction[Throwable, F[Unit]] = { (e: Throwable) =>
       val (toSender, toLogger) = e match {
         case err: UserException          => (err.getMessage, None)
@@ -48,10 +49,10 @@ object CommandExecutor {
 
     val genAsset = CommandAPICommand("gen_asset")
       .withAliases("g")
-      .executesPlayer(genExecutor(GenLootAsset.generateLootAsset))
+      .executesPlayer(genExecutor(GenLootAsset.generateLootAsset[F, G]))
     val delAsset = CommandAPICommand("del_asset")
       .withAliases("d")
-      .executesPlayer(genExecutor(DelLootAsset.deleteLootAsset(_, openedInventories)))
+      .executesPlayer(genExecutor(DelLootAsset.deleteLootAsset[F, G](_, openedInventories)))
 
     Async[F].delay {
       CommandAPICommand("lootcontainermanager")
