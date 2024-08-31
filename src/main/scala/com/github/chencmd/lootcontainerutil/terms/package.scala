@@ -70,8 +70,9 @@ package object terms {
         }
 
         def createInventorySession: F[InventorySession] = for {
-          items   <-
-            mcThread.run(asset.items.traverse(i => itemConverter.toItemStack(i.item).map((i.slot, _, i.quantity))))
+          items   <- mcThread.run {
+            asset.items.traverse(i => itemConverter.toItemStack(i.item).map((i.slot, _, i.quantity)))
+          }
           session <- InventorySession[F](ContainerManager.INVENTORY_NAME, location)(createInventory(items))
         } yield session
 
