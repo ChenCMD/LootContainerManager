@@ -55,13 +55,7 @@ object LootAssetRepositoryCache {
     override def deleteLootAssetLocationAt(location: BlockLocation): F[Unit] = for {
       asset <- askLootAssetLocationAt(location)
       asset <- asset.fold(SystemException.raise("Asset not found"))(_.pure[F])
-      _     <- Sync[F].delay { println(s"Deleting asset: $asset") }
       _     <- cacheRef.update { s =>
-        // LootAssetCache(
-        //   s.assets.updatedWith(location.toChunkLocation)(_.map(_ - location)),
-        //   s.updatedAssetLocations - location,
-        //   asset.id.fold(s.deletedAssetIds)(s.deletedAssetIds + _)
-        // )
         val uuid = asset.uuid
         val p    = asset.containers.map(_.location)
         LootAssetCache(
@@ -71,8 +65,6 @@ object LootAssetRepositoryCache {
           asset.id.fold(s.deletedAssetIds)(s.deletedAssetIds + _)
         )
       }
-      cache <- cacheRef.get
-      _     <- Sync[F].delay { println(s"caches: ${cache}") }
     } yield ()
   }
 }

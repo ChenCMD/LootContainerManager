@@ -75,7 +75,6 @@ object Config {
       val p = s"genAsset.toItem[$i]"
       for {
         typedMap <- Either.catchNonFatal(sec.asInstanceOf[Map[String, Any]]).leftMap(_.getMessage).toEitherNec
-        _        <- Either.rightNec(println(typedMap))
 
         (generateType, predicate, id, preCommands) <- (
           getValueWithType[String](typedMap, p)("generateType"),
