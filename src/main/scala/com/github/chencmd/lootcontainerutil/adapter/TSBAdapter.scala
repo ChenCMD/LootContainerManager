@@ -17,7 +17,6 @@ import cats.data.EitherT
 import cats.effect.kernel.Async
 import cats.effect.kernel.Sync
 import cats.implicits.*
-import org.typelevel.log4cats.Logger
 
 import scala.jdk.CollectionConverters.*
 import scala.util.matching.Regex
@@ -35,7 +34,6 @@ import de.tr7zw.nbtapi.NBT
 
 object TSBAdapter {
   def createInstr[F[_]: Async, G[_]: Sync](plugin: JavaPlugin, config: Config)(using
-    logger: Logger[F],
     ManageItemNBT: ManageItemNBT
   ): ItemConversionInstr[F, G] = new ItemConversionInstr[F, G] {
     def toItemIdentifier(item: ItemStack): F[ItemIdentifier] = for {
