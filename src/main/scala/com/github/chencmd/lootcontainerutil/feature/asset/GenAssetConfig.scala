@@ -16,27 +16,27 @@ enum DataSource(val path: NBTPath) {
 enum ItemGenerator(
   val predicate: Regex,
   val id: String,
-  val preCommand: List[String]
+  val preCommands: List[String]
 ) {
   case WithLootTable(
     override val predicate: Regex,
     override val id: String,
-    override val preCommand: List[String]
-  ) extends ItemGenerator(predicate, id, preCommand)
+    override val preCommands: List[String]
+  ) extends ItemGenerator(predicate, id, preCommands)
 
   case WithMCFunction(
     override val predicate: Regex,
     override val id: String,
-    override val preCommand: List[String],
+    override val preCommands: List[String],
     val functionOutput: DataSource
-  ) extends ItemGenerator(predicate, id, preCommand)
+  ) extends ItemGenerator(predicate, id, preCommands)
 
   case WithItemId(
     override val predicate: Regex,
     override val id: String,
     val tag: Option[String],
-    override val preCommand: List[String]
-  ) extends ItemGenerator(predicate, id, preCommand)
+    override val preCommands: List[String]
+  ) extends ItemGenerator(predicate, id, preCommands)
 }
 
 final case class GenAssetConfig(

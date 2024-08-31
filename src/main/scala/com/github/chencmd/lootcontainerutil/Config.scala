@@ -75,19 +75,20 @@ object Config {
       val p = s"genAsset.toItem[$i]"
       for {
         typedMap <- Either.catchNonFatal(sec.asInstanceOf[Map[String, Any]]).leftMap(_.getMessage).toEitherNec
+        _        <- Either.rightNec(println(typedMap))
 
-        (generateType, predicate, id, preCommand) <- (
+        (generateType, predicate, id, preCommands) <- (
           getValueWithType[String](typedMap, p)("generateType"),
           getValueWithType[String](typedMap, p)("predicate"),
           getValueWithType[String](typedMap, p)("id"),
           typedMap
-            .getOrElse("preCommand", List.empty)
-            .downcastOrLeftNec[List[Any]]
-            .flatMap(_.traverse(_.downcastOrLeftNec[String]))
+            .getOrElse("preCommands", java.util.ArrayList[String]())
+            .downcastOrLeftNec[java.util.ArrayList[?]]
+            .flatMap(_.asScala.toList.traverse(_.asInstanceOf[Any].downcastOrLeftNec[String]))
         ).parTupled
 
         itemGenerator <- generateType match {
-          case "loot_table" => ItemGenerator.WithLootTable(predicate.r, id, preCommand).pure[EitherNec[String, _]]
+          case "loot_table" => ItemGenerator.WithLootTable(predicate.r, id, preCommands).pure[EitherNec[String, _]]
           case "function"   => {
             val p = s"genAsset.toItem[$i].functionOutput"
             for {
@@ -102,11 +103,11 @@ object Config {
               ).parTupled
 
               dataSource <- getDataSources(fnOut, target, path)
-            } yield ItemGenerator.WithMCFunction(predicate.r, id, preCommand, dataSource)
+            } yield ItemGenerator.WithMCFunction(predicate.r, id, preCommands, dataSource)
           }
           case "give"       => {
             val tag = getValueWithType[String](typedMap, p)("tag").toOption
-            ItemGenerator.WithItemId(predicate.r, id, tag, preCommand).pure[EitherNec[String, _]]
+            ItemGenerator.WithItemId(predicate.r, id, tag, preCommands).pure[EitherNec[String, _]]
           }
           case _ => Either.leftNec(s"Invalid generateType '$generateType' in $p expected 'loot_table' or 'function'")
         }

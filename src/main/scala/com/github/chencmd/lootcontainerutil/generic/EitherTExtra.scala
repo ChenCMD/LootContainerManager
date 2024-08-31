@@ -30,7 +30,7 @@ object EitherTExtra {
     }
   }
 
-  def exitWhenF[F[_]](cond: Boolean) = new ExitWhenFOps(cond)
+  def exitWhenF[F[_]](cond: Boolean) = new ExitWhenFOps[F](cond)
 
   def exitWhenA[F[_]](cond: Boolean) = new ExitWhenAOps[F](cond)
 
