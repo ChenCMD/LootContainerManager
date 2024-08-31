@@ -9,8 +9,8 @@ import com.github.chencmd.lootcontainermanager.minecraft.bukkit.BlockLocation
 import com.github.chencmd.lootcontainermanager.terms.InventoriesStore
 import com.github.chencmd.lootcontainermanager.terms.InventoriesStore.*
 
-import cats.effect.kernel.Sync
 import cats.effect.kernel.Async
+import cats.effect.kernel.Sync
 import cats.implicits.*
 
 import scala.jdk.CollectionConverters.*

@@ -15,9 +15,13 @@ import com.github.chencmd.lootcontainermanager.nbt.definition.NBTTag
 
 import cats.data.EitherT
 import cats.effect.kernel.Async
+import cats.effect.kernel.Sync
 import cats.implicits.*
+import org.typelevel.log4cats.Logger
 
 import scala.jdk.CollectionConverters.*
+import scala.util.matching.Regex
+import scala.util.matching.Regex.Match
 
 import org.bukkit.Bukkit
 import org.bukkit.Location
@@ -28,10 +32,6 @@ import org.bukkit.loot.LootContext
 import org.bukkit.plugin.java.JavaPlugin
 
 import de.tr7zw.nbtapi.NBT
-import org.typelevel.log4cats.Logger
-import scala.util.matching.Regex
-import scala.util.matching.Regex.Match
-import cats.effect.kernel.Sync
 
 object TSBAdapter {
   def createInstr[F[_]: Async, G[_]: Sync](plugin: JavaPlugin, config: Config)(using

@@ -171,7 +171,7 @@ object NMSNBTTag {
       type NMSNBTTagConvertedByteArray <: NMSNBTTag
       override type NMSTagType = NMSNBTTagConvertedByteArray
 
-      private lazy val clazz   = ReflectionUtil
+      private lazy val clazz       = ReflectionUtil
         .getMinecraftClass("nbt.NBTTagByteArray")
         .asInstanceOf[Class[NMSTagType]]
       private lazy val constructor = clazz
@@ -187,7 +187,7 @@ object NMSNBTTag {
       type NMSNBTTagConvertedIntArray <: NMSNBTTag
       override type NMSTagType = NMSNBTTagConvertedIntArray
 
-      private lazy val clazz   = ReflectionUtil
+      private lazy val clazz       = ReflectionUtil
         .getMinecraftClass("nbt.NBTTagIntArray")
         .asInstanceOf[Class[NMSTagType]]
       private lazy val constructor = clazz
@@ -203,7 +203,7 @@ object NMSNBTTag {
       type NMSNBTTagConvertedLongArray <: NMSNBTTag
       override type NMSTagType = NMSNBTTagConvertedLongArray
 
-      private lazy val clazz   = ReflectionUtil
+      private lazy val clazz       = ReflectionUtil
         .getMinecraftClass("nbt.NBTTagLongArray")
         .asInstanceOf[Class[NMSTagType]]
       private lazy val constructor = clazz

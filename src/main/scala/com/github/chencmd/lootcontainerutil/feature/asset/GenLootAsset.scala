@@ -13,6 +13,7 @@ import com.github.chencmd.lootcontainermanager.minecraft.bukkit.Vector
 
 import cats.data.OptionT
 import cats.effect.kernel.Async
+import cats.effect.kernel.Sync
 import cats.effect.std.UUIDGen
 import cats.implicits.*
 
@@ -29,7 +30,6 @@ import org.bukkit.inventory.Inventory
 
 import com.github.tarao.record4s.%
 import com.github.tarao.record4s.unselect
-import cats.effect.kernel.Sync
 
 object GenLootAsset {
   type ContainerData = % {

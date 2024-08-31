@@ -4,10 +4,12 @@ import com.github.chencmd.lootcontainermanager.feature.asset.ContainerManager
 import com.github.chencmd.lootcontainermanager.feature.asset.ItemConversionInstr
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAsset
 import com.github.chencmd.lootcontainermanager.generic.KeyedMutex
+import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
 import com.github.chencmd.lootcontainermanager.minecraft.bukkit.BlockLocation
 import com.github.chencmd.lootcontainermanager.minecraft.bukkit.InventorySession
 
 import cats.effect.kernel.Async
+import cats.effect.kernel.Sync
 import cats.implicits.*
 
 import java.util.UUID
@@ -17,8 +19,6 @@ import org.bukkit.event.inventory.InventoryType
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
-import cats.effect.kernel.Sync
-import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
 
 package object terms {
   case class LootAssetCache(
@@ -70,7 +70,8 @@ package object terms {
         }
 
         def createInventorySession: F[InventorySession] = for {
-          items   <- mcThread.run(asset.items.traverse(i => itemConverter.toItemStack(i.item).map((i.slot, _, i.quantity))))
+          items   <-
+            mcThread.run(asset.items.traverse(i => itemConverter.toItemStack(i.item).map((i.slot, _, i.quantity))))
           session <- InventorySession[F](ContainerManager.INVENTORY_NAME, location)(createInventory(items))
         } yield session
 

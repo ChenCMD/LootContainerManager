@@ -1,7 +1,7 @@
 package com.github.chencmd.lootcontainermanager.nbt
 
-import scala.util.parsing.combinator.RegexParsers
 import scala.util.matching.Regex
+import scala.util.parsing.combinator.RegexParsers
 
 trait CommonParsers extends RegexParsers {
   protected def integer: Parser[Int] = "-?[0-9]".r ^^ (_.toInt)

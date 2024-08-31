@@ -3,13 +3,13 @@ package com.github.chencmd.lootcontainermanager.minecraft.bukkit
 import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
 
 import cats.effect.kernel.Async
+import cats.effect.kernel.Sync
 import cats.implicits.*
 import cats.~>
 import org.typelevel.log4cats.Logger
 
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
-import cats.effect.kernel.Sync
 
 object OnBukkitServerThread {
   def createInstr[F[_]: Async, G[_]: Sync](taskOwner: JavaPlugin)(unsafeRunSync: [A] => G[A] => A, coerceF: G ~> F)(

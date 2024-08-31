@@ -15,6 +15,7 @@ import cats.Align
 import cats.data.Ior
 import cats.effect.kernel.Async
 import cats.effect.kernel.Ref
+import cats.effect.kernel.Sync
 import cats.implicits.*
 import org.typelevel.log4cats.Logger
 
@@ -40,7 +41,6 @@ import com.comphenix.protocol.events.PacketContainer
 import com.comphenix.protocol.wrappers.WrappedDataValue
 import com.comphenix.protocol.wrappers.WrappedDataWatcher.Registry
 import org.joml.Vector3f
-import cats.effect.kernel.Sync
 
 object LootAssetHighlight {
   def task[F[_]: Async, G[_]: Sync](using

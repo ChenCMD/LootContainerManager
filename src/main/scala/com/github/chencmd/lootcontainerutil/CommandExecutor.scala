@@ -9,8 +9,8 @@ import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAss
 import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
 import com.github.chencmd.lootcontainermanager.terms.InventoriesStore
 
-import cats.effect.kernel.Sync
 import cats.effect.kernel.Async
+import cats.effect.kernel.Sync
 import cats.implicits.*
 import org.typelevel.log4cats.Logger
 
