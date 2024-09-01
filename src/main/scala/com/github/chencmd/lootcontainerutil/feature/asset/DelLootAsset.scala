@@ -18,9 +18,11 @@ import scala.util.chaining.*
 
 import org.bukkit.block.Container
 import org.bukkit.entity.Player
+import org.typelevel.log4cats.Logger
 
 object DelLootAsset {
   def deleteLootAsset[F[_]: Async, G[_]: Sync](p: Player, openedInventories: InventoriesStore[F])(using
+    logger: Logger[F],
     mcThread: OnMinecraftThread[F, G],
     Converter: ItemConversionInstr[F, G],
     asyncLootAssetCache: LootAssetPersistenceCacheInstr[F]

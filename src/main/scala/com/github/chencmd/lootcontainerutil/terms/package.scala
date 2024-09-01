@@ -19,6 +19,7 @@ import org.bukkit.event.inventory.InventoryType
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
+import org.typelevel.log4cats.Logger
 
 package object terms {
   case class LootAssetCache(
@@ -45,6 +46,7 @@ package object terms {
 
     extension [F[_]: Async](openedInventories: InventoriesStore[F]) {
       def getOrCreateInventory[G[_]: Sync](location: BlockLocation, asset: LootAsset)(using
+        logger: Logger[F],
         mcThread: OnMinecraftThread[F, G],
         itemConverter: ItemConversionInstr[F, G]
       ): F[InventorySession] = {
@@ -70,9 +72,10 @@ package object terms {
         }
 
         def createInventorySession: F[InventorySession] = for {
-          items   <- mcThread.run {
+          (generatedTime, items) <- Async[F].timed(mcThread.run {
             asset.items.traverse(i => itemConverter.toItemStack(i.item).map((i.slot, _, i.quantity)))
-          }
+          })
+          _                      <- logger.info(s"Generated inventory in ${generatedTime.toMillis}ms.")
           session <- InventorySession[F](ContainerManager.INVENTORY_NAME, location)(createInventory(items))
         } yield session
 
