@@ -12,6 +12,7 @@ import com.github.chencmd.lootcontainermanager.generic.extensions.CastOps.*
 import com.github.chencmd.lootcontainermanager.minecraft.ManageItemNBT
 import com.github.chencmd.lootcontainermanager.nbt.NBTTagParser
 import com.github.chencmd.lootcontainermanager.nbt.definition.NBTTag
+import com.github.chencmd.lootcontainerutil.minecraft.bukkit.VoidCommandSender
 
 import cats.data.EitherT
 import cats.effect.kernel.Async
@@ -23,6 +24,7 @@ import scala.util.matching.Regex
 import scala.util.matching.Regex.Match
 
 import org.bukkit.Bukkit
+import org.bukkit.GameRule
 import org.bukkit.Location
 import org.bukkit.NamespacedKey
 import org.bukkit.block.Container
@@ -30,6 +32,7 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.loot.LootContext
 import org.bukkit.plugin.java.JavaPlugin
 
+import com.github.tarao.record4s.ArrayRecord
 import de.tr7zw.nbtapi.NBT
 
 object TSBAdapter {
@@ -68,7 +71,7 @@ object TSBAdapter {
 
       item <- generator match {
         case g: ItemGenerator.WithItemId => for {
-            res <- runPreCommands(preCommands).value
+            res <- muteCommandLogWith { runPreCommands(preCommands) }.value
             _   <- res.fold(Sync[G].raiseError, _ => Sync[G].unit)
 
             tag <- g.tag.map(interp).filter(_.nonEmpty).traverse { t =>
@@ -88,7 +91,7 @@ object TSBAdapter {
           } yield item
 
         case g: ItemGenerator.WithLootTable => for {
-            res <- runPreCommands(preCommands).value
+            res <- muteCommandLogWith { runPreCommands(preCommands) }.value
             _   <- res.fold(Sync[G].raiseError, _ => Sync[G].unit)
 
             lt <- Sync[G].delay(Bukkit.getServer.getLootTable(NamespacedKey.fromString(id)))
@@ -104,11 +107,12 @@ object TSBAdapter {
         case g: ItemGenerator.WithMCFunction => for {
             item <- {
               val program = for {
-                _ <- runPreCommands(g.preCommands.map(interp))
-                _ <- runCommand(s"execute as @p run function $id")(
-                  ConfigurationException(s"Failed to run function g.${id}.")
-                )
-
+                _ <- muteCommandLogWith {
+                  runPreCommands(g.preCommands.map(interp))
+                    >> runCommand(s"execute as @p run function $id")(
+                      ConfigurationException(s"Failed to run function g.${id}.")
+                    )
+                }
                 fnOut = g.functionOutput
 
                 nbtData <- generateItemCompoundFromDataSource(fnOut)
@@ -162,6 +166,29 @@ object TSBAdapter {
       str3
     }
 
+    def muteCommandLogWith[E <: Throwable](f: => EitherT[G, E, Unit]): EitherT[G, Throwable, Unit] = for {
+      worlds           <- EitherT.liftF(Sync[G].delay(Bukkit.getWorlds.asScala.toList))
+      beforeRuleValues <- EitherT.liftF(worlds.traverse { w =>
+        for {
+          scf <- Sync[G].delay(w.getGameRuleValue(GameRule.SEND_COMMAND_FEEDBACK))
+          lac <- Sync[G].delay(w.getGameRuleValue(GameRule.LOG_ADMIN_COMMANDS))
+        } yield w -> ArrayRecord(scf = scf, lac = lac)
+      })
+      _                <- EitherT.liftF(beforeRuleValues.traverse { (w, v) =>
+        for {
+          _ <- Sync[G].whenA(v.scf)(Sync[G].delay(w.setGameRule(GameRule.SEND_COMMAND_FEEDBACK, false)))
+          _ <- Sync[G].whenA(v.lac)(Sync[G].delay(w.setGameRule(GameRule.LOG_ADMIN_COMMANDS, false)))
+        } yield ()
+      })
+      _                <- f.leftWiden
+      _                <- EitherT.liftF(beforeRuleValues.traverse_ { (w, v) =>
+        for {
+          _ <- Sync[G].delay(w.setGameRule(GameRule.SEND_COMMAND_FEEDBACK, v.scf))
+          _ <- Sync[G].delay(w.setGameRule(GameRule.LOG_ADMIN_COMMANDS, v.lac))
+        } yield ()
+      })
+    } yield ()
+
     def runPreCommands(commands: List[String]): EitherT[G, ConfigurationException, Unit] = {
       commands.traverse_ { cmd =>
         runCommand(cmd)(ConfigurationException(s"Failed to run preCommand: $cmd."))
@@ -169,7 +196,10 @@ object TSBAdapter {
     }
 
     def runCommand[E](cmd: String)(handleError: => E): EitherT[G, E, Unit] = {
-      val res = Sync[G].delay(Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), cmd))
+      val res = for {
+        voidSender <- VoidCommandSender.createVoidSender[G]
+        res        <- Sync[G].delay(Bukkit.getServer().dispatchCommand(voidSender, cmd))
+      } yield res
       EitherTExtra.exitWhenMA(res)(handleError)
     }
   }

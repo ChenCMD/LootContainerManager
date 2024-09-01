@@ -11,6 +11,7 @@ import com.github.chencmd.lootcontainermanager.minecraft.bukkit.InventorySession
 import cats.effect.kernel.Async
 import cats.effect.kernel.Sync
 import cats.implicits.*
+import org.typelevel.log4cats.Logger
 
 import java.util.UUID
 
@@ -19,7 +20,6 @@ import org.bukkit.event.inventory.InventoryType
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
-import org.typelevel.log4cats.Logger
 
 package object terms {
   case class LootAssetCache(

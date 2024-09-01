@@ -12,13 +12,13 @@ import com.github.chencmd.lootcontainermanager.terms.InventoriesStore.*
 import cats.effect.kernel.Async
 import cats.effect.kernel.Sync
 import cats.implicits.*
+import org.typelevel.log4cats.Logger
 
 import scala.jdk.CollectionConverters.*
 import scala.util.chaining.*
 
 import org.bukkit.block.Container
 import org.bukkit.entity.Player
-import org.typelevel.log4cats.Logger
 
 object DelLootAsset {
   def deleteLootAsset[F[_]: Async, G[_]: Sync](p: Player, openedInventories: InventoriesStore[F])(using
