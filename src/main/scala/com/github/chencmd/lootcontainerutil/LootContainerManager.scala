@@ -158,8 +158,6 @@ class LootContainerManager extends JavaPlugin {
     cache        = LootAssetCache(assetsMap, assetMapping, Set.empty, Set.empty)
     _ <- lootAssetLocationCacheRef.set(cache)
 
-    _ <- logger.info("Assets retrieved.")
-    _ <- logger.info("Assets:")
-    _ <- assets.traverse_(asset => logger.info(asset.toString))
+    _ <- logger.info(s"Assets retrieved. retrieved: ${assets.size}")
   } yield ()
 }
