@@ -33,7 +33,10 @@ import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.Inventory
 
-class ContainerManager[F[_]: Async, G[_]: Sync] private (private val openedInventories: InventoriesStore[F])(using
+class ContainerManager[F[_]: Async, G[_]: Sync] private (
+  private val openedInventories: InventoriesStore[F],
+  private val debug: Boolean
+)(using
   logger: Logger[F],
   mcThread: OnMinecraftThread[F, G],
   asyncLootAssetCache: LootAssetPersistenceCacheInstr[F],
@@ -87,7 +90,7 @@ class ContainerManager[F[_]: Async, G[_]: Sync] private (private val openedInven
     def effect(assetLocation: BlockLocation): F[Unit] = for {
       asset <- asyncLootAssetCache.askLootAssetLocationAt(assetLocation)
       asset <- asset.fold(SystemException.raise[F]("Asset not found"))(_.pure[F])
-      inv   <- openedInventories.getOrCreateInventory[G](assetLocation, asset)
+      inv   <- openedInventories.getOrCreateInventory[G](assetLocation, asset, debug)
       _     <- mcThread.run(Sync[G].delay(p.openInventory(inv.getInventory())))
     } yield ()
 
@@ -113,7 +116,7 @@ class ContainerManager[F[_]: Async, G[_]: Sync] private (private val openedInven
 
           _ <- Async[F].whenA(hasChanged)(for {
             _ <- asyncLootAssetCache.updateLootAsset(asset.copy(items = items))
-            _ <- logger.info(s"Asset modified at ${holder.location.toXYZString}")
+            _ <- Async[F].whenA(debug)(logger.info(s"Asset modified at ${holder.location.toXYZString}"))
           } yield ())
         } yield (None, ())
       }
@@ -154,13 +157,13 @@ class ContainerManager[F[_]: Async, G[_]: Sync] private (private val openedInven
 object ContainerManager {
   val INVENTORY_NAME = "LOOT_ASSET_CONTAINER"
 
-  def apply[F[_]: Async, G[_]: Sync](openedInventories: InventoriesStore[F])(using
+  def apply[F[_]: Async, G[_]: Sync](openedInventories: InventoriesStore[F], debug: Boolean)(using
     logger: Logger[F],
     mcThread: OnMinecraftThread[F, G],
     syncLootAssetCache: LootAssetPersistenceCacheInstr[G],
     asyncLootAssetCache: LootAssetPersistenceCacheInstr[F],
     itemConverter: ItemConversionInstr[F, G]
   ): F[ContainerManager[F, G]] = Async[F].delay {
-    new ContainerManager[F, G](openedInventories)
+    new ContainerManager[F, G](openedInventories, debug)
   }
 }

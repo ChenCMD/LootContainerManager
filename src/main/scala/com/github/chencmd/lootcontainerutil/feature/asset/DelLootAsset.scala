@@ -21,7 +21,7 @@ import org.bukkit.block.Container
 import org.bukkit.entity.Player
 
 object DelLootAsset {
-  def deleteLootAsset[F[_]: Async, G[_]: Sync](p: Player, openedInventories: InventoriesStore[F])(using
+  def deleteLootAsset[F[_]: Async, G[_]: Sync](p: Player, openedInventories: InventoriesStore[F], debug: Boolean)(using
     logger: Logger[F],
     mcThread: OnMinecraftThread[F, G],
     Converter: ItemConversionInstr[F, G],
@@ -42,7 +42,7 @@ object DelLootAsset {
     asset <- asyncLootAssetCache.askLootAssetLocationAt(assetLocation)
     asset <- asset.fold(UserException.raise[F]("Asset not found"))(_.pure[F])
 
-    assetSession <- openedInventories.getOrCreateInventory[G](assetLocation, asset)
+    assetSession <- openedInventories.getOrCreateInventory[G](assetLocation, asset, debug)
     assetInv = assetSession.getInventory()
 
     _ <- Async[F].delay { assetInv.getViewers().asScala.foreach(_.closeInventory()) }

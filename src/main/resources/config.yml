@@ -32,3 +32,4 @@ genAsset:
       tag: "%%tag%%"
 db:
   filePath: "sqlite.db"
+debug: false

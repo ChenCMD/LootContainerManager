@@ -26,7 +26,7 @@ import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.plugin.java.JavaPlugin
 
 object Config {
-  private def apply(genAsset: GenAssetConfig, db: DBConfig): Config = new Config(genAsset, db)
+  private def apply(genAsset: GenAssetConfig, db: DBConfig, debug: Boolean): Config = new Config(genAsset, db, debug)
 
   def tryRead[F[_]: Async](plugin: JavaPlugin): F[Config] = for {
     _          <- Async[F].delay {
@@ -37,7 +37,8 @@ object Config {
     dataFolder <- Async[F].delay(plugin.getDataFolder.toPath)
     genAssetConfig = getGenAssetConfig(config)
     dbConfig       = getDBConfig(config, dataFolder)
-    config <- (genAssetConfig, dbConfig)
+    debug          = config.getBoolean("debug", false).rightNec
+    config <- (genAssetConfig, dbConfig, debug)
       .parMapN(Config.apply)
       .fold(s => ConfigurationException.raise(s.mkString_("\n")), _.pure[F])
   } yield config
@@ -152,4 +153,4 @@ object Config {
   } yield value
 }
 
-case class Config private (genAsset: GenAssetConfig, db: DBConfig)
+case class Config private (genAsset: GenAssetConfig, db: DBConfig, debug: Boolean)

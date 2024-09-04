@@ -24,7 +24,8 @@ import dev.jorel.commandapi.executors.PlayerCommandExecutor
 object CommandExecutor {
   def register[F[_]: Async, G[_]: Sync](
     openedInventories: InventoriesStore[F],
-    unsafeRunAsync: [U1] => (fa: F[U1]) => Unit
+    unsafeRunAsync: [U1] => (fa: F[U1]) => Unit,
+    debug: Boolean
   )(using
     logger: Logger[F],
     mcThread: OnMinecraftThread[F, G],
@@ -52,7 +53,7 @@ object CommandExecutor {
       .executesPlayer(genExecutor(GenLootAsset.generateLootAsset[F, G]))
     val delAsset = CommandAPICommand("del_asset")
       .withAliases("d")
-      .executesPlayer(genExecutor(DelLootAsset.deleteLootAsset[F, G](_, openedInventories)))
+      .executesPlayer(genExecutor(DelLootAsset.deleteLootAsset[F, G](_, openedInventories, debug)))
 
     Async[F].delay {
       CommandAPICommand("lootcontainermanager")

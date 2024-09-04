@@ -45,7 +45,7 @@ package object terms {
     def empty[F[_]: Async]: F[InventoriesStore[F]] = KeyedMutex.empty[F, BlockLocation, InventorySession]
 
     extension [F[_]: Async](openedInventories: InventoriesStore[F]) {
-      def getOrCreateInventory[G[_]: Sync](location: BlockLocation, asset: LootAsset)(using
+      def getOrCreateInventory[G[_]: Sync](location: BlockLocation, asset: LootAsset, debug: Boolean)(using
         logger: Logger[F],
         mcThread: OnMinecraftThread[F, G],
         itemConverter: ItemConversionInstr[F, G]
@@ -75,7 +75,7 @@ package object terms {
           (generatedTime, items) <- Async[F].timed(mcThread.run {
             asset.items.traverse(i => itemConverter.toItemStack(i.item).map((i.slot, _, i.quantity)))
           })
-          _                      <- logger.info(s"Generated inventory in ${generatedTime.toMillis}ms.")
+          _       <- Async[F].whenA(debug)(logger.info(s"Generated inventory in ${generatedTime.toMillis}ms."))
           session <- InventorySession[F](ContainerManager.INVENTORY_NAME, location)(createInventory(items))
         } yield session
 

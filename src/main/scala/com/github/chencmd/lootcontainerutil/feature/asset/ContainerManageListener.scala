@@ -42,7 +42,8 @@ class ContainerManageListener[F[_]: Async, G[_]: Sync] private (
 
 object ContainerManageListener {
   def apply[F[_]: Async, G[_]: Sync](openedInventories: InventoriesStore[F])(
-    unsafeRunSyncContinuation: [A] => SyncContinuation[F, G, A] => A
+    unsafeRunSyncContinuation: [A] => SyncContinuation[F, G, A] => A,
+    debug: Boolean
   )(using
     logger: Logger[F],
     mcThread: OnMinecraftThread[F, G],
@@ -51,7 +52,7 @@ object ContainerManageListener {
     Converter: ItemConversionInstr[F, G],
     LAP: LootAssetPersistenceInstr[F]
   ): F[ContainerManageListener[F, G]] = for {
-    cm  <- ContainerManager[F, G](openedInventories)
+    cm  <- ContainerManager[F, G](openedInventories, debug)
     cml <- Async[F].delay(new ContainerManageListener[F, G](cm, unsafeRunSyncContinuation))
   } yield cml
 }

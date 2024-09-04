@@ -67,7 +67,7 @@ class LootContainerManager extends JavaPlugin {
       given ManageItemNBT           = ManageBukkitItemNBT.createInstr
 
       cfg <- Config.tryRead[F](this)
-      transactor     = SQLite.createTransactor[F](cfg.db)
+      transactor     = SQLite.createTransactor[F](cfg.db, cfg.debug)
       lootAssetRepos = LootAssetRepository.createInstr[F](transactor)
 
       given LootAssetPersistenceInstr[F] = lootAssetRepos
@@ -80,20 +80,23 @@ class LootContainerManager extends JavaPlugin {
 
       openedInventories <- InventoriesStore.empty[F]
       pal               <- ProtectActionListener[F, G](unsafeRunSyncContinuation)
-      cml               <- ContainerManageListener[F, G](openedInventories)(unsafeRunSyncContinuation)
+      cml               <- ContainerManageListener[F, G](openedInventories)(unsafeRunSyncContinuation, cfg.debug)
       _                 <- Async[F].delay(Bukkit.getPluginManager.registerEvents(pal, this))
       _                 <- Async[F].delay(Bukkit.getPluginManager.registerEvents(cml, this))
 
       _ <- Async[F].delay(CommandAPI.onEnable())
-      _ <- CommandExecutor.register[F, G](openedInventories, unsafeRunAsync)
+      _ <- CommandExecutor.register[F, G](openedInventories, unsafeRunAsync, cfg.debug)
 
       _          <- lootAssetRepos.initialize()
-      _          <- refreshCache(asyncLootAssetLocationCacheRef)
+      _          <- refreshCache(asyncLootAssetLocationCacheRef, cfg.debug)
       taskFiber1 <- {
         val program = for {
           cache <- asyncLootAssetLocationCacheRef.get
           _     <- Async[F].whenA(cache.updatedAssetLocations.nonEmpty || cache.deletedAssetIds.nonEmpty) {
-            saveAssetFromCache(asyncLootAssetLocationCacheRef) >> refreshCache(asyncLootAssetLocationCacheRef)
+            saveAssetFromCache(asyncLootAssetLocationCacheRef, cfg.debug) >> refreshCache(
+              asyncLootAssetLocationCacheRef,
+              cfg.debug
+            )
           }
         } yield ()
         (Async[F].sleep(30.seconds) >> program).foreverM.start
@@ -104,7 +107,7 @@ class LootContainerManager extends JavaPlugin {
       _ <- finalizerRef.set(Some(for {
         _ <- taskFiber1.cancel
         _ <- taskFiber2.cancel
-        _ <- saveAssetFromCache(asyncLootAssetLocationCacheRef)
+        _ <- saveAssetFromCache(asyncLootAssetLocationCacheRef, cfg.debug)
 
         _ <- Async[F].delay(CommandAPI.onDisable())
         _ <- logger.info("LootContainerManager disabled.")
@@ -128,12 +131,12 @@ class LootContainerManager extends JavaPlugin {
     finalizerRef.get.flatMap(_.orEmpty).unsafeRunSync()
   }
 
-  def saveAssetFromCache(lootAssetLocationCacheRef: Ref[F, LootAssetCache])(using
+  def saveAssetFromCache(lootAssetLocationCacheRef: Ref[F, LootAssetCache], debug: Boolean)(using
     logger: Logger[F],
     lootAssetRepos: LootAssetPersistenceInstr[F]
   ): F[Unit] = for {
     cache <- lootAssetLocationCacheRef.get
-    _     <- logger.info("Updating assets...")
+    _     <- Async[F].whenA(debug)(logger.info("Updating assets..."))
     updatingAssets = for {
       uuid <- cache.updatedAssetLocations.toList
       b    <- cache.mapping.get(uuid).toList
@@ -144,11 +147,11 @@ class LootContainerManager extends JavaPlugin {
     _ <- deletedAssets.traverse_(lootAssetRepos.deleteLootAssets)
   } yield ()
 
-  def refreshCache[F[_]: Async](lootAssetLocationCacheRef: Ref[F, LootAssetCache])(using
+  def refreshCache[F[_]: Async](lootAssetLocationCacheRef: Ref[F, LootAssetCache], debug: Boolean)(using
     logger: Logger[F],
     lootAssetRepos: LootAssetPersistenceInstr[F]
   ): F[Unit] = for {
-    _      <- logger.info("Retrieving assets...")
+    _      <- Async[F].whenA(debug)(logger.info("Retrieving assets..."))
     assets <- lootAssetRepos.getAllLootAssets()
     assetsMap    = assets
       .flatMap(a => a.containers.map(_.location -> a.uuid))
