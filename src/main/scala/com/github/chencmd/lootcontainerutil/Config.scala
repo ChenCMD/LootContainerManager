@@ -37,8 +37,8 @@ object Config {
     config     <- Async[F].delay(plugin.getConfig)
     dataFolder <- Async[F].delay(plugin.getDataFolder.toPath)
     assetConfig = getAssetConfig(config)
-    dbConfig       = getDBConfig(config, dataFolder)
-    debug          = config.getBoolean("debug", false).rightNec
+    dbConfig    = getDBConfig(config, dataFolder)
+    debug       = config.getBoolean("debug", false).rightNec
     config <- (assetConfig, dbConfig, debug)
       .parMapN(Config.apply)
       .fold(s => ConfigurationException.raise(s.mkString_("\n")), _.pure[F])
@@ -118,7 +118,8 @@ object Config {
     for {
       asset       <- Option(config.getConfigurationSection("asset")).toRightNec("missing key 'asset'")
       AssetConfig <- (
-        asset.getLong("highlightRefreshInterval", 3)
+        asset
+          .getLong("highlightRefreshInterval", 3)
           .pipe(_.seconds)
           .rightNec,
         asset

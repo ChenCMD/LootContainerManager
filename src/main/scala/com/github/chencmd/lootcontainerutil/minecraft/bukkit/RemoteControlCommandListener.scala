@@ -25,7 +25,7 @@ object RemoteControlCommandListener {
     .asInstanceOf[Constructor[RemoteControlCommandListener]]
   def constructor[F[_]: Sync] = Sync[F].delay(_constructor)
 
-  lazy val _remoteConsoleField = ReflectionUtil.getField(_clazz, "remoteConsole")
+  lazy val _remoteConsoleField       = ReflectionUtil.getField(_clazz, "remoteConsole")
   def remoteConsoleField[F[_]: Sync] = Sync[F].delay(_remoteConsoleField)
 
   def apply[F[_]: Sync](s: NMSMinecraftServer, sa: SocketAddress): F[RemoteControlCommandListener] =
