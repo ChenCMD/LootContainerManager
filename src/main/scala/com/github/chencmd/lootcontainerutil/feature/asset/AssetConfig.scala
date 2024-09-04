@@ -4,6 +4,7 @@ import com.github.chencmd.lootcontainermanager.nbt.definition.NBTPath
 import com.github.chencmd.lootcontainermanager.nbt.definition.NBTPathInterpolation
 
 import scala.util.matching.Regex
+import scala.concurrent.duration.FiniteDuration
 
 type ItemMapper = (NBTPath, NBTPathInterpolation)
 
@@ -40,6 +41,7 @@ enum ItemGenerator(
 }
 
 final case class AssetConfig(
+  highlightRefreshInterval: FiniteDuration,
   toItemIdentifier: List[ItemMapper],
   toItem: List[ItemGenerator]
 )

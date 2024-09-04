@@ -1,4 +1,5 @@
 asset:
+  highlightRefreshInterval: 3
   toItemIdentifier:
     - predicate: "tag.TSB.ID"
       to: "artifact:%%tag.TSB.ID%%"

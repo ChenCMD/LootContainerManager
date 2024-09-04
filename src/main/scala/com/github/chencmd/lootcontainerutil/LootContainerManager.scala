@@ -100,7 +100,7 @@ class LootContainerManager extends JavaPlugin {
         (Async[F].sleep(cfg.db.attemptSaveIntervalSeconds) >> program).foreverM.start
       }
 
-      taskFiber2 <- LootAssetHighlight.task[F, G].start
+      taskFiber2 <- LootAssetHighlight.task[F, G](cfg.asset.highlightRefreshInterval).start
 
       _ <- finalizerRef.set(Some(for {
         _ <- taskFiber1.cancel

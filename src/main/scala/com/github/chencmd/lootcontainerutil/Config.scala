@@ -118,6 +118,9 @@ object Config {
     for {
       asset       <- Option(config.getConfigurationSection("asset")).toRightNec("missing key 'asset'")
       AssetConfig <- (
+        asset.getLong("highlightRefreshInterval", 3)
+          .pipe(_.seconds)
+          .rightNec,
         asset
           .getMapList("toItemIdentifier")
           .asScala

@@ -19,7 +19,6 @@ import cats.effect.kernel.Sync
 import cats.implicits.*
 import org.typelevel.log4cats.Logger
 
-import scala.concurrent.duration.*
 import scala.jdk.CollectionConverters.*
 import scala.util.Random
 import scala.util.chaining.*
@@ -41,16 +40,17 @@ import com.comphenix.protocol.events.PacketContainer
 import com.comphenix.protocol.wrappers.WrappedDataValue
 import com.comphenix.protocol.wrappers.WrappedDataWatcher.Registry
 import org.joml.Vector3f
+import scala.concurrent.duration.FiniteDuration
 
 object LootAssetHighlight {
-  def task[F[_]: Async, G[_]: Sync](using
+  def task[F[_]: Async, G[_]: Sync](refreshInterval: FiniteDuration)(using
     logger: Logger[F],
     lootAssetCache: LootAssetPersistenceCacheInstr[F],
     mcThread: OnMinecraftThread[F, G]
   ): F[Unit] = for {
     entityIds <- Ref.of[F, Map[UUID, Map[Position, Int]]](Map.empty)
     _         <- Async[F].delay(logger.info("Starting highlight task"))
-    _         <- (highlight[F, G](entityIds) >> Async[F].sleep(3.seconds)).foreverM
+    _         <- (highlight[F, G](entityIds) >> Async[F].sleep(refreshInterval)).foreverM
   } yield ()
 
   val CHESTS = Set(
