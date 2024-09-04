@@ -32,4 +32,5 @@ genAsset:
       tag: "%%tag%%"
 db:
   filePath: "sqlite.db"
+  attemptSaveIntervalSeconds: 30
 debug: false

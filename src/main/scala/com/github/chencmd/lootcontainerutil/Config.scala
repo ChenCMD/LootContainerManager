@@ -18,8 +18,9 @@ import cats.implicits.*
 import scala.jdk.CollectionConverters.*
 import scala.reflect.ClassTag
 import scala.reflect.TypeTest
+import scala.concurrent.duration.*
+import scala.util.chaining.*
 
-import java.io.File
 import java.nio.file.Path
 
 import org.bukkit.configuration.file.FileConfiguration
@@ -136,14 +137,17 @@ object Config {
   }
 
   def getDBConfig(config: FileConfiguration, dataFolder: Path): EitherNec[String, DBConfig] = for {
-    db       <- Option(config.getConfigurationSection("db")).toRightNec("missing key 'db'")
-    dbConfig <- Option(db.getString("filePath"))
+    db                         <- Option(config.getConfigurationSection("db")).toRightNec("missing key 'db'")
+    filePath                   <- Option(db.getString("filePath"))
       .toRight("missing key 'db.filePath'")
       .filterOrElse(_.endsWith(".db"), "db.filePath must have extension '.db'")
       .map(dataFolder.resolve(_).toFile)
-      .map(DBConfig.apply)
       .toEitherNec
-  } yield dbConfig
+    attemptSaveIntervalSeconds <- db
+      .getLong("attemptSaveIntervalSeconds", 30)
+      .pipe(_.seconds)
+      .rightNec
+  } yield DBConfig(filePath, attemptSaveIntervalSeconds)
 
   def getValueWithType[A: ClassTag: TypeTest[Any, _]](map: Map[String, Any], location: String)(
     key: String

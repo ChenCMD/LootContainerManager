@@ -31,8 +31,6 @@ import cats.~>
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
-import scala.concurrent.duration.*
-
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
 
@@ -99,7 +97,7 @@ class LootContainerManager extends JavaPlugin {
             )
           }
         } yield ()
-        (Async[F].sleep(30.seconds) >> program).foreverM.start
+        (Async[F].sleep(cfg.db.attemptSaveIntervalSeconds) >> program).foreverM.start
       }
 
       taskFiber2 <- LootAssetHighlight.task[F, G].start
