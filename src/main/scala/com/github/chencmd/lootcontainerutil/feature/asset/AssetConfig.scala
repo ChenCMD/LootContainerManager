@@ -39,7 +39,7 @@ enum ItemGenerator(
   ) extends ItemGenerator(predicate, id, preCommands)
 }
 
-final case class GenAssetConfig(
+final case class AssetConfig(
   toItemIdentifier: List[ItemMapper],
   toItem: List[ItemGenerator]
 )

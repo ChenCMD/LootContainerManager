@@ -50,7 +50,7 @@ object TSBAdapter {
         )
       )
 
-      (_, usingInterpolation) <- config.genAsset.toItemIdentifier
+      (_, usingInterpolation) <- config.asset.toItemIdentifier
         .find(_._1.isAccessible(itemTag))
         .fold(ConfigurationException.raise[F](s"A matched itemMapper was not found. data: ${tag.toSNBT}"))(_.pure[F])
 
@@ -60,7 +60,7 @@ object TSBAdapter {
     } yield interpolatedTag
 
     def toItemStack(item: ItemIdentifier): G[ItemStack] = for {
-      generator <- config.genAsset.toItem
+      generator <- config.asset.toItem
         .find(_.predicate.matches(item))
         .fold(ConfigurationException.raise[G](s"ItemIdentifier did not match any itemMapper. item: $item"))(_.pure[G])
 

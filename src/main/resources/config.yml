@@ -1,4 +1,4 @@
-genAsset:
+asset:
   toItemIdentifier:
     - predicate: "tag.TSB.ID"
       to: "artifact:%%tag.TSB.ID%%"
