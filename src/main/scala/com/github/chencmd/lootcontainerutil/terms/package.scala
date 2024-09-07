@@ -59,6 +59,7 @@ package object terms {
             } else {
               val invType = asset.containers.head.blockId.drop("minecraft:".length) match {
                 case "brewing_stand" => InventoryType.BREWING
+                case i if i.endsWith("shulker_box") => InventoryType.SHULKER_BOX
                 case id              => InventoryType.valueOf(id.toUpperCase())
               }
               asset.name.fold(server.createInventory(holder, invType))(server.createInventory(holder, invType, _))
