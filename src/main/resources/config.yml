@@ -12,7 +12,7 @@ asset:
     - predicate: "{}"
       to: "%%id%%%%tag%%"
   toItem:
-    - predicate: "^artifact:(?<id>\\d)$"
+    - predicate: "^artifact:(?<id>\\d+)$"
       generateType: "function"
       id: "api:artifact/box/from_id"
       functionOutput:
