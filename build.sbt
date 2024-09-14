@@ -20,6 +20,7 @@ libraryDependencies ++= Seq(
   "org.tpolecat"           %% "doobie-core"              % doobieVersion,
   "org.tpolecat"           %% "doobie-specs2"            % doobieVersion,
   "org.xerial"              % "sqlite-jdbc"              % "3.45.1.0",
+  "org.flywaydb"            % "flyway-core"              % "10.17.3",
   "org.scala-lang.modules" %% "scala-parser-combinators" % "2.3.0",
   "com.github.tarao"       %% "record4s"                 % "0.13.0",
   "org.joml"                % "joml"                     % "1.10.8",
@@ -54,9 +55,12 @@ assembly / assemblyExcludedJars  := {
 }
 
 assembly / assemblyMergeStrategy := {
-  case PathList("META-INF", "services", "java.sql.Driver") => MergeStrategy.concat
-  case PathList("META-INF", xs @ _*)                       => MergeStrategy.discard
-  case x                                                   => (ThisBuild / assemblyMergeStrategy).value(x)
+  case PathList("META-INF", "services", "java.sql.Driver")                        => MergeStrategy.concat
+  case PathList("META-INF", "versions", "9", "module-info.class")                 => MergeStrategy.first
+  case PathList("META-INF", "services", "org.flywaydb.core.extensibility.Plugin") => MergeStrategy.first
+  case PathList("META-INF", xs @ _*)                                              => MergeStrategy.discard
+  case "module-info.class"                                                        => MergeStrategy.first
+  case x => (ThisBuild / assemblyMergeStrategy).value(x)
 }
 
 assembly / assemblyOutputPath    := new File(baseDirectory.value, "dist/LootContainerManager.jar")
