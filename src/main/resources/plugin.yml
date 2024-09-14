@@ -1,5 +1,5 @@
 name: 'LootContainerManager'
-version: '1.1.0'
+version: '1.1.1'
 main: 'com.github.chencmd.lootcontainermanager.LootContainerManager'
 api-version: '1.20'
 author: 'ChenCMD'
