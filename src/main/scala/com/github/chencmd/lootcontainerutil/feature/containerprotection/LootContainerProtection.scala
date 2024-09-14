@@ -1,9 +1,9 @@
 package com.github.chencmd.lootcontainermanager.feature.containerprotection
 
 import com.github.chencmd.lootcontainermanager.Prefix
-import com.github.chencmd.lootcontainermanager.generic.OptionTExtra
 import com.github.chencmd.lootcontainermanager.generic.SyncContinuation
 import com.github.chencmd.lootcontainermanager.generic.extensions.CastExt.downcastOrNone
+import com.github.chencmd.lootcontainermanager.generic.extra.OptionTExtra
 import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
 
 import cats.data.OptionT

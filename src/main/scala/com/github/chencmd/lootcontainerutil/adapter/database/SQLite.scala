@@ -1,6 +1,6 @@
 package com.github.chencmd.lootcontainermanager.adapter.database
 
-import com.github.chencmd.lootcontainermanager.generic.ThreadExtra
+import com.github.chencmd.lootcontainermanager.generic.extra.ThreadExtra
 
 import cats.effect.kernel.Async
 

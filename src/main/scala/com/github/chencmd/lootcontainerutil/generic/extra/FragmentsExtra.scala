@@ -1,4 +1,4 @@
-package com.github.chencmd.lootcontainermanager.generic
+package com.github.chencmd.lootcontainermanager.generic.extra
 
 import cats.Reducible
 import cats.implicits.*

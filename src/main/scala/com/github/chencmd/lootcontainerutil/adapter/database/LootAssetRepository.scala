@@ -5,8 +5,8 @@ import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAss
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetContainer
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetItem
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetPersistenceInstr
-import com.github.chencmd.lootcontainermanager.generic.FragmentsExtra
 import com.github.chencmd.lootcontainermanager.generic.extensions.CastExt.*
+import com.github.chencmd.lootcontainermanager.generic.extra.FragmentsExtra
 import com.github.chencmd.lootcontainermanager.generic.instances.MetaInstances.given
 import com.github.chencmd.lootcontainermanager.minecraft.bukkit.BlockLocation
 
