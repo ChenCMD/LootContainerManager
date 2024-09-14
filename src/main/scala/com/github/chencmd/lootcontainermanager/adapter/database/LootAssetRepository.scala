@@ -186,7 +186,7 @@ object LootAssetRepository {
         lootAsset   <- queryResult.groupMap(_._1)(v => (v._2, v._3)).toList.traverse {
           case (repr, data) => {
             val (containers, items) = data.separate
-            reprToLootAsset(repr, containers.flatten.distinct, items.flatten)
+            reprToLootAsset(repr, containers.flatten.distinctBy(_.location), items.flatten.distinctBy(_.slot))
           }
         }
       } yield lootAsset
