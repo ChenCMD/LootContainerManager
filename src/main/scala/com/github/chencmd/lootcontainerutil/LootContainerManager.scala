@@ -12,6 +12,7 @@ import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAss
 import com.github.chencmd.lootcontainermanager.feature.containerprotection.ProtectActionListener
 import com.github.chencmd.lootcontainermanager.generic.MapExtra.*
 import com.github.chencmd.lootcontainermanager.generic.SyncContinuation
+import com.github.chencmd.lootcontainermanager.generic.extensions.IOExt.*
 import com.github.chencmd.lootcontainermanager.minecraft.ManageItemNBT
 import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
 import com.github.chencmd.lootcontainermanager.minecraft.bukkit.ManageBukkitItemNBT
@@ -126,7 +127,7 @@ class LootContainerManager extends JavaPlugin {
   }
 
   override def onDisable() = {
-    finalizerRef.get.flatMap(_.orEmpty).unsafeRunSync()
+    finalizerRef.get.flatMap(_.orEmpty).unsafeRunHereSync()
   }
 
   def saveAssetFromCache(lootAssetLocationCacheRef: Ref[F, LootAssetCache], debug: Boolean)(using
