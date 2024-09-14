@@ -25,7 +25,7 @@ object DelLootAsset {
   def deleteLootAsset[F[_]: Async, G[_]: Sync](p: Player, openedInventories: InventoriesStore[F], debug: Boolean)(using
     logger: Logger[F],
     mcThread: OnMinecraftThread[F, G],
-    Converter: ItemConversionInstr[F, G],
+    itemConverter: ItemConversionInstr[F, G],
     asyncLootAssetCache: LootAssetPersistenceCacheInstr[F]
   ): F[Unit] = for {
     dataOrNone                <- mcThread.run(for {

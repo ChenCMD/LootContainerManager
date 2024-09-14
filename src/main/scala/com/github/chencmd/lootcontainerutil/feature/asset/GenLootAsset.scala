@@ -47,7 +47,7 @@ object GenLootAsset {
 
   def generateLootAsset[F[_]: Async, G[_]: Sync](p: Player)(using
     mcThread: OnMinecraftThread[F, G],
-    Converter: ItemConversionInstr[F, G],
+    itemConverter: ItemConversionInstr[F, G],
     asyncLootAssetCache: LootAssetPersistenceCacheInstr[F]
   ): F[Unit] = for {
     // プレイヤーが見ているコンテナの情報を取得する

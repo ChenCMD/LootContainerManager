@@ -5,8 +5,6 @@ import cats.implicits.*
 
 object OptionExtra {
   extension [A](optionA: Option[A]) {
-    def getOrElseEffectfully[F[_]: Applicative](fa: F[A]): F[A] = {
-      optionA.fold(fa)(_.pure[F])
-    }
+    def getOrElseEffectfully[F[_]: Applicative](fa: F[A]): F[A] = optionA.fold(fa)(_.pure[F])
   }
 }
