@@ -10,7 +10,7 @@ import com.github.chencmd.lootcontainermanager.feature.asset.LootAssetHighlight
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetPersistenceCacheInstr
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetPersistenceInstr
 import com.github.chencmd.lootcontainermanager.feature.containerprotection.ProtectActionListener
-import com.github.chencmd.lootcontainermanager.generic.MapExtra.*
+import com.github.chencmd.lootcontainermanager.generic.extensions.MapExt.*
 import com.github.chencmd.lootcontainermanager.generic.SyncContinuation
 import com.github.chencmd.lootcontainermanager.generic.extensions.IOExt.*
 import com.github.chencmd.lootcontainermanager.minecraft.ManageItemNBT
