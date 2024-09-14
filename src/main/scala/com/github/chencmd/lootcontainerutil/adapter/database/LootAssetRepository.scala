@@ -6,6 +6,8 @@ import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAss
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetItem
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetPersistenceInstr
 import com.github.chencmd.lootcontainermanager.generic.extensions.CastExt.*
+import com.github.chencmd.lootcontainermanager.generic.extensions.EitherExt.*
+import com.github.chencmd.lootcontainermanager.generic.extensions.OptionExt.*
 import com.github.chencmd.lootcontainermanager.generic.extra.FragmentsExtra
 import com.github.chencmd.lootcontainermanager.generic.instances.MetaInstances.given
 import com.github.chencmd.lootcontainermanager.minecraft.bukkit.BlockLocation
@@ -96,10 +98,10 @@ object LootAssetRepository {
     def reprToLootAssetContainer(repr: LootAssetContainerRecordRepr): F[LootAssetContainer] = for {
       facing    <- Either
         .catchNonFatal(repr.facing.map(_.toUpperCase).map(BlockFace.valueOf))
-        .fold(_ => SystemException.raise(s"Invalid block face: ${repr.facing}"), _.pure[F])
+        .orRaiseF(SystemException(s"Invalid block face: ${repr.facing}"))
       chestType <- Either
         .catchNonFatal(repr.chestType.map(_.toUpperCase).map(Chest.Type.valueOf))
-        .fold(_ => SystemException.raise(s"Invalid chest type: ${repr.chestType}"), _.pure[F])
+        .orRaiseF(SystemException(s"Invalid chest type: ${repr.chestType}"))
       lootAsset = LootAssetContainer(
         BlockLocation(repr.location.world, repr.location.x, repr.location.y, repr.location.z),
         repr.blockId,
@@ -121,7 +123,7 @@ object LootAssetRepository {
         case "random" => for {
             ltKey <- recordRepr.lootTable
               .map(NamespacedKey.fromString)
-              .fold(SystemException.raise(s"Invalid loot table key: ${recordRepr.lootTable}"))(_.pure[F])
+              .orRaiseF(SystemException(s"Invalid loot table key: ${recordRepr.lootTable}"))
             asset = LootAsset.Random(recordRepr.id, recordRepr.uuid, recordRepr.name, containers, ltKey)
           } yield asset
         case _        => SystemException.raise(s"Invalid asset type: ${recordRepr.typ}")

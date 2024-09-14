@@ -7,6 +7,7 @@ import com.github.chencmd.lootcontainermanager.feature.asset.DataSource
 import com.github.chencmd.lootcontainermanager.feature.asset.ItemGenerator
 import com.github.chencmd.lootcontainermanager.feature.asset.ItemMapper
 import com.github.chencmd.lootcontainermanager.generic.extensions.CastExt.*
+import com.github.chencmd.lootcontainermanager.generic.extensions.EitherExt.*
 import com.github.chencmd.lootcontainermanager.nbt.NBTPathInterpolationParser
 import com.github.chencmd.lootcontainermanager.nbt.NBTPathParser
 import com.github.chencmd.lootcontainermanager.nbt.definition.NBTPath
@@ -41,7 +42,7 @@ object Config {
     debug       = config.getBoolean("debug", false).rightNec
     config <- (assetConfig, dbConfig, debug)
       .parMapN(Config.apply)
-      .fold(s => ConfigurationException.raise(s.mkString_("\n")), _.pure[F])
+      .orRaiseF(s => ConfigurationException(s.mkString_("\n")))
   } yield config
 
   def getAssetConfig(config: FileConfiguration): EitherNec[String, AssetConfig] = {

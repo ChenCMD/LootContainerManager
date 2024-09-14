@@ -5,6 +5,7 @@ import com.github.chencmd.lootcontainermanager.feature.asset.ContainerManager
 import com.github.chencmd.lootcontainermanager.feature.asset.ItemConversionInstr
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAsset
 import com.github.chencmd.lootcontainermanager.generic.KeyedMutex
+import com.github.chencmd.lootcontainermanager.generic.extensions.OptionExt.*
 import com.github.chencmd.lootcontainermanager.minecraft.ContainerMeta
 import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
 import com.github.chencmd.lootcontainermanager.minecraft.bukkit.BlockLocation
@@ -54,7 +55,7 @@ package object terms {
           })
           blockId       = asset.containers.head.blockId
           containerMeta = ContainerMeta.fromId(blockId.drop("minecraft:".length))
-          containerMeta <- containerMeta.fold(SystemException.raise[F](s"Unknown container type: $blockId"))(_.pure[F])
+          containerMeta <- containerMeta.orRaiseF[F](SystemException(s"Unknown container type: $blockId"))
 
           session <- InventorySession[F](ContainerManager.INVENTORY_NAME, location, containerMeta) { holder =>
             val server = Bukkit.getServer()
@@ -79,7 +80,7 @@ package object terms {
         } yield session
 
         openedInventories.withLockAtKey(location) { invOrNone =>
-          invOrNone.fold(createInventorySession)(_.pure[F]).map(i => (Some(i), (invOrNone.isDefined, i)))
+          invOrNone.getOrElseEffectfully(createInventorySession).map(i => (Some(i), (invOrNone.isDefined, i)))
         }
       }
     }

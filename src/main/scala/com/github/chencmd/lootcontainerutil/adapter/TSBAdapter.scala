@@ -8,6 +8,8 @@ import com.github.chencmd.lootcontainermanager.feature.asset.ItemConversionInstr
 import com.github.chencmd.lootcontainermanager.feature.asset.ItemGenerator
 import com.github.chencmd.lootcontainermanager.feature.asset.ItemIdentifier
 import com.github.chencmd.lootcontainermanager.generic.extensions.CastExt.*
+import com.github.chencmd.lootcontainermanager.generic.extensions.EitherExt.*
+import com.github.chencmd.lootcontainermanager.generic.extensions.OptionExt.*
 import com.github.chencmd.lootcontainermanager.generic.extra.EitherTExtra
 import com.github.chencmd.lootcontainermanager.minecraft.ManageItemNBT
 import com.github.chencmd.lootcontainermanager.minecraft.bukkit.VoidCommandSender
@@ -41,7 +43,7 @@ object TSBAdapter {
   ): ItemConversionInstr[F, G] = new ItemConversionInstr[F, G] {
     def toItemIdentifier(item: ItemStack): F[ItemIdentifier] = for {
       nbtItem <- Async[F].delay(NBT.readNbt(item))
-      tag     <- NBTTagParser.parse(nbtItem.toString).fold(SystemException.raise[F](_), _.pure[F])
+      tag     <- NBTTagParser.parse(nbtItem.toString).orRaiseF[F](SystemException.apply)
       itemTag: NBTTag.NBTTagCompound = NBTTag.NBTTagCompound(
         Map(
           "id"    -> NBTTag.NBTTagString(item.getType().getKey().toString()),
@@ -52,17 +54,17 @@ object TSBAdapter {
 
       (_, usingInterpolation) <- config.asset.toItemIdentifier
         .find(_._1.isAccessible(itemTag))
-        .fold(ConfigurationException.raise[F](s"A matched itemMapper was not found. data: ${tag.toSNBT}"))(_.pure[F])
+        .orRaiseF[F](ConfigurationException(s"A matched itemMapper was not found. data: ${tag.toSNBT}"))
 
       interpolatedTag <- usingInterpolation
         .interpolate(itemTag)
-        .fold(ConfigurationException.raise[F]("itemMapper did not return a result."))(_.pure[F])
+        .orRaiseF[F](ConfigurationException("itemMapper did not return a result."))
     } yield interpolatedTag
 
     def toItemStack(item: ItemIdentifier): G[ItemStack] = for {
       generator <- config.asset.toItem
         .find(_.predicate.matches(item))
-        .fold(ConfigurationException.raise[G](s"ItemIdentifier did not match any itemMapper. item: $item"))(_.pure[G])
+        .orRaiseF[G](ConfigurationException(s"ItemIdentifier did not match any itemMapper. item: $item"))
 
       matched     = generator.predicate.findFirstMatchIn(item).get
       interp      = interpolate(matched)
@@ -76,7 +78,7 @@ object TSBAdapter {
 
             tag <- g.tag.map(interp).filter(_.nonEmpty).traverse { t =>
               val res = NBTTagParser.parse(t)
-              res.fold(ConfigurationException.raise[G](_), _.pure[G])
+              res.orRaiseF[G](ConfigurationException.apply)
             }
 
             item <- ManageItemNBT.createItemFromNBT[G](
@@ -101,7 +103,7 @@ object TSBAdapter {
             rng   <- Sync[G].delay(java.util.Random())
             items <- Sync[G].delay(lt.populateLoot(rng, lc).asScala.toList)
             res = items.headOption
-            item <- res.fold(ConfigurationException.raise[G]("LootTable did not return any items."))(_.pure[G])
+            item <- res.orRaiseF[G](ConfigurationException("LootTable did not return any items."))
           } yield item
 
         case g: ItemGenerator.WithMCFunction => for {

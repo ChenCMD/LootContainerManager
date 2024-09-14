@@ -5,6 +5,7 @@ import com.github.chencmd.lootcontainermanager.exceptions.UserException
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAsset
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetPersistenceCacheInstr
 import com.github.chencmd.lootcontainermanager.generic.extensions.CastExt.*
+import com.github.chencmd.lootcontainermanager.generic.extensions.OptionExt.*
 import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
 import com.github.chencmd.lootcontainermanager.minecraft.bukkit.BlockLocation
 import com.github.chencmd.lootcontainermanager.terms.InventoriesStore
@@ -36,12 +37,12 @@ object DelLootAsset {
       container <- containerOrNone
       inventory <- inventoryOrNone
     } yield container -> inventory)
-    (container, containerInv) <- dataOrNone.fold(UserException.raise[F]("No container was found"))(_.pure[F])
+    (container, containerInv) <- dataOrNone.orRaiseF[F](UserException("No container was found"))
 
     assetLocation = BlockLocation.of(container.getLocation())
 
     asset <- asyncLootAssetCache.askLootAssetLocationAt(assetLocation)
-    asset <- asset.fold(UserException.raise[F]("Asset not found"))(_.pure[F])
+    asset <- asset.orRaiseF[F](UserException("Asset not found"))
 
     _ <- asset match {
       case asset: LootAsset.Fixed => for {

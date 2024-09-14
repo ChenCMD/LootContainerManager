@@ -4,6 +4,7 @@ import com.github.chencmd.lootcontainermanager.Prefix
 import com.github.chencmd.lootcontainermanager.exceptions.SystemException
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetContainer
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetPersistenceCacheInstr
+import com.github.chencmd.lootcontainermanager.generic.extensions.EitherExt.*
 import com.github.chencmd.lootcontainermanager.generic.extensions.TupleExt.*
 import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
 import com.github.chencmd.lootcontainermanager.minecraft.bukkit.BlockLocation
@@ -65,7 +66,7 @@ object LootAssetHighlight {
     players <- Async[F].delay(Bukkit.getOnlinePlayers.asScala.toList)
     players <- Either
       .catchNonFatal(players.asInstanceOf[List[Player]])
-      .fold(_ => SystemException.raise[F]("Failed to get online players"), _.pure[F])
+      .orRaiseF[F](_ => SystemException("Failed to get online players"))
 
     assets          <- players.traverse { player =>
       for {

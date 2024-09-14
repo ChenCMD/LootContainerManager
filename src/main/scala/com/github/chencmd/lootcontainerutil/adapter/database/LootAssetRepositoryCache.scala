@@ -3,6 +3,7 @@ package com.github.chencmd.lootcontainermanager.adapter.database
 import com.github.chencmd.lootcontainermanager.exceptions.SystemException
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAsset
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetPersistenceCacheInstr
+import com.github.chencmd.lootcontainermanager.generic.extensions.OptionExt.*
 import com.github.chencmd.lootcontainermanager.minecraft.bukkit.BlockLocation
 import com.github.chencmd.lootcontainermanager.terms.LootAssetCache
 
@@ -54,7 +55,7 @@ object LootAssetRepositoryCache {
 
     override def deleteLootAssetLocationAt(location: BlockLocation): F[Unit] = for {
       asset <- askLootAssetLocationAt(location)
-      asset <- asset.fold(SystemException.raise("Asset not found"))(_.pure[F])
+      asset <- asset.orRaiseF(SystemException("Asset not found"))
       _     <- cacheRef.update { s =>
         val uuid = asset.uuid
         val p    = asset.containers.map(_.location)

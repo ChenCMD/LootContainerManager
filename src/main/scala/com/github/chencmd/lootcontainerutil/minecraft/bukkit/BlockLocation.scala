@@ -1,6 +1,7 @@
 package com.github.chencmd.lootcontainermanager.minecraft.bukkit
 
 import com.github.chencmd.lootcontainermanager.exceptions.SystemException
+import com.github.chencmd.lootcontainermanager.generic.extensions.OptionExt.*
 
 import cats.effect.kernel.Sync
 import cats.implicits.*
@@ -39,7 +40,7 @@ final case class BlockLocation(world: String, x: Int, y: Int, z: Int) {
   def toBukkit(world: World): BukkitLocation  = new BukkitLocation(world, x, y, z)
   def toBukkit[F[_]: Sync]: F[BukkitLocation] = for {
     worldOpt <- Sync[F].delay(Bukkit.getWorlds().asScala.toList.find(_.getKey.toString == world))
-    world    <- worldOpt.fold(SystemException.raise(s"Missing world: $world"))(_.pure[F])
+    world    <- worldOpt.orRaiseF(SystemException(s"Missing world: $world"))
   } yield new BukkitLocation(world, x, y, z)
 
   def toPosition: Position = Position(world, x.toDouble, y.toDouble, z.toDouble)

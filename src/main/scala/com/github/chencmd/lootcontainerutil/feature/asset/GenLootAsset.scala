@@ -7,6 +7,7 @@ import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAss
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetItem
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetPersistenceCacheInstr
 import com.github.chencmd.lootcontainermanager.generic.extensions.CastExt.*
+import com.github.chencmd.lootcontainermanager.generic.extensions.OptionExt.*
 import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
 import com.github.chencmd.lootcontainermanager.minecraft.bukkit.BlockLocation
 import com.github.chencmd.lootcontainermanager.minecraft.bukkit.Vector
@@ -61,7 +62,7 @@ object GenLootAsset {
       } yield (containerData, connectedContainerData)
       program.value
     }
-    (data, connected)   <- containerDataOrNone.fold(UserException.raise[F]("No container was found."))(_.pure[F])
+    (data, connected)   <- containerDataOrNone.orRaiseF[F](UserException("No container was found."))
 
     // アセットが既に存在しているか確認する
     existsAsset <- asyncLootAssetCache.askIfLootAssetPresentAt(data.location)

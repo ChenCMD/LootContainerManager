@@ -6,6 +6,7 @@ import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAss
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetPersistenceCacheInstr
 import com.github.chencmd.lootcontainermanager.generic.SyncContinuation
 import com.github.chencmd.lootcontainermanager.generic.extensions.CastExt.*
+import com.github.chencmd.lootcontainermanager.generic.extensions.OptionExt.*
 import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
 import com.github.chencmd.lootcontainermanager.minecraft.bukkit.BlockLocation
 import com.github.chencmd.lootcontainermanager.minecraft.bukkit.InventorySession
@@ -21,7 +22,6 @@ import org.typelevel.log4cats.Logger
 
 import scala.concurrent.duration.*
 import scala.jdk.CollectionConverters.*
-import scala.util.chaining.*
 
 import org.bukkit.Sound
 import org.bukkit.SoundCategory
@@ -90,8 +90,8 @@ class ContainerManager[F[_]: Async, G[_]: Sync] private (
 
     def effect(assetLocation: BlockLocation): F[Unit] = for {
       asset <- asyncLootAssetCache.askLootAssetLocationAt(assetLocation)
-      asset <- asset.fold(SystemException.raise[F]("Asset not found"))(_.downcastOrNone[LootAsset.Fixed].pure[F])
-      _     <- asset.traverse_ { asset =>
+      asset <- asset.orRaiseF[F](SystemException("Asset not found"))
+      _     <- asset.downcastOrNone[LootAsset.Fixed].traverse_ { asset =>
         for {
           (created, inv) <- openedInventories.getOrCreateInventory[G](assetLocation, asset, debug)
           _              <- mcThread.run(Sync[G].delay(p.openInventory(inv.getInventory())))
@@ -118,7 +118,7 @@ class ContainerManager[F[_]: Async, G[_]: Sync] private (
       _ <- openedInventories.withLockAtKey(holder.location) { _ =>
         for {
           asset <- asyncLootAssetCache.askLootAssetLocationAt(holder.location)
-          asset <- asset.fold(SystemException.raise[F]("Asset not found"))(_.pure[F])
+          asset <- asset.orRaiseF[F](SystemException("Asset not found"))
           asset <- asset.downcastOrRaise[LootAsset.Fixed][F]()
           items <- GenLootAsset.convertToLootAssetItem[F, G](inv)
           hasChanged = !asset.items.sameElements(items)
