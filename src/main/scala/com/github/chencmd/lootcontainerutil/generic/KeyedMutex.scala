@@ -1,6 +1,6 @@
 package com.github.chencmd.lootcontainermanager.generic
 
-import com.github.chencmd.lootcontainermanager.generic.OptionExtra.*
+import com.github.chencmd.lootcontainermanager.generic.extensions.OptionExt.*
 
 import cats.effect.kernel.GenConcurrent
 import cats.effect.kernel.Ref

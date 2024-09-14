@@ -1,9 +1,9 @@
-package com.github.chencmd.lootcontainermanager.generic
+package com.github.chencmd.lootcontainermanager.generic.extensions
 
 import scala.compiletime.constValue
 import scala.compiletime.ops.int.*
 
-object TupleExtra {
+object TupleExt {
   import Tuple.*
 
   case class PrecomputedAddition[n <: Int, m <: Int](val value: (n + m)) extends AnyVal
