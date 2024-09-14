@@ -32,7 +32,7 @@ enum ContainerMeta(
   case Hopper       extends ContainerMeta(Set("hopper"), InventoryType.HOPPER)
   case ShulkerBox
       extends ContainerMeta(
-        Set.from(DyeColor.values().map(d => s"${d.name}_shulker_box") :+ "shulker_box"),
+        Set.from(DyeColor.values().map(d => s"${d.toString.toLowerCase}_shulker_box") :+ "shulker_box"),
         InventoryType.SHULKER_BOX,
         Some(Sound.BLOCK_SHULKER_BOX_OPEN),
         Some(Sound.BLOCK_SHULKER_BOX_CLOSE)
