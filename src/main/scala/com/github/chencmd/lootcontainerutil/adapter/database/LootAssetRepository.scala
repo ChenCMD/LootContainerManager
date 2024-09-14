@@ -199,8 +199,6 @@ object LootAssetRepository {
         sql"DELETE FROM loot_asset_items WHERE ${Fragments.in(fr"asset_id", assetIds)}"
       }
 
-      override def initialize(): F[Unit] = ASSET_CREATE_QUERIES.traverse_(_.update.run).transact(transactor)
-
       override def getAllLootAssets(): F[List[LootAsset]] = for {
         queryResult <- ASSET_SELECT_QUERY
           .query[(LootAssetRecordRepr, Option[LootAssetContainerRecordRepr], Option[LootAssetItemRecordRepr])]

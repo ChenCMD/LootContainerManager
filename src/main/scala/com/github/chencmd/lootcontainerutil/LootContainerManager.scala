@@ -65,7 +65,8 @@ class LootContainerManager extends JavaPlugin {
       given ManageItemNBT           = ManageBukkitItemNBT.createInstr
 
       cfg <- Config.tryRead[F](this)
-      transactor     = SQLite.createTransactor[F](cfg.db, cfg.debug)
+      transactor = SQLite.createTransactor[F](cfg.db, cfg.debug)
+      _ <- SQLite.migrate[F](classOf[LootContainerManager], cfg.db)
       lootAssetRepos = LootAssetRepository.createInstr[F](transactor)
 
       given LootAssetPersistenceInstr[F] = lootAssetRepos
@@ -85,7 +86,6 @@ class LootContainerManager extends JavaPlugin {
       _ <- Async[F].delay(CommandAPI.onEnable())
       _ <- CommandExecutor.register[F, G](openedInventories, unsafeRunAsync, cfg.debug)
 
-      _          <- lootAssetRepos.initialize()
       _          <- refreshCache(asyncLootAssetLocationCacheRef, cfg.debug)
       taskFiber1 <- {
         val program = for {
