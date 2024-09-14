@@ -5,6 +5,8 @@ import com.github.chencmd.lootcontainermanager.nbt.definition.{NBTPath, NBTPathI
 import org.scalatest.funspec.AnyFunSpec
 
 import scala.language.adhocExtensions
+import com.github.chencmd.lootcontainermanager.nbt.definition.{NBTPathRootNode, NBTPathInterpolation, NBTPath}
+import com.github.chencmd.lootcontainermanager.nbt.NBTPathInterpolationParser
 
 class NBTPathInterpolationParserTest extends AnyFunSpec {
   import NBTPathRootNode.*

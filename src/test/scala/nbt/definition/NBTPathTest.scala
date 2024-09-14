@@ -9,6 +9,7 @@ import com.github.chencmd.lootcontainermanager.nbt.definition.NBTPathRootNode as
 import com.github.chencmd.lootcontainermanager.nbt.definition.NBTPathNode as Node
 import com.github.chencmd.lootcontainermanager.nbt.definition.NBTNel
 import cats.data.NonEmptyList
+import com.github.chencmd.lootcontainermanager.nbt.definition.{NBTNel, NBTTag, NBTPathRootNode, NBTPath, NBTPathNode}
 
 class NBTPathTest extends AnyFunSpec {
   import NBTTag.*

@@ -7,6 +7,8 @@ import org.scalatest.funspec.AnyFunSpec
 import scala.language.adhocExtensions
 import com.github.chencmd.lootcontainermanager.nbt.definition.NBTNel
 import cats.data.NonEmptyList
+import com.github.chencmd.lootcontainermanager.nbt.definition.{NBTNel, NBTTag}
+import com.github.chencmd.lootcontainermanager.nbt.NBTTagParser
 
 class NBTTagParserTest extends AnyFunSpec {
   import NBTTag.*

@@ -10,6 +10,8 @@ import scala.language.adhocExtensions
 import com.github.chencmd.lootcontainermanager.nbt.definition.NBTNel
 import com.github.chencmd.lootcontainermanager.generic.extensions.MapExt.*
 import cats.data.NonEmptyList
+import com.github.chencmd.lootcontainermanager.nbt.definition.{NBTNel, NBTTag}
+import com.github.chencmd.lootcontainermanager.generic.extensions.MapExt
 
 class NBTTagTest extends AnyFunSpec {
   import NBTTag.*

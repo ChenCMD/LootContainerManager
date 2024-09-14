@@ -5,6 +5,7 @@ import com.github.chencmd.lootcontainermanager.nbt.definition.*
 import cats.data.NonEmptyList
 
 import scala.language.adhocExtensions
+import com.github.chencmd.lootcontainermanager.nbt.definition.{NBTNel, NBTTag, NBTPathInterpolation, NBTPath}
 
 open class NBTPathInterpolationTest extends AnyFunSpec {
   import NBTTag.*

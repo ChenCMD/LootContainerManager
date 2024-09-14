@@ -7,6 +7,8 @@ import org.scalatest.funspec.AnyFunSpec
 import scala.language.adhocExtensions
 import cats.data.NonEmptyList
 import com.github.chencmd.lootcontainermanager.nbt.definition.NBTNel
+import com.github.chencmd.lootcontainermanager.nbt.definition.{NBTNel, NBTTag, NBTPathRootNode, NBTPath}
+import com.github.chencmd.lootcontainermanager.nbt.NBTPathParser
 
 class NBTPathParserTest extends AnyFunSpec {
   describe("NBTPathParser") {
