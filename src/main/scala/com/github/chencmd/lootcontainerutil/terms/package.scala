@@ -5,10 +5,10 @@ import com.github.chencmd.lootcontainermanager.feature.asset.ContainerManager
 import com.github.chencmd.lootcontainermanager.feature.asset.ItemConversionInstr
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAsset
 import com.github.chencmd.lootcontainermanager.generic.KeyedMutex
+import com.github.chencmd.lootcontainermanager.minecraft.ContainerMeta
 import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
 import com.github.chencmd.lootcontainermanager.minecraft.bukkit.BlockLocation
 import com.github.chencmd.lootcontainermanager.minecraft.bukkit.InventorySession
-import com.github.chencmd.lootcontainerutil.minecraft.ContainerMeta
 
 import cats.effect.kernel.Async
 import cats.effect.kernel.Sync

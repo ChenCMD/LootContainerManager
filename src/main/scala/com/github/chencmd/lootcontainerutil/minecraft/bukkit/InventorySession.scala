@@ -1,6 +1,6 @@
 package com.github.chencmd.lootcontainermanager.minecraft.bukkit
 
-import com.github.chencmd.lootcontainerutil.minecraft.ContainerMeta
+import com.github.chencmd.lootcontainermanager.minecraft.ContainerMeta
 
 import cats.effect.kernel.Sync
 

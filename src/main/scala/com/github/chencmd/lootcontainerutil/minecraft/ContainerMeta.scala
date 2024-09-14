@@ -1,4 +1,4 @@
-package com.github.chencmd.lootcontainerutil.minecraft
+package com.github.chencmd.lootcontainermanager.minecraft
 
 import org.bukkit.DyeColor
 import org.bukkit.Sound
