@@ -75,9 +75,10 @@ object LootAssetHighlight {
       } yield for {
         assets <- assets.flatTraverse { asset =>
           def toData(container: LootAssetContainer) = {
-            val location = container.location
-            val block    = world.getBlockAt(location.toBukkit(world))
-            location.toPosition -> (container, block)
+            val location  = container.location
+            val assetType = asset.typ
+            val block     = world.getBlockAt(location.toBukkit(world))
+            location.toPosition -> (container, assetType, block)
           }
           Sync[G].delay {
             if (asset.containers.size == 1) {
@@ -103,12 +104,12 @@ object LootAssetHighlight {
       val pUuid              = p.getUniqueId
       val entityIdsForPlayer = entityIdsForAllPlayers.get(pUuid).orEmpty
       val program            = Align[Map[Position, _]].align(entityIdsForPlayer, containers).toList.flatTraverse {
-        case (pos, Ior.Left((id)))                => sendDeleteImaginaryHighlightPacket(p)(id).as(List.empty)
-        case (pos, Ior.Right((container, block))) => for {
+        case (pos, Ior.Left((id)))                           => sendDeleteImaginaryHighlightPacket(p)(id).as(List.empty)
+        case (pos, Ior.Right((container, assetType, block))) => for {
             _  <- checkBlock(p)(block, container.location)
-            id <- sendAddImaginaryHighlightPacket[F, G](p)(pos, container, block)
+            id <- sendAddImaginaryHighlightPacket[F, G](p)(pos, container, assetType, block)
           } yield List(pos -> id)
-        case (pos, Ior.Both(id, (_, b)))          => checkBlock(p)(b, pos.toBlockLocation).as(List(pos -> id))
+        case (pos, Ior.Both(id, (_, _, b))) => checkBlock(p)(b, pos.toBlockLocation).as(List(pos -> id))
       }
       program.map(pUuid -> _.toMap)
     }
@@ -125,6 +126,7 @@ object LootAssetHighlight {
   def sendAddImaginaryHighlightPacket[F[_]: Async, G[_]: Sync](player: Player)(
     position: Position,
     container: LootAssetContainer,
+    assetType: String,
     block: Block
   )(using
     mcThread: OnMinecraftThread[F, G]
@@ -136,7 +138,7 @@ object LootAssetHighlight {
 
     facing            = container.facing.filter(_ => CHESTS.contains(container.blockId))
     spawnEntityPacket = createSpawnEntityPacket(entityID, position, facing, container.chestType)
-    setMetadataPacket = createMetadataPacket(entityID, nmsBlockData)
+    setMetadataPacket = createMetadataPacket(entityID, nmsBlockData, assetType)
 
     pManager = ProtocolLibrary.getProtocolManager
     _ <- Async[F].delay(pManager.sendServerPacket(player, spawnEntityPacket))
@@ -187,7 +189,7 @@ object LootAssetHighlight {
     }
   }
 
-  def createMetadataPacket(entityID: Int, blockData: NMSIBlockData): PacketContainer = {
+  def createMetadataPacket(entityID: Int, blockData: NMSIBlockData, assetType: String): PacketContainer = {
     PacketContainer(PacketType.Play.Server.ENTITY_METADATA).tap { p =>
       // Entity ID   | VarInt
       p.getIntegers().write(0, entityID)
@@ -206,7 +208,15 @@ object LootAssetHighlight {
         // Shadow strength
         WrappedDataValue(19, Registry.get(classOf[jl.Float]), float2Float(0f)),
         // Grow color override
-        WrappedDataValue(22, Registry.get(classOf[jl.Integer]), int2Integer(255 << 16 | (128 + 32) << 8 | 32)),
+        WrappedDataValue(
+          22,
+          Registry.get(classOf[jl.Integer]),
+          assetType match {
+            case "fixed"  => 0xffaa22
+            case "random" => 0x00ffaa
+            case _        => throw new SystemException(s"Invalid asset type: $assetType")
+          }
+        ),
         // Displayed block state
         WrappedDataValue(23, Registry.getBlockDataSerializer(false), blockData)
       )

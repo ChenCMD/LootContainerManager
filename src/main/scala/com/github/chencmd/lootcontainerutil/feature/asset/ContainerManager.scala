@@ -2,6 +2,7 @@ package com.github.chencmd.lootcontainermanager.feature.asset
 
 import com.github.chencmd.lootcontainermanager.Prefix
 import com.github.chencmd.lootcontainermanager.exceptions.SystemException
+import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAsset
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetPersistenceCacheInstr
 import com.github.chencmd.lootcontainermanager.generic.SyncContinuation
 import com.github.chencmd.lootcontainermanager.generic.extensions.CastOps.*
@@ -89,9 +90,12 @@ class ContainerManager[F[_]: Async, G[_]: Sync] private (
 
     def effect(assetLocation: BlockLocation): F[Unit] = for {
       asset <- asyncLootAssetCache.askLootAssetLocationAt(assetLocation)
-      asset <- asset.fold(SystemException.raise[F]("Asset not found"))(_.pure[F])
-      inv   <- openedInventories.getOrCreateInventory[G](assetLocation, asset, debug)
-      _     <- mcThread.run(Sync[G].delay(p.openInventory(inv.getInventory())))
+      asset <- asset.fold(SystemException.raise[F]("Asset not found"))(_.downcastOrNone[LootAsset.Fixed].pure[F])
+      _     <- asset.traverse_ { asset =>
+        openedInventories.getOrCreateInventory[G](assetLocation, asset, debug).flatMap { inv =>
+          mcThread.run(Sync[G].delay(p.openInventory(inv.getInventory())))
+        }
+      }
     } yield ()
 
     assetLocation.value.map(loc => (loc.nonEmpty, loc.traverse_(effect)))
@@ -111,6 +115,7 @@ class ContainerManager[F[_]: Async, G[_]: Sync] private (
         for {
           asset <- asyncLootAssetCache.askLootAssetLocationAt(holder.location)
           asset <- asset.fold(SystemException.raise[F]("Asset not found"))(_.pure[F])
+          asset <- asset.downcastOrRaise[LootAsset.Fixed][F]()
           items <- GenLootAsset.convertToLootAssetItem[F, G](inv)
           hasChanged = !asset.items.sameElements(items)
 

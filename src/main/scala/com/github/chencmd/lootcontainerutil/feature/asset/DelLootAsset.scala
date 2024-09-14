@@ -2,6 +2,7 @@ package com.github.chencmd.lootcontainermanager.feature.asset
 
 import com.github.chencmd.lootcontainermanager.Prefix
 import com.github.chencmd.lootcontainermanager.exceptions.UserException
+import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAsset
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetPersistenceCacheInstr
 import com.github.chencmd.lootcontainermanager.generic.extensions.CastOps.*
 import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
@@ -42,14 +43,18 @@ object DelLootAsset {
     asset <- asyncLootAssetCache.askLootAssetLocationAt(assetLocation)
     asset <- asset.fold(UserException.raise[F]("Asset not found"))(_.pure[F])
 
-    assetSession <- openedInventories.getOrCreateInventory[G](assetLocation, asset, debug)
-    assetInv = assetSession.getInventory()
+    _ <- asset match {
+      case asset: LootAsset.Fixed => for {
+          assetSession <- openedInventories.getOrCreateInventory[G](assetLocation, asset, debug)
+          assetInv = assetSession.getInventory()
 
-    _ <- Async[F].delay { assetInv.getViewers().asScala.foreach(_.closeInventory()) }
-
-    _ <- Async[F].delay {
-      containerInv.clear()
-      containerInv.setContents(assetInv.getContents())
+          _ <- Async[F].delay { assetInv.getViewers().asScala.foreach(_.closeInventory()) }
+          _ <- Async[F].delay {
+            containerInv.clear()
+            containerInv.setContents(assetInv.getContents())
+          }
+        } yield ()
+      case _: LootAsset.Random    => Async[F].unit
     }
 
     _ <- openedInventories.withLockAtKey(assetLocation)(_ => (None, ()).pure[F])

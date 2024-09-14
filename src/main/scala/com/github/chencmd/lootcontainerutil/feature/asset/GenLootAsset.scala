@@ -19,6 +19,7 @@ import cats.implicits.*
 
 import scala.jdk.CollectionConverters.*
 
+import org.bukkit.NamespacedKey
 import org.bukkit.World
 import org.bukkit.block.Chest
 import org.bukkit.block.Container
@@ -27,6 +28,7 @@ import org.bukkit.block.data.Waterlogged
 import org.bukkit.block.data.`type`.Chest as ChestData
 import org.bukkit.entity.Player
 import org.bukkit.inventory.Inventory
+import org.bukkit.loot.Lootable
 
 import com.github.tarao.record4s.%
 import com.github.tarao.record4s.unselect
@@ -40,6 +42,7 @@ object GenLootAsset {
     val waterlogged: Option[Boolean]
     val chestType: Option[ChestData.Type]
     val inventory: Inventory
+    val lootTable: Option[NamespacedKey]
   }
 
   def generateLootAsset[F[_]: Async, G[_]: Sync](p: Player)(using
@@ -69,16 +72,25 @@ object GenLootAsset {
     // コンテナを見ているプレイヤーが居たら閉じる
     _           <- closeContainer(data.inventory)
 
-    // コンテナの情報を取得する
-    items <- convertToLootAssetItem[F, G](data.inventory)
-    asset <- convertToLootAsset(List(data) ++ connected.toList, items)
+    // アセットを生成する
+    containers = convertToLootAssetContainers(data, connected)
+    assetUuid <- UUIDGen.randomUUID[F]
+    asset     <- data.lootTable match {
+      case Some(lt) => LootAsset.Random(None, assetUuid, data.name, containers, lt).pure[F]
+      case None     => convertToLootAssetItem[F, G](data.inventory).map { items =>
+          LootAsset.Fixed(None, assetUuid, data.name, containers, items)
+        }
+    }
 
     // LootAsset を保存する
-    _ <- asyncLootAssetCache.updateLootAsset(asset)
+    _         <- asyncLootAssetCache.updateLootAsset(asset)
 
     // プレイヤーにメッセージを送信する
     _ <- Async[F].delay {
-      p.sendMessage(s"${Prefix.SUCCESS}アセットを生成しました。")
+      asset match {
+        case _: LootAsset.Fixed  => p.sendMessage(s"${Prefix.SUCCESS}アセット (固定) を生成しました。")
+        case _: LootAsset.Random => p.sendMessage(s"${Prefix.SUCCESS}アセット (ランダム) を生成しました。")
+      }
     }
   } yield ()
 
@@ -134,7 +146,8 @@ object GenLootAsset {
       "facing"      -> data.downcastOrNone[Directional].map(_.getFacing),
       "waterlogged" -> data.downcastOrNone[Waterlogged].map(_.isWaterlogged),
       "chestType"   -> data.downcastOrNone[ChestData].map(_.getType),
-      "inventory"   -> container.getInventory()
+      "inventory"   -> container.getInventory(),
+      "lootTable"   -> container.downcastOrNone[Lootable].flatMap(l => Option(l.getLootTable)).map(_.getKey())
     )
   }
 
@@ -155,9 +168,11 @@ object GenLootAsset {
       }
   }
 
-  def convertToLootAsset[F[_]: Async](data: List[ContainerData], items: List[LootAssetItem]): F[LootAsset] = {
-    val containers = data.map(_(unselect.name.inventory).to[LootAssetContainer])
-    val uuid       = UUIDGen.randomUUID[F]
-    uuid.map(LootAsset(None, _, data.head.name, containers, items))
+  def convertToLootAssetContainers(
+    data: ContainerData,
+    connectedContainerData: Option[ContainerData]
+  ): List[LootAssetContainer] = {
+    val containers = List(data) ++ connectedContainerData.toList
+    containers.map(_(unselect.name.inventory).to[LootAssetContainer])
   }
 }

@@ -4,6 +4,7 @@ import com.github.chencmd.lootcontainermanager.minecraft.bukkit.BlockLocation
 
 import java.util.UUID
 
+import org.bukkit.NamespacedKey
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.`type`.Chest
 
@@ -21,10 +22,26 @@ case class LootAssetItem(
   quantity: Int
 )
 
-case class LootAsset(
-  id: Option[Int],
-  uuid: UUID,
-  name: Option[String],
-  containers: List[LootAssetContainer],
-  items: List[LootAssetItem]
-)
+enum LootAsset(
+  val id: Option[Int],
+  val uuid: UUID,
+  val typ: String,
+  val name: Option[String],
+  val containers: List[LootAssetContainer]
+) {
+  case Fixed(
+    override val id: Option[Int],
+    override val uuid: UUID,
+    override val name: Option[String],
+    override val containers: List[LootAssetContainer],
+    items: List[LootAssetItem]
+  ) extends LootAsset(id, uuid, "fixed", name, containers)
+
+  case Random(
+    override val id: Option[Int],
+    override val uuid: UUID,
+    override val name: Option[String],
+    override val containers: List[LootAssetContainer],
+    lootTable: NamespacedKey
+  ) extends LootAsset(id, uuid, "random", name, containers)
+}

@@ -6,6 +6,7 @@ import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAss
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetItem
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetPersistenceInstr
 import com.github.chencmd.lootcontainermanager.generic.FragmentsExtra
+import com.github.chencmd.lootcontainermanager.generic.extensions.CastOps.*
 import com.github.chencmd.lootcontainermanager.generic.instances.MetaInstances.given
 import com.github.chencmd.lootcontainermanager.minecraft.bukkit.BlockLocation
 
@@ -15,6 +16,7 @@ import cats.implicits.*
 
 import java.util.UUID
 
+import org.bukkit.NamespacedKey
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.`type`.Chest
 
@@ -36,7 +38,9 @@ object LootAssetRepository {
       (
         ("id", Option[Int]),
         ("uuid", UUID),
-        ("name", Option[String])
+        ("typ", String),
+        ("name", Option[String]),
+        ("lootTable", Option[String])
       )
     ]
     type LootAssetContainerRecordRepr = ArrayRecord[
@@ -77,9 +81,15 @@ object LootAssetRepository {
     def lootAssetToRepr(
       lootAsset: LootAsset
     ): (LootAssetRecordRepr, List[LootAssetContainerRecordRepr], List[LootAssetItemRecordRepr]) = {
-      val assetRepr  = ArrayRecord(id = lootAsset.id, uuid = lootAsset.uuid, name = lootAsset.name)
+      val assetRepr  = ArrayRecord(
+        id = lootAsset.id,
+        uuid = lootAsset.uuid,
+        typ = lootAsset.typ,
+        name = lootAsset.name,
+        lootTable = lootAsset.downcastOrNone[LootAsset.Random].map(_.lootTable.toString)
+      )
       val containers = lootAsset.containers.map(lootAssetContainerToRepr)
-      val items      = lootAsset.items.map(lootAssetItemToRepr)
+      val items      = lootAsset.downcastOrNone[LootAsset.Fixed].map(_.items.map(lootAssetItemToRepr)).orEmpty
       (assetRepr, containers, items)
     }
 
@@ -106,55 +116,22 @@ object LootAssetRepository {
     ): F[LootAsset] = for {
       containers <- recordReprContainers.traverse(reprToLootAssetContainer)
       items = recordReprItems.map(repr => LootAssetItem(repr.slot, repr.item, repr.quantity))
-      asset = LootAsset(
-        id = recordRepr.id,
-        uuid = recordRepr.uuid,
-        name = recordRepr.name,
-        containers = containers,
-        items = items
-      )
+      asset <- recordRepr.typ match {
+        case "fixed"  => LootAsset.Fixed(recordRepr.id, recordRepr.uuid, recordRepr.name, containers, items).pure[F]
+        case "random" => for {
+            ltKey <- recordRepr.lootTable
+              .map(NamespacedKey.fromString)
+              .fold(SystemException.raise(s"Invalid loot table key: ${recordRepr.lootTable}"))(_.pure[F])
+            asset = LootAsset.Random(recordRepr.id, recordRepr.uuid, recordRepr.name, containers, ltKey)
+          } yield asset
+        case _        => SystemException.raise(s"Invalid asset type: ${recordRepr.typ}")
+      }
     } yield asset
 
     new LootAssetPersistenceInstr[F] {
-      val ASSET_CREATE_QUERIES = List(
-        // TODO ちゃんと Migration を用意する
-        sql"""|CREATE TABLE IF NOT EXISTS loot_assets (
-              |   id          INTEGER  PRIMARY KEY AUTOINCREMENT,
-              |   uuid        TEXT     NOT NULL,
-              |   name        TEXT,
-              |
-              |   UNIQUE (uuid)
-              |)""".stripMargin,
-        sql"""|CREATE TABLE IF NOT EXISTS loot_asset_containers (
-              |   id          INTEGER  PRIMARY KEY AUTOINCREMENT,
-              |   asset_id    INT      NOT NULL,
-              |   world       TEXT     NOT NULL,
-              |   x           INT      NOT NULL,
-              |   y           INT      NOT NULL,
-              |   z           INT      NOT NULL,
-              |   block_id    TEXT     NOT NULL,
-              |   facing      TEXT,
-              |   waterlogged BOOLEAN,
-              |   chest_type  TEXT,
-              |
-              |   FOREIGN KEY (asset_id) REFERENCES loot_assets (id),
-              |   UNIQUE (asset_id, world, x, y, z)
-              |)""".stripMargin,
-        sql"""|CREATE TABLE IF NOT EXISTS loot_asset_items (
-              |   id          INTEGER  PRIMARY KEY AUTOINCREMENT,
-              |   asset_id    INT      NOT NULL,
-              |   slot        INT      NOT NULL,
-              |   item        TEXT     NOT NULL,
-              |   quantity    INT      NOT NULL,
-              |
-              |   FOREIGN KEY (asset_id) REFERENCES loot_assets (id)
-              |   UNIQUE (asset_id, slot)
-              |)""".stripMargin
-      )
-
       val ASSET_SELECT_QUERY = sql"""|
         |SELECT
-        |   asset.id, asset.uuid, asset.name,
+        |   asset.id, asset.uuid, asset.typ, asset.name, asset.loot_table,
         |   container.world, container.x, container.y, container.z,
         |   container.block_id, container.facing, container.waterlogged, container.chest_type,
         |   item.slot, item.item, item.quantity
@@ -171,7 +148,7 @@ object LootAssetRepository {
         |""".stripMargin
 
       def makeAssetUpsertQuery(assetRepr: LootAssetRecordRepr): Fragment = {
-        sql"INSERT OR REPLACE INTO loot_assets VALUES ${FragmentsExtra.tupled(assetRepr.values)}"
+        sql"INSERT OR REPLACE INTO loot_assets(id, uuid, typ, name, loot_table) VALUES ${FragmentsExtra.tupled(assetRepr.values)}"
       }
 
       def makeAssetsDeleteQuery(assetIds: NonEmptyList[Int]): Fragment = {

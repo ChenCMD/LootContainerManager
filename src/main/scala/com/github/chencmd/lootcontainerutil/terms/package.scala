@@ -45,7 +45,7 @@ package object terms {
     def empty[F[_]: Async]: F[InventoriesStore[F]] = KeyedMutex.empty[F, BlockLocation, InventorySession]
 
     extension [F[_]: Async](openedInventories: InventoriesStore[F]) {
-      def getOrCreateInventory[G[_]: Sync](location: BlockLocation, asset: LootAsset, debug: Boolean)(using
+      def getOrCreateInventory[G[_]: Sync](location: BlockLocation, asset: LootAsset.Fixed, debug: Boolean)(using
         logger: Logger[F],
         mcThread: OnMinecraftThread[F, G],
         itemConverter: ItemConversionInstr[F, G]
