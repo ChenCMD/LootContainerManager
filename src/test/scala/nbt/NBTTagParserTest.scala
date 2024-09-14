@@ -1,11 +1,8 @@
 package nbt
 
-import com.github.chencmd.lootcontainermanager.nbt.NBTTagParser
-import com.github.chencmd.lootcontainermanager.nbt.definition.NBTTag
 import org.scalatest.funspec.AnyFunSpec
 
 import scala.language.adhocExtensions
-import com.github.chencmd.lootcontainermanager.nbt.definition.NBTNel
 import cats.data.NonEmptyList
 import com.github.chencmd.lootcontainermanager.nbt.definition.{NBTNel, NBTTag}
 import com.github.chencmd.lootcontainermanager.nbt.NBTTagParser

@@ -1,7 +1,5 @@
 package nbt
 
-import com.github.chencmd.lootcontainermanager.nbt.NBTPathInterpolationParser
-import com.github.chencmd.lootcontainermanager.nbt.definition.{NBTPath, NBTPathInterpolation, NBTPathRootNode}
 import org.scalatest.funspec.AnyFunSpec
 
 import scala.language.adhocExtensions

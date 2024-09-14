@@ -3,13 +3,14 @@ package nbt.definition
 import org.scalatest.funspec.AnyFunSpec
 
 import scala.language.adhocExtensions
-import com.github.chencmd.lootcontainermanager.nbt.definition.NBTTag
-import com.github.chencmd.lootcontainermanager.nbt.definition.NBTPath
-import com.github.chencmd.lootcontainermanager.nbt.definition.NBTPathRootNode as RootNode
-import com.github.chencmd.lootcontainermanager.nbt.definition.NBTPathNode as Node
-import com.github.chencmd.lootcontainermanager.nbt.definition.NBTNel
 import cats.data.NonEmptyList
-import com.github.chencmd.lootcontainermanager.nbt.definition.{NBTNel, NBTTag, NBTPathRootNode, NBTPath, NBTPathNode}
+import com.github.chencmd.lootcontainermanager.nbt.definition.{
+  NBTNel,
+  NBTTag,
+  NBTPathRootNode as RootNode,
+  NBTPath,
+  NBTPathNode as Node
+}
 
 class NBTPathTest extends AnyFunSpec {
   import NBTTag.*
