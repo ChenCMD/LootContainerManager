@@ -4,7 +4,7 @@ import com.github.chencmd.lootcontainermanager.Prefix
 import com.github.chencmd.lootcontainermanager.exceptions.UserException
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAsset
 import com.github.chencmd.lootcontainermanager.feature.asset.persistence.LootAssetPersistenceCacheInstr
-import com.github.chencmd.lootcontainermanager.generic.extensions.CastOps.*
+import com.github.chencmd.lootcontainermanager.generic.extensions.CastExt.*
 import com.github.chencmd.lootcontainermanager.minecraft.OnMinecraftThread
 import com.github.chencmd.lootcontainermanager.minecraft.bukkit.BlockLocation
 import com.github.chencmd.lootcontainermanager.terms.InventoriesStore

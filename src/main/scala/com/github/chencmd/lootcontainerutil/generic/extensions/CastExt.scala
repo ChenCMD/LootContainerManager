@@ -8,7 +8,7 @@ import cats.implicits.*
 import scala.reflect.ClassTag
 import scala.reflect.TypeTest
 
-object CastOps {
+object CastExt {
   final class DowncastOrLeftOps[A, B](val value: A) extends AnyVal {
     def apply[E](onFailed: => E)(using tt: TypeTest[A, B]): Either[E, A & B] = value match {
       case tt(b) => Right(b)

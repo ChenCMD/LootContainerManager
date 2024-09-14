@@ -1,6 +1,6 @@
 package com.github.chencmd.lootcontainermanager.nbt.definition
 
-import com.github.chencmd.lootcontainermanager.generic.extensions.CastOps.downcastOrNone
+import com.github.chencmd.lootcontainermanager.generic.extensions.CastExt.downcastOrNone
 import com.github.chencmd.lootcontainermanager.nbt.definition.NBTTag.*
 
 import cats.arrow.FunctionK

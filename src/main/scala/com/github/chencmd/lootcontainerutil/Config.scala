@@ -6,7 +6,7 @@ import com.github.chencmd.lootcontainermanager.feature.asset.AssetConfig
 import com.github.chencmd.lootcontainermanager.feature.asset.DataSource
 import com.github.chencmd.lootcontainermanager.feature.asset.ItemGenerator
 import com.github.chencmd.lootcontainermanager.feature.asset.ItemMapper
-import com.github.chencmd.lootcontainermanager.generic.extensions.CastOps.*
+import com.github.chencmd.lootcontainermanager.generic.extensions.CastExt.*
 import com.github.chencmd.lootcontainermanager.nbt.NBTPathInterpolationParser
 import com.github.chencmd.lootcontainermanager.nbt.NBTPathParser
 import com.github.chencmd.lootcontainermanager.nbt.definition.NBTPath
