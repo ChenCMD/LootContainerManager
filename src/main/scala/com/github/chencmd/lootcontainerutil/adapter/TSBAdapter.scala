@@ -10,9 +10,9 @@ import com.github.chencmd.lootcontainermanager.feature.asset.ItemIdentifier
 import com.github.chencmd.lootcontainermanager.generic.EitherTExtra
 import com.github.chencmd.lootcontainermanager.generic.extensions.CastOps.*
 import com.github.chencmd.lootcontainermanager.minecraft.ManageItemNBT
+import com.github.chencmd.lootcontainermanager.minecraft.bukkit.VoidCommandSender
 import com.github.chencmd.lootcontainermanager.nbt.NBTTagParser
 import com.github.chencmd.lootcontainermanager.nbt.definition.NBTTag
-import com.github.chencmd.lootcontainerutil.minecraft.bukkit.VoidCommandSender
 
 import cats.data.EitherT
 import cats.effect.kernel.Async

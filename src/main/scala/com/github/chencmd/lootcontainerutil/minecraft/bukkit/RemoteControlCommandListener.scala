@@ -1,6 +1,6 @@
-package com.github.chencmd.lootcontainerutil.minecraft.bukkit
+package com.github.chencmd.lootcontainermanager.minecraft.bukkit
 
-import com.github.chencmd.lootcontainerutil.minecraft.nms.NMSMinecraftServer
+import com.github.chencmd.lootcontainermanager.minecraft.nms.NMSMinecraftServer
 
 import cats.effect.kernel.Sync
 import cats.implicits.*

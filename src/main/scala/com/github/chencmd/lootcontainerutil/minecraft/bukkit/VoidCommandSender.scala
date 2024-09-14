@@ -1,5 +1,5 @@
-package com.github.chencmd.lootcontainerutil.minecraft.bukkit
-import com.github.chencmd.lootcontainerutil.minecraft.bukkit.RemoteControlCommandListener
+package com.github.chencmd.lootcontainermanager.minecraft.bukkit
+import com.github.chencmd.lootcontainermanager.minecraft.bukkit.RemoteControlCommandListener
 
 import cats.effect.kernel.Sync
 import cats.implicits.*
