@@ -3,8 +3,8 @@ package com.github.chencmd.lootcontainermanager.feature.asset
 import com.github.chencmd.lootcontainermanager.nbt.definition.NBTPath
 import com.github.chencmd.lootcontainermanager.nbt.definition.NBTPathInterpolation
 
-import scala.util.matching.Regex
 import scala.concurrent.duration.FiniteDuration
+import scala.util.matching.Regex
 
 type ItemMapper = (NBTPath, NBTPathInterpolation)
 

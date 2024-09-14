@@ -19,6 +19,7 @@ import cats.effect.kernel.Sync
 import cats.implicits.*
 import org.typelevel.log4cats.Logger
 
+import scala.concurrent.duration.FiniteDuration
 import scala.jdk.CollectionConverters.*
 import scala.util.Random
 import scala.util.chaining.*
@@ -40,7 +41,6 @@ import com.comphenix.protocol.events.PacketContainer
 import com.comphenix.protocol.wrappers.WrappedDataValue
 import com.comphenix.protocol.wrappers.WrappedDataWatcher.Registry
 import org.joml.Vector3f
-import scala.concurrent.duration.FiniteDuration
 
 object LootAssetHighlight {
   def task[F[_]: Async, G[_]: Sync](refreshInterval: FiniteDuration)(using
