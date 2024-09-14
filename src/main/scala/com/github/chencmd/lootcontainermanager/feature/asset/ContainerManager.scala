@@ -96,7 +96,7 @@ class ContainerManager[F[_]: Async, G[_]: Sync] private (
           (created, inv) <- openedInventories.getOrCreateInventory[G](assetLocation, asset, debug)
           _              <- mcThread.run(Sync[G].delay(p.openInventory(inv.getInventory())))
           _              <- inv.containerMeta.openedSound.traverse_ { se =>
-            Async[F].delay(p.getWorld.playSound(p.getLocation, se, SoundCategory.BLOCKS, 1f, 1))
+            Async[F].delay(p.playSound(p.getLocation, se, SoundCategory.BLOCKS, 1f, 1))
           }
         } yield ()
       }
@@ -130,9 +130,8 @@ class ContainerManager[F[_]: Async, G[_]: Sync] private (
         } yield (None, ())
       }
       _ <- holder.containerMeta.closedSound.traverse_ { se =>
-        Async[F].delay {
-          val loc = e.getPlayer().getLocation
-          loc.getWorld.playSound(loc, se, SoundCategory.BLOCKS, 1f, 1)
+        e.getPlayer.downcastOrNone[Player].traverse_ { p =>
+          Async[F].delay(p.playSound(p.getLocation, se, SoundCategory.BLOCKS, 1f, 1))
         }
       }
     } yield ()
