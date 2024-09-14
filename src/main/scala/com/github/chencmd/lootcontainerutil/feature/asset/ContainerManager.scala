@@ -92,9 +92,13 @@ class ContainerManager[F[_]: Async, G[_]: Sync] private (
       asset <- asyncLootAssetCache.askLootAssetLocationAt(assetLocation)
       asset <- asset.fold(SystemException.raise[F]("Asset not found"))(_.downcastOrNone[LootAsset.Fixed].pure[F])
       _     <- asset.traverse_ { asset =>
-        openedInventories.getOrCreateInventory[G](assetLocation, asset, debug).flatMap { inv =>
-          mcThread.run(Sync[G].delay(p.openInventory(inv.getInventory())))
-        }
+        for {
+          (created, inv) <- openedInventories.getOrCreateInventory[G](assetLocation, asset, debug)
+          _              <- mcThread.run(Sync[G].delay(p.openInventory(inv.getInventory())))
+          _              <- inv.containerMeta.openedSound.traverse_ { se =>
+            Async[F].delay(p.getWorld.playSound(p.getLocation, se, SoundCategory.BLOCKS, 1f, 1))
+          }
+        } yield ()
       }
     } yield ()
 
@@ -110,8 +114,8 @@ class ContainerManager[F[_]: Async, G[_]: Sync] private (
       if holder.id == ContainerManager.INVENTORY_NAME
     } yield (inv, holder)
 
-    def effect(inv: Inventory, holder: InventorySession): F[Unit] = {
-      openedInventories.withLockAtKey(holder.location) { _ =>
+    def effect(inv: Inventory, holder: InventorySession): F[Unit] = for {
+      _ <- openedInventories.withLockAtKey(holder.location) { _ =>
         for {
           asset <- asyncLootAssetCache.askLootAssetLocationAt(holder.location)
           asset <- asset.fold(SystemException.raise[F]("Asset not found"))(_.pure[F])
@@ -125,7 +129,13 @@ class ContainerManager[F[_]: Async, G[_]: Sync] private (
           } yield ())
         } yield (None, ())
       }
-    }
+      _ <- holder.containerMeta.closedSound.traverse_ { se =>
+        Async[F].delay {
+          val loc = e.getPlayer().getLocation
+          loc.getWorld.playSound(loc, se, SoundCategory.BLOCKS, 1f, 1)
+        }
+      }
+    } yield ()
 
     program.value.map(v => (v.nonEmpty, v.traverse_(effect.tupled)))
   }

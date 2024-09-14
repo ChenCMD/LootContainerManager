@@ -45,7 +45,7 @@ object DelLootAsset {
 
     _ <- asset match {
       case asset: LootAsset.Fixed => for {
-          assetSession <- openedInventories.getOrCreateInventory[G](assetLocation, asset, debug)
+          (_, assetSession) <- openedInventories.getOrCreateInventory[G](assetLocation, asset, debug)
           assetInv = assetSession.getInventory()
 
           _ <- Async[F].delay { assetInv.getViewers().asScala.foreach(_.closeInventory()) }
