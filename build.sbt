@@ -1,6 +1,6 @@
 name := "LootContainerManager"
 
-version := "1.1.1"
+version := "1.2.0"
 
 scalaVersion := "3.5.0"
 
