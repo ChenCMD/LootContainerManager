@@ -37,6 +37,7 @@ import org.bukkit.plugin.java.JavaPlugin
 
 import dev.jorel.commandapi.CommandAPI
 import dev.jorel.commandapi.CommandAPIBukkitConfig
+import java.util.UUID
 
 class LootContainerManager extends JavaPlugin {
   type F = IO[_]
@@ -84,8 +85,10 @@ class LootContainerManager extends JavaPlugin {
       _                 <- Async[F].delay(Bukkit.getPluginManager.registerEvents(pal, this))
       _                 <- Async[F].delay(Bukkit.getPluginManager.registerEvents(cml, this))
 
+      highlightDisablePlayers <- Ref[F].of(Set.empty[UUID])
+
       _ <- Async[F].delay(CommandAPI.onEnable())
-      _ <- CommandExecutor.register[F, G](openedInventories, unsafeRunAsync, cfg.debug)
+      _ <- CommandExecutor.register[F, G](openedInventories, highlightDisablePlayers, unsafeRunAsync, cfg.debug)
 
       _          <- refreshCache(asyncLootAssetLocationCacheRef, cfg.debug)
       taskFiber1 <- {
@@ -101,7 +104,7 @@ class LootContainerManager extends JavaPlugin {
         (Async[F].sleep(cfg.db.attemptSaveIntervalSeconds) >> program).foreverM.start
       }
 
-      taskFiber2 <- LootAssetHighlight.task[F, G](cfg.asset.highlightRefreshInterval).start
+      taskFiber2 <- LootAssetHighlight.task[F, G](highlightDisablePlayers, cfg.asset.highlightRefreshInterval).start
 
       _ <- finalizerRef.set(Some(for {
         _ <- taskFiber1.cancel

@@ -20,10 +20,15 @@ import dev.jorel.commandapi.CommandAPICommand
 import dev.jorel.commandapi.CommandPermission
 import dev.jorel.commandapi.executors.CommandArguments
 import dev.jorel.commandapi.executors.PlayerCommandExecutor
+import cats.effect.kernel.Ref
+import java.util.UUID
+import org.bukkit.Sound
+import org.bukkit.SoundCategory
 
 object CommandExecutor {
   def register[F[_]: Async, G[_]: Sync](
     openedInventories: InventoriesStore[F],
+    highlightDisablePlayers: Ref[F, Set[UUID]],
     unsafeRunAsync: [U1] => (fa: F[U1]) => Unit,
     debug: Boolean
   )(using
@@ -48,18 +53,36 @@ object CommandExecutor {
       unsafeRunAsync(f(sender).handleErrorWith(handler(sender)))
     }
 
-    val genAsset = CommandAPICommand("gen_asset")
+    val genAsset  = CommandAPICommand("gen_asset")
       .withAliases("g")
       .executesPlayer(genExecutor(GenLootAsset.generateLootAsset[F, G]))
-    val delAsset = CommandAPICommand("del_asset")
+    val delAsset  = CommandAPICommand("del_asset")
       .withAliases("d")
       .executesPlayer(genExecutor(DelLootAsset.deleteLootAsset[F, G](_, openedInventories, debug)))
+    val highlight = CommandAPICommand("highlight")
+      .withAliases("h")
+      .executesPlayer(genExecutor { p =>
+        for {
+          highlightEnabled <- highlightDisablePlayers.modify {
+            case set if set.contains(p.getUniqueId) => (set - p.getUniqueId, true)
+            case set                                => (set + p.getUniqueId, false)
+          }
+      _ <- Async[F].delay(p.playSound(p, Sound.UI_BUTTON_CLICK, SoundCategory.MASTER, 0.6f, 1.2f))
+          _                <- Async[F].delay {
+            if (highlightEnabled) {
+              p.sendMessage(s"${Prefix.INFO}ハイライトを有効化しました。")
+            } else {
+              p.sendMessage(s"${Prefix.INFO}ハイライトを無効化しました。")
+            }
+          }
+        } yield ()
+      })
 
     Async[F].delay {
       CommandAPICommand("lootcontainermanager")
         .withAliases("lcm")
         .withPermission(CommandPermission.OP)
-        .withSubcommands(genAsset, delAsset)
+        .withSubcommands(genAsset, delAsset, highlight)
         .register()
     }
   }

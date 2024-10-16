@@ -44,14 +44,14 @@ import com.comphenix.protocol.wrappers.WrappedDataWatcher.Registry
 import org.joml.Vector3f
 
 object LootAssetHighlight {
-  def task[F[_]: Async, G[_]: Sync](refreshInterval: FiniteDuration)(using
+  def task[F[_]: Async, G[_]: Sync](highlightDisablePlayers: Ref[F, Set[UUID]], refreshInterval: FiniteDuration)(using
     logger: Logger[F],
     lootAssetCache: LootAssetPersistenceCacheInstr[F],
     mcThread: OnMinecraftThread[F, G]
   ): F[Unit] = for {
     entityIds <- Ref.of[F, Map[UUID, Map[Position, Int]]](Map.empty)
     _         <- Async[F].delay(logger.info("Starting highlight task"))
-    _         <- (highlight[F, G](entityIds) >> Async[F].sleep(refreshInterval)).foreverM
+    _         <- (highlight[F, G](highlightDisablePlayers, entityIds) >> Async[F].sleep(refreshInterval)).foreverM
   } yield ()
 
   val CHESTS = Set(
@@ -59,7 +59,10 @@ object LootAssetHighlight {
     "minecraft:trapped_chest"
   )
 
-  def highlight[F[_]: Async, G[_]: Sync](entityIds: Ref[F, Map[UUID, Map[Position, Int]]])(using
+  def highlight[F[_]: Async, G[_]: Sync](
+    highlightDisablePlayers: Ref[F, Set[UUID]],
+    entityIds: Ref[F, Map[UUID, Map[Position, Int]]]
+  )(using
     lootAssetCache: LootAssetPersistenceCacheInstr[F],
     mcThread: OnMinecraftThread[F, G]
   ): F[Unit] = for {
@@ -72,7 +75,8 @@ object LootAssetHighlight {
       for {
         loc <- Async[F].delay(BlockLocation.of(player.getLocation))
         world = player.getWorld
-        assets <- lootAssetCache.askLootAssetLocationsNear(loc)
+        highlightDisabled <- highlightDisablePlayers.get.map(_.contains(player.getUniqueId))
+        assets <- if !highlightDisabled then lootAssetCache.askLootAssetLocationsNear(loc) else List.empty.pure[F]
       } yield for {
         assets <- assets.flatTraverse { asset =>
           def toData(container: LootAssetContainer) = {
